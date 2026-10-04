@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { LANGUAGE_IDS } from '@/lib/models/settings';
+import { LANGUAGE_IDS, THEME_IDS } from '@/lib/models/settings';
+import { DUPLICATE_KEEPER_RULE_IDS } from '@/lib/models/duplicate-file';
 import * as AppSettingsUtils from '@/lib/utils/app-settings';
 import { BYTE_UNIT_BASES } from '@/lib/utils/format';
 
@@ -43,10 +44,33 @@ describe('AppSettingsUtils', () => {
     ).toBe(true);
   });
 
-  it('rejects incomplete settings and the obsolete permission alert key', () => {
+  it.each([
+    [BYTE_UNIT_BASES.binary, 500 * 1024 * 1024, 10 * 1024 * 1024],
+    [BYTE_UNIT_BASES.decimal, 500_000_000, 10_000_000],
+  ])(
+    'loads released legacy settings without losing preferences with base %s',
+    (unitBase, largeBytes, duplicateBytes) => {
+      const legacy = {
+        language: LANGUAGE_IDS.zhTW,
+        theme: THEME_IDS.dark,
+        largeFileMinimumBytes: 500 * 1024 * 1024,
+        duplicateFileMinimumBytes: 10 * 1024 * 1024,
+        duplicateKeeperRule: DUPLICATE_KEEPER_RULE_IDS.newestModified,
+      };
+
+      expect(AppSettingsUtils.parse(legacy, unitBase)).toEqual({
+        ...legacy,
+        hideCleanupReadFailureAlerts: false,
+        largeFileMinimumBytes: largeBytes,
+        duplicateFileMinimumBytes: duplicateBytes,
+      });
+      expect(legacy).not.toHaveProperty('hideCleanupReadFailureAlerts');
+    }
+  );
+
+  it('rejects the obsolete permission alert key', () => {
     const { hideCleanupReadFailureAlerts, ...legacy } = AppSettingsUtils.defaults(LANGUAGE_IDS.zhCN);
     expect(hideCleanupReadFailureAlerts).toBe(false);
-    expect(() => AppSettingsUtils.parse(legacy)).toThrow('Invalid app settings document');
     expect(() => AppSettingsUtils.parse({ ...legacy, ignoreCleanupPermissionWarnings: true })).toThrow(
       'Invalid app settings document'
     );
@@ -57,4 +81,39 @@ describe('AppSettingsUtils', () => {
       AppSettingsUtils.parse({ ...AppSettingsUtils.defaults(), hideCleanupReadFailureAlerts: 'true' })
     ).toThrow('Invalid app settings value');
   });
+
+  it.each([undefined, null, 0, 'false'])('rejects an explicitly invalid alert preference %s', value => {
+    expect(() =>
+      AppSettingsUtils.parse({ ...AppSettingsUtils.defaults(), hideCleanupReadFailureAlerts: value })
+    ).toThrow('Invalid app settings value');
+  });
+
+  it.each([
+    { language: 'unsupported' },
+    { theme: 'unsupported' },
+    { largeFileMinimumBytes: -1 },
+    { duplicateFileMinimumBytes: Number.NaN },
+    { duplicateKeeperRule: 'unsupported' },
+  ])('still rejects invalid core values in both document formats: %j', invalid => {
+    const settings = AppSettingsUtils.defaults();
+    const { hideCleanupReadFailureAlerts, ...legacy } = settings;
+    expect(hideCleanupReadFailureAlerts).toBe(false);
+    for (const document of [legacy, settings]) {
+      expect(() => AppSettingsUtils.parse({ ...document, ...invalid })).toThrow('Invalid app settings value');
+    }
+  });
+
+  it.each(['language', 'theme', 'largeFileMinimumBytes', 'duplicateFileMinimumBytes', 'duplicateKeeperRule'])(
+    'still rejects a missing core field %s in both document formats',
+    key => {
+      const settings = AppSettingsUtils.defaults();
+      const { hideCleanupReadFailureAlerts, ...legacy } = settings;
+      expect(hideCleanupReadFailureAlerts).toBe(false);
+      for (const document of [legacy, settings]) {
+        const incomplete: Record<string, unknown> = { ...document };
+        delete incomplete[key];
+        expect(() => AppSettingsUtils.parse(incomplete)).toThrow('Invalid app settings document');
+      }
+    }
+  );
 });

@@ -27,20 +27,21 @@ export function defaults(
   };
 }
 export function parse(value: unknown, unitBase: ByteUnitBase = BYTE_UNIT_BASES.binary): AppSettings {
-  if (
-    !hasExactKeys(value, [
-      'hideCleanupReadFailureAlerts',
-      'language',
-      'theme',
-      'largeFileMinimumBytes',
-      'duplicateFileMinimumBytes',
-      'duplicateKeeperRule',
-    ])
-  ) {
+  const legacyKeys = [
+    'language',
+    'theme',
+    'largeFileMinimumBytes',
+    'duplicateFileMinimumBytes',
+    'duplicateKeeperRule',
+  ] as const;
+  if (!hasExactKeys(value, legacyKeys) && !hasExactKeys(value, [...legacyKeys, 'hideCleanupReadFailureAlerts'])) {
     throw new Error('Invalid app settings document');
   }
   const settings = value;
-  const hideCleanupReadFailureAlerts = settings.hideCleanupReadFailureAlerts;
+  // Released five-field documents predate this option. Keep alerts visible on
+  // upgrade without accepting missing core fields or unrelated obsolete keys.
+  const hideCleanupReadFailureAlerts =
+    'hideCleanupReadFailureAlerts' in settings ? settings.hideCleanupReadFailureAlerts : false;
   const largeFileMinimumBytes = normalizePresetBytes(
     settings.largeFileMinimumBytes,
     LARGE_FILE_MINIMUM_PRESETS,
