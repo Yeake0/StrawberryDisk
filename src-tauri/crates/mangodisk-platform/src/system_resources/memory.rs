@@ -118,6 +118,8 @@ impl MemorySource for MemorySampler {
             let processes = {
                 // RSS platforms need one process pass for identity and resident memory.
                 let refresh = ProcessRefreshKind::nothing()
+                    // Linux tasks share process RSS and must not become application rows.
+                    .without_tasks()
                     .with_exe(UpdateKind::OnlyIfNotSet)
                     .with_memory();
                 self.system
@@ -162,6 +164,54 @@ impl MemorySource for MemorySampler {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn process_snapshots_do_not_count_threads_as_separate_processes() {
+        use super::super::process_cpu::{ProcessCpuSampler, ProcessCpuSource};
+        use std::sync::{mpsc, Arc, Barrier};
+
+        let barrier = Arc::new(Barrier::new(5));
+        let (sender, receiver) = mpsc::channel();
+        let workers = (0..4)
+            .map(|_| {
+                let barrier = Arc::clone(&barrier);
+                let sender = sender.clone();
+                std::thread::spawn(move || {
+                    let path = std::fs::read_link("/proc/thread-self").unwrap();
+                    let tid = path
+                        .file_name()
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .parse::<u32>()
+                        .unwrap();
+                    sender.send(tid).unwrap();
+                    barrier.wait();
+                })
+            })
+            .collect::<Vec<_>>();
+        let tids = (0..4).map(|_| receiver.recv().unwrap()).collect::<Vec<_>>();
+        let memory = MemorySampler::default().sample(true);
+        let cpu = ProcessCpuSampler::default().sample();
+        // Release workers before asserting so a failed sample cannot strand test threads.
+        barrier.wait();
+        for worker in workers {
+            worker.join().unwrap();
+        }
+        let memory = memory.unwrap().processes.unwrap();
+        let cpu = cpu.unwrap().processes;
+        assert!(memory.iter().any(|row| row.pid == std::process::id()));
+        assert!(cpu.iter().any(|row| row.pid == std::process::id()));
+        assert!(
+            memory.iter().all(|row| !tids.contains(&row.pid)),
+            "thread RSS must not be counted as process memory"
+        );
+        assert!(
+            cpu.iter().all(|row| !tids.contains(&row.pid)),
+            "thread CPU must not be counted twice with process CPU"
+        );
+    }
 
     #[test]
     fn native_sampling_can_skip_processes_and_observe_this_process() {

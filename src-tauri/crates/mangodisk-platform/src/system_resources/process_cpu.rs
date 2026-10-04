@@ -98,7 +98,10 @@ impl ProcessCpuSampler {
             });
         }
         // Never collect memory, command lines, environment, or disk I/O for the CPU list.
-        let refresh = ProcessRefreshKind::nothing().with_exe(UpdateKind::OnlyIfNotSet);
+        let refresh = ProcessRefreshKind::nothing()
+            // Process counters already include their threads; avoid duplicate task rows.
+            .without_tasks()
+            .with_exe(UpdateKind::OnlyIfNotSet);
         #[cfg(not(any(target_os = "macos", windows)))]
         let refresh = refresh.with_cpu();
         let updated =

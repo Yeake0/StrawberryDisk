@@ -118,7 +118,7 @@ fn run_worker(
 
 enum Sensor {
     Cpu(CpuReader),
-    Memory(SystemResourceService),
+    Memory(Box<SystemResourceService>),
     Network(NetworkReader),
     Disk,
     #[cfg(test)]
@@ -127,11 +127,11 @@ enum Sensor {
 impl Sensor {
     fn new(metric: MetricId) -> Self {
         match metric {
-            #[cfg(any(windows, target_os = "linux"))]
+            #[cfg(windows)]
             MetricId::Cpu => Self::Cpu(CpuReader::default()),
-            #[cfg(not(any(windows, target_os = "linux")))]
+            #[cfg(not(windows))]
             MetricId::Cpu => Self::Cpu(CpuReader),
-            MetricId::Memory => Self::Memory(SystemResourceService::default()),
+            MetricId::Memory => Self::Memory(Box::default()),
             MetricId::Network => Self::Network(NetworkReader::default()),
             MetricId::Disk => Self::Disk,
         }
