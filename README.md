@@ -48,6 +48,8 @@ Find cleanable content scattered across the system, applications, developer tool
 
 Smart recommendations help you make safe choices quickly. You can also review items individually and see the estimated reclaimable space upfront, keeping every cleanup predictable and under your control.
 
+Startup logs record the operating system's product version, kernel/build version, architecture, and WebView runtime separately to help diagnose platform-specific reports.
+
 If a scan cannot read some locations, its details show up to 50 failed read operations with paths and native errors. The failure total counts read attempts, not unique folders. A read failure alone does not indicate missing Full Disk Access.
 
 The details dialog can remember a choice to hide all Deep Cleanup read-failure alerts, including automatic macOS privacy guidance. This changes presentation only: unreadable items are still skipped and diagnostics remain available. Cleanup execution errors and other operation failures are still reported. Restore read-failure alerts from Settings → Scanning & analysis. These alerts are shown by default.

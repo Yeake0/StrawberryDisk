@@ -20,3 +20,18 @@ pub fn current() -> SystemIdentity {
         architecture: System::cpu_arch(),
     }
 }
+
+/// Product version and kernel/build distinguish systems sharing a WebView release.
+pub fn log_current() {
+    let identity = current();
+    let kernel_version = System::kernel_version();
+    let system_name = System::name();
+    log::info!(
+        "system_environment operating_system={} system_name={} os_version={} kernel_version={} architecture={}",
+        crate::diagnostics::text(identity.operating_system),
+        crate::diagnostics::text(system_name.as_deref().unwrap_or("unknown")),
+        crate::diagnostics::text(identity.version.as_deref().unwrap_or("unknown")),
+        crate::diagnostics::text(kernel_version.as_deref().unwrap_or("unknown")),
+        crate::diagnostics::text(&identity.architecture)
+    );
+}

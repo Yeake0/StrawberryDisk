@@ -300,6 +300,7 @@ pub fn run() {
             commands::system_maintenance::get_system_maintenance_runtime,
         ])
         .setup(move |app| {
+            mangodisk_platform::system_identity::log_current();
             log::info!(
                 "application_started version={} distribution={}",
                 app.package_info().version,
