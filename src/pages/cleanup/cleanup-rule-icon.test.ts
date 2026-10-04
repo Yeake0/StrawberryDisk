@@ -125,7 +125,7 @@ describe('cleanup rule icons', () => {
   });
 
   it('keeps category icons independent from individual rule brands', () => {
-    expect(cleanupGroupIcon('browser')).toBe(ICON_NAMES.globe);
+    expect(cleanupGroupIcon('browser')).toBe(ICON_NAMES.cleanupBrowserData);
     expect(cleanupGroupIcon('development')).toBe(ICON_NAMES.cleanupDeveloperTools);
     expect(cleanupGroupIcon('xcode')).toBe(ICON_NAMES.brandXcode);
   });

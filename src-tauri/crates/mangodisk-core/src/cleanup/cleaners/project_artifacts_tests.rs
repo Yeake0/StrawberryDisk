@@ -1116,6 +1116,14 @@ fn assert_incomplete_artifact_diagnostics(visible_bytes: usize) {
         let mut normalized = failures.clone();
         // Native traversal can resolve macOS /var aliases; compare the same filesystem objects.
         for detail in &mut normalized.details {
+            // A denied directory may fail during opening or enumeration depending on
+            // the native API. Both must preserve the same object and denial reason.
+            assert!(matches!(
+                detail.stage,
+                mangodisk_platform::FileReadStage::OpenDirectory
+                    | mangodisk_platform::FileReadStage::ReadDirectory
+            ));
+            detail.stage = mangodisk_platform::FileReadStage::ReadDirectory;
             detail.path = fs::canonicalize(&detail.path)
                 .expect("restored directory must resolve")
                 .to_string_lossy()
