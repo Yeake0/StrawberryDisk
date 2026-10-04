@@ -24,6 +24,7 @@ import * as PathUtils from '@/lib/utils/path';
 import * as StorageScanPreferenceUtils from '@/lib/utils/storage-scan-preference';
 import { useStorageScanPreferencesStore } from '@/stores/storage-scan-preferences-store';
 import { useStorageScopeStore } from '@/stores/storage-scope-store';
+import { useAnalysisStore } from '@/stores/analysis-store';
 
 import MdAnalysisBrowserToolbar from './components/md-analysis-browser-toolbar.vue';
 import MdAnalysisFolderPane from './components/md-analysis-folder-pane.vue';
@@ -73,11 +74,21 @@ const pendingHistoryNavigation = ref<PendingHistoryNavigation | null>(null);
 const primaryAnalysisPending = ref(false);
 const confirmOpen = ref(false);
 const pendingDelete = ref<DirectoryEntryInfo | null>(null);
-const viewMode = ref<AnalysisViewId>(ANALYSIS_VIEW_IDS.treemap);
+const analysisStore = useAnalysisStore();
+const viewMode = computed<AnalysisViewId>({
+  get: () => analysisStore.viewPreferences.viewMode,
+  set: value => analysisStore.setViewMode(value),
+});
 const hoveredEntryPath = ref<string | null>(null);
 const listCollapsed = ref(false);
-const treemapDepth = ref(1);
-const sunburstDepth = ref(3);
+const treemapDepth = computed({
+  get: () => analysisStore.viewPreferences.treemapDepth,
+  set: value => analysisStore.setChartDepth(ANALYSIS_VIEW_IDS.treemap, value),
+});
+const sunburstDepth = computed({
+  get: () => analysisStore.viewPreferences.sunburstDepth,
+  set: value => analysisStore.setChartDepth(ANALYSIS_VIEW_IDS.sunburst, value),
+});
 
 function hoverEntry(path: string | null) {
   hoveredEntryPath.value = props.busy || props.deleting ? null : path;

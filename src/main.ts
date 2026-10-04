@@ -7,6 +7,7 @@ import 'vue-sonner/style.css';
 import { i18n } from './i18n';
 import { useAppStore } from './stores/app-store';
 import { useAiStore } from './stores/ai-store';
+import { useAnalysisStore } from './stores/analysis-store';
 
 document.documentElement.dataset.skin = 'mangodisk';
 
@@ -16,7 +17,11 @@ app.use(pinia);
 app.use(i18n);
 
 async function startApplication() {
-  await Promise.all([useAppStore(pinia).loadSettings(), useAiStore(pinia).loadPreferences()]);
+  await Promise.all([
+    useAppStore(pinia).loadSettings(),
+    useAiStore(pinia).loadPreferences(),
+    useAnalysisStore(pinia).initializeViewPreferences(),
+  ]);
   app.mount('#app');
 }
 

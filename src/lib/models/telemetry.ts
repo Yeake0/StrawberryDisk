@@ -67,6 +67,8 @@ export const LOG_EVENTS = {
   historyRefreshFailed: 'history_refresh_failed',
   analysisCacheSyncedAfterDelete: 'cache_synced_after_delete',
   analysisCacheConfigurationChanged: 'cache_configuration_changed',
+  analysisViewPreferencesLoadFailed: 'view_preferences_load_failed',
+  analysisViewPreferencesSaveFailed: 'view_preferences_save_failed',
   droppedFolderValidationFailed: 'dropped_folder_validation_failed',
   folderDialogFailed: 'folder_dialog_failed',
   feedbackAttachmentDiscardFailed: 'attachment_discard_failed',

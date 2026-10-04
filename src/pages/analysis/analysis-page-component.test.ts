@@ -19,6 +19,7 @@ import { Select } from '@/components/ui/select';
 import type { AnalysisResult } from '@/lib/models/analysis';
 
 import AnalysisPage from './index.vue';
+import { PreferenceStorageService } from '@/lib/services/preference-storage-service';
 
 vi.mock('@tauri-apps/plugin-os', () => ({ platform: () => 'macos' }));
 
@@ -35,9 +36,56 @@ const result: AnalysisResult = {
 beforeEach(() => {
   setActivePinia(createPinia());
   vi.restoreAllMocks();
+  useAnalysisStore().viewPreferencesInitialized = true;
+  vi.spyOn(PreferenceStorageService, 'saveAnalysisViewPreferences').mockResolvedValue();
 });
 
 describe('analysis page', () => {
+  it('restores mode and independent depths on page entry without waiting for saves', async () => {
+    const store = useAnalysisStore();
+    store.viewPreferences = { schemaVersion: 1, viewMode: 'sunburst', treemapDepth: 2, sunburstDepth: 5 };
+    let finish: () => void = () => undefined;
+    vi.mocked(PreferenceStorageService.saveAnalysisViewPreferences).mockImplementation(
+      () =>
+        new Promise(resolve => {
+          finish = resolve;
+        })
+    );
+    const props = {
+      result,
+      excludedFolders: [],
+      homePath: '/fixture',
+      disk: null,
+      disks: [],
+      progress: null,
+      busy: false,
+      cancelling: false,
+      deleting: false,
+    };
+    const options = { props, global: { plugins: [i18n], stubs: { MdPageShell: { template: '<div><slot /></div>' } } } };
+    const wrapper = shallowMount(AnalysisPage, options);
+    try {
+      const chart = wrapper.getComponent(MdAnalysisVisualPane);
+      expect(chart.props('viewMode')).toBe('sunburst');
+      expect(chart.props('sunburstDepth')).toBe(5);
+      chart.vm.$emit('update:viewMode', 'treemap');
+      await wrapper.vm.$nextTick();
+      expect(chart.props('viewMode')).toBe('treemap');
+      expect(chart.props('treemapDepth')).toBe(2);
+      expect(chart.vm.$.uid).toBe(wrapper.getComponent(MdAnalysisVisualPane).vm.$.uid);
+      finish();
+    } finally {
+      wrapper.unmount();
+    }
+    const reentered = shallowMount(AnalysisPage, options);
+    try {
+      expect(reentered.getComponent(MdAnalysisVisualPane).props('viewMode')).toBe('treemap');
+      expect(reentered.getComponent(MdAnalysisVisualPane).props('sunburstDepth')).toBe(5);
+    } finally {
+      reentered.unmount();
+    }
+  });
+
   it('preserves the sunburst depth selection while an unvisited child is resolved from the backend cache', async () => {
     const store = useAnalysisStore();
     store.result = result;

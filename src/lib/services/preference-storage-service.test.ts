@@ -39,7 +39,7 @@ describe('PreferenceStorageService', () => {
   beforeEach(() => {
     values.clear();
     delayedFirstWrite.enabled = false;
-    saveMock.mockClear();
+    saveMock.mockReset().mockResolvedValue(undefined);
   });
 
   it('uses one unversioned settings file and persists values directly', async () => {
@@ -151,5 +151,75 @@ describe('PreferenceStorageService', () => {
       selectedPaths: { analysis: '/second' },
       recentFolders: ['/second'],
     });
+  });
+
+  it('coalesces rapid chart updates while retaining the last immutable snapshot', async () => {
+    let release: () => void = () => undefined;
+    saveMock.mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          release = () => resolve(undefined);
+        })
+    );
+    const initial = { schemaVersion: 1 as const, viewMode: 'treemap' as const, treemapDepth: 1, sunburstDepth: 3 };
+    const first = PreferenceStorageService.saveAnalysisViewPreferences(initial);
+    await vi.waitFor(() => expect(saveMock).toHaveBeenCalledOnce());
+    const writes = [];
+    for (let index = 0; index < 100; index++) {
+      writes.push(PreferenceStorageService.saveAnalysisViewPreferences({ ...initial, treemapDepth: (index % 6) + 1 }));
+    }
+    const latest = { ...initial, viewMode: 'sunburst' as const, treemapDepth: 2, sunburstDepth: 5 };
+    writes.push(PreferenceStorageService.saveAnalysisViewPreferences(latest));
+    latest.sunburstDepth = 6;
+    release();
+    await Promise.all([first, ...writes]);
+    expect(saveMock).toHaveBeenCalledTimes(2);
+    expect(await PreferenceStorageService.loadAnalysisViewPreferences()).toEqual({ ...latest, sunburstDepth: 5 });
+  });
+
+  it('isolates chart preferences and lets other settings complete before follow-up updates', async () => {
+    let release: () => void = () => undefined;
+    const savedKeys: string[][] = [];
+    saveMock.mockImplementation(async () => {
+      savedKeys.push([...values.keys()]);
+    });
+    saveMock.mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          release = () => resolve(undefined);
+        })
+    );
+    const initial = { schemaVersion: 1 as const, viewMode: 'treemap' as const, treemapDepth: 1, sunburstDepth: 3 };
+    const first = PreferenceStorageService.saveAnalysisViewPreferences(initial);
+    await vi.waitFor(() => expect(saveMock).toHaveBeenCalledOnce());
+    const settings = AppSettingsUtils.defaults();
+    const otherDomain = PreferenceStorageService.saveSettings(settings);
+    const followup = PreferenceStorageService.saveAnalysisViewPreferences({ ...initial, treemapDepth: 4 });
+    release();
+    await Promise.all([first, otherDomain, followup]);
+    expect(saveMock).toHaveBeenCalledTimes(3);
+    expect(savedKeys[0]).toContain('settings');
+    expect(await PreferenceStorageService.loadSettings()).toEqual(settings);
+    expect(await PreferenceStorageService.loadAnalysisViewPreferences()).toEqual({ ...initial, treemapDepth: 4 });
+  });
+
+  it('allows the latest chart update to save after a preceding write fails', async () => {
+    let reject: (error: Error) => void = () => undefined;
+    saveMock.mockImplementationOnce(
+      () =>
+        new Promise((_resolve, fail) => {
+          reject = fail;
+        })
+    );
+    const initial = { schemaVersion: 1 as const, viewMode: 'treemap' as const, treemapDepth: 1, sunburstDepth: 3 };
+    const first = PreferenceStorageService.saveAnalysisViewPreferences(initial);
+    const failure = expect(first).rejects.toThrow('disk unavailable');
+    await vi.waitFor(() => expect(saveMock).toHaveBeenCalledOnce());
+    const followup = PreferenceStorageService.saveAnalysisViewPreferences({ ...initial, treemapDepth: 6 });
+    reject(new Error('disk unavailable'));
+    await failure;
+    await followup;
+    expect(saveMock).toHaveBeenCalledTimes(2);
+    expect(await PreferenceStorageService.loadAnalysisViewPreferences()).toEqual({ ...initial, treemapDepth: 6 });
   });
 });

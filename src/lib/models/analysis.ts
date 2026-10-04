@@ -9,6 +9,15 @@ export const ANALYSIS_VIEW_IDS = {
 
 export type AnalysisViewId = (typeof ANALYSIS_VIEW_IDS)[keyof typeof ANALYSIS_VIEW_IDS];
 
+export const ANALYSIS_VIEW_PREFERENCES_SCHEMA_VERSION = 1;
+
+export interface AnalysisViewPreferences {
+  schemaVersion: typeof ANALYSIS_VIEW_PREFERENCES_SCHEMA_VERSION;
+  viewMode: AnalysisViewId;
+  treemapDepth: number;
+  sunburstDepth: number;
+}
+
 export const ANALYSIS_SORT_KEYS = {
   name: 'name',
   bytes: 'bytes',

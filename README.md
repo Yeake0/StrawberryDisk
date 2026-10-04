@@ -70,6 +70,8 @@ Reclaim space taken up by duplicate copies without treating files as duplicates 
 
 See where your storage is going at a glance. Use one to six nested treemap levels to compare sizes, or explore two to six levels in the sunburst chart. Both charts show folders and indexed files within bounded child projections. Click a folder to drill down; the adjacent list keeps file actions within reach. The list shows up to 500 largest items. Smaller items remain available in paged Other details, and aggregate tiles retain their actual share of disk usage.
 
+The last selected chart and each chart's depth are restored across folders and application restarts. These global view preferences use the separate `analysisViewPreferences` key in `settings.json`; restoring them does not trigger a scan.
+
 > **Privacy & Security**
 
 On macOS and Linux, analysis counts a hard-linked file's allocated space once per scan. Shared allocation belongs to one stable path, so child totals reflect the selected scan root. Deleting from a shared-allocation scan invalidates navigation snapshots and refreshes the current folder so surviving links receive the allocation. Sizes use decimal units (GB); `du -h` commonly uses binary units (GiB).
