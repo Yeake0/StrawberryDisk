@@ -206,6 +206,25 @@ describe('analysis store', () => {
     expect(store.deletingPath).toBeNull();
   });
 
+  it('drops sibling snapshots when deletion requires allocation reconciliation', async () => {
+    vi.spyOn(AnalysisService, 'deletePermanently').mockResolvedValue({
+      requiresRescan: true,
+      removedPath: entry.path,
+      releasedBytes: 64,
+      removedFileCount: 1,
+    });
+    const refreshed = { ...result, scanId: 99, entries: [] };
+    vi.spyOn(AnalysisService, 'analyze').mockResolvedValue(refreshed);
+    vi.spyOn(useAppStore(), 'refreshSystemDisk').mockResolvedValue(true);
+    const store = useAnalysisStore();
+    store.result = { ...result, entries: [entry] };
+    store.cache = { '/fixture': store.result, '/sibling': { ...result, root: '/sibling', totalBytes: 0 } };
+    store.cacheOrder = Object.keys(store.cache);
+    await store.deletePermanently(entry);
+    expect(Object.keys(store.cache)).toEqual(['/fixture']);
+    expect(store.result).toEqual(refreshed);
+  });
+
   it('refreshes shared disk capacity after a completed deletion', async () => {
     vi.spyOn(AnalysisService, 'deletePermanently').mockResolvedValue({
       requiresRescan: false,

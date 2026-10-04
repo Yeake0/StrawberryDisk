@@ -132,6 +132,7 @@ mod windows_benchmark {
                         allocated_bytes,
                         file_count,
                         skipped_count,
+                        ..
                     } => directories.push((
                         path_digest(&path),
                         logical_bytes,
@@ -139,6 +140,7 @@ mod windows_benchmark {
                         file_count,
                         skipped_count,
                     )),
+                    FastAnalysisRecord::HardLinkedFile { .. } => {}
                     FastAnalysisRecord::LargeFileCandidate(path) => {
                         candidates.push(path_digest(&path));
                     }

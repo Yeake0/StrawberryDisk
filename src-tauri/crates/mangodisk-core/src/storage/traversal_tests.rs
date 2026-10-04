@@ -811,6 +811,7 @@ fn fast_analysis_contract_validates_record_counts_before_publish() {
                 logical_bytes: 5,
                 allocated_bytes: 5,
                 file_count: 1,
+                direct_file_count: 1,
                 skipped_count: 0,
             },
             &mut sink,
@@ -823,6 +824,7 @@ fn fast_analysis_contract_validates_record_counts_before_publish() {
                 logical_bytes: 5,
                 allocated_bytes: 5,
                 file_count: 1,
+                direct_file_count: 1,
                 skipped_count: 0,
             },
             &mut sink,
@@ -1224,4 +1226,119 @@ fn explicit_nested_filesystem_root_is_not_covered_by_its_parent() {
         2,
         "a mounted filesystem must remain an explicit scan root"
     );
+}
+
+#[cfg(unix)]
+#[test]
+fn analysis_charges_hard_links_once_with_stable_native_and_fallback_ownership() {
+    let _operation_lock = crate::shared::operation::test_operation_lock();
+    cache::clear_all().unwrap();
+    let fixture = tempfile::tempdir().unwrap();
+    let root = current_platform()
+        .canonicalize_no_links(fixture.path())
+        .unwrap();
+    fs::create_dir(root.join("a")).unwrap();
+    fs::create_dir(root.join("b")).unwrap();
+    let owner = root.join("a/owner.bin");
+    fs::write(&owner, vec![3; 1024 * 1024]).unwrap();
+    fs::hard_link(&owner, root.join("b/alias.bin")).unwrap();
+    fs::hard_link(&owner, root.join("a/alias.bin")).unwrap();
+    let allocation = current_platform()
+        .file_space_usage(&owner, &fs::metadata(&owner).unwrap())
+        .allocated_bytes;
+    let root_text = current_platform().display_path(&root);
+    for _ in 0..3 {
+        let (result, diagnostics) =
+            StorageTraversal::analyze_path_with_diagnostics(Some(root_text.clone()), true, |_| {})
+                .unwrap();
+        assert_eq!(diagnostics.fast_path, "used");
+        assert_eq!(result.total_bytes, allocation);
+        assert_eq!(
+            result.entries.iter().map(|entry| entry.bytes).sum::<u64>(),
+            allocation
+        );
+        assert_eq!(
+            result
+                .entries
+                .iter()
+                .find(|entry| entry.name == "a")
+                .unwrap()
+                .bytes,
+            allocation
+        );
+        assert_eq!(
+            result
+                .entries
+                .iter()
+                .find(|entry| entry.name == "b")
+                .unwrap()
+                .bytes,
+            0
+        );
+        let child = cache::analysis_result(&root.join("a")).unwrap().unwrap();
+        assert_eq!(
+            child.entries.iter().map(|entry| entry.bytes).sum::<u64>(),
+            allocation
+        );
+        assert_eq!(
+            child.entries.iter().filter(|entry| entry.bytes > 0).count(),
+            1
+        );
+    }
+    let progress = Arc::new(ProgressTracker::new(0, |_| {}, 0));
+    let (aggregate, snapshot) = traverse_memory_only(
+        &root,
+        ScanPurpose::Analysis,
+        now_ms(),
+        None,
+        &progress,
+        &AtomicBool::new(false),
+        None,
+    )
+    .unwrap();
+    assert_eq!(aggregate.bytes, allocation);
+    assert_eq!(aggregate.file_count, 3);
+    assert_eq!(snapshot.directories[&root.join("a")].direct_file_count, 1);
+    assert_eq!(snapshot.directories[&root.join("b")].direct_file_count, 0);
+    assert_eq!(aggregate.logical_bytes, 3 * 1024 * 1024);
+    assert_eq!(snapshot.files[&root.join("a/owner.bin")].bytes, 0);
+    assert_eq!(snapshot.files[&root.join("b/alias.bin")].bytes, 0);
+    let outside = tempfile::tempdir().unwrap();
+    fs::hard_link(&owner, outside.path().join("outside.bin")).unwrap();
+    // A link outside the selected root does not suppress the allocation inside it.
+    let child = StorageTraversal::analyze_path_with_diagnostics(
+        Some(current_platform().display_path(&root.join("b"))),
+        true,
+        |_| {},
+    )
+    .unwrap()
+    .0;
+    assert_eq!(child.total_bytes, allocation);
+    // A child refresh must evict the ancestor rather than add shared allocation a second time.
+    assert!(cache::analysis_result(&root).unwrap().is_none());
+    let parent = StorageTraversal::analyze_path_with_diagnostics(Some(root_text), false, |_| {})
+        .unwrap()
+        .0;
+    assert_eq!(parent.total_bytes, allocation);
+    // Deleting the charged alias requires a full snapshot rebuild, so the surviving link owns it.
+    fs::remove_file(root.join("a/alias.bin")).unwrap();
+    cache::remove_entry(
+        &root.join("a/alias.bin"),
+        mangodisk_platform::FileSpaceUsage {
+            allocated_bytes: allocation,
+            logical_bytes: 1024 * 1024,
+        },
+        1,
+        false,
+    );
+    assert!(cache::analysis_result(&root).unwrap().is_none());
+    let refreshed = StorageTraversal::analyze_path_with_diagnostics(
+        Some(current_platform().display_path(&root)),
+        false,
+        |_| {},
+    )
+    .unwrap()
+    .0;
+    assert_eq!(refreshed.total_bytes, allocation);
+    cache::clear_all().unwrap();
 }

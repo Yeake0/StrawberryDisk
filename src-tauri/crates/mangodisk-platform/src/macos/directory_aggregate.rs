@@ -698,6 +698,8 @@ mod tests {
         let entry = BulkDirectoryEntry {
             name: "remote-directory".into(),
             device: 7,
+            file_id: 1,
+            link_count: 1,
             object_type: VNODE_TYPE_DIRECTORY,
             mount_status: 0,
             flags: super::super::SF_DATALESS,

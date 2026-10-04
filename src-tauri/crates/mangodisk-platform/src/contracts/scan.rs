@@ -280,11 +280,22 @@ impl FileSpaceUsage {
 /// core storage details to the platform crate.
 #[derive(Debug)]
 pub enum FastAnalysisRecord {
+    /// Allocation facts for multiply linked files. Analysis reconciles these by physical identity;
+    /// logical lengths and path counts remain unchanged. Other scan purposes omit this record.
+    HardLinkedFile {
+        path: PathBuf,
+        identity: PhysicalFileIdentity,
+        logical_bytes: u64,
+        allocated_bytes: u64,
+        modified_at_ms: Option<u64>,
+    },
     Directory {
         path: PathBuf,
         logical_bytes: u64,
         allocated_bytes: u64,
         file_count: u64,
+        /// Direct files with positive allocation, before Core reconciles hard links.
+        direct_file_count: u64,
         skipped_count: u64,
     },
     LargeFileCandidate(PathBuf),

@@ -33,6 +33,7 @@ struct DirectoryTotals {
     logical_bytes: u64,
     allocated_bytes: u64,
     file_count: u64,
+    direct_file_count: u64,
     skipped_count: u64,
 }
 
@@ -62,6 +63,7 @@ impl DirectoryTotals {
             .allocated_bytes
             .checked_add(allocated_bytes)
             .ok_or_else(|| platform_error("directory_allocation_overflow"))?;
+        self.direct_file_count += u64::from(allocated_bytes > 0);
         self.file_count = self
             .file_count
             .checked_add(1)
@@ -123,6 +125,7 @@ struct DirectoryReadResult {
     direct_totals: DirectoryTotals,
     child_directories: Vec<PathBuf>,
     candidates: Vec<PathBuf>,
+    hard_links: Vec<FastAnalysisRecord>,
     page_count: u64,
     entry_count: u64,
     returned_bytes: u64,
@@ -170,6 +173,7 @@ struct DirectoryReadAccumulator {
     totals: DirectoryTotals,
     child_directories: Vec<PathBuf>,
     candidates: Vec<PathBuf>,
+    hard_links: Vec<FastAnalysisRecord>,
     remote_file_count: u64,
     remote_directory_count: u64,
 }
@@ -295,6 +299,9 @@ impl<'a> AnalysisCoordinator<'a> {
             result.direct_totals.file_count,
             result.direct_totals.progress_bytes(self.purpose),
         );
+        for record in result.hard_links {
+            (self.consumer)(record).map_err(FastAnalysisScanError::Consumer)?;
+        }
         for candidate in result.candidates {
             emit_candidate(candidate, self.consumer, &mut self.diagnostics)?;
         }
@@ -617,6 +624,7 @@ fn read_directory(
                 },
                 child_directories: Vec::new(),
                 candidates: Vec::new(),
+                hard_links: Vec::new(),
                 page_count: 0,
                 entry_count: 0,
                 returned_bytes: 0,
@@ -669,6 +677,7 @@ fn read_directory(
         direct_totals: accumulator.totals,
         child_directories: accumulator.child_directories,
         candidates: accumulator.candidates,
+        hard_links: accumulator.hard_links,
         page_count,
         entry_count: entry_count_total,
         returned_bytes,
@@ -741,6 +750,20 @@ fn process_entry(
             accumulator
                 .totals
                 .add_file(entry.logical_bytes, entry.allocated_bytes)?;
+            if policy.purpose == ScanPurpose::Analysis && entry.link_count > 1 {
+                accumulator
+                    .hard_links
+                    .push(FastAnalysisRecord::HardLinkedFile {
+                        path: path.clone(),
+                        identity: crate::PhysicalFileIdentity {
+                            volume: entry.device,
+                            index: entry.file_id,
+                        },
+                        logical_bytes: entry.logical_bytes,
+                        allocated_bytes: entry.allocated_bytes,
+                        modified_at_ms: entry.modified_at_ms,
+                    });
+            }
             let candidate_purpose = match policy.purpose {
                 ScanPurpose::DuplicateFiles => ScanPurpose::DuplicateFiles,
                 _ => ScanPurpose::LargeFiles,
@@ -811,6 +834,7 @@ fn emit_directory(
         logical_bytes: totals.logical_bytes,
         allocated_bytes: totals.allocated_bytes,
         file_count: totals.file_count,
+        direct_file_count: totals.direct_file_count,
         skipped_count: totals.skipped_count,
     })
     .map_err(FastAnalysisScanError::Consumer)?;
@@ -906,6 +930,8 @@ mod tests {
             let entry = BulkDirectoryEntry {
                 name: name.into(),
                 device: 7,
+                file_id: 1,
+                link_count: 1,
                 object_type: VNODE_TYPE_DIRECTORY,
                 mount_status: 0,
                 flags: 0,
@@ -940,6 +966,8 @@ mod tests {
         let entry = BulkDirectoryEntry {
             name: "remote-directory".into(),
             device: 7,
+            file_id: 1,
+            link_count: 1,
             object_type: VNODE_TYPE_DIRECTORY,
             mount_status: 0,
             flags: super::super::SF_DATALESS,
@@ -1014,6 +1042,7 @@ mod tests {
                         allocated_bytes,
                         file_count,
                         skipped_count,
+                        ..
                     } => {
                         directories.insert(
                             path,
@@ -1021,6 +1050,7 @@ mod tests {
                         );
                     }
                     FastAnalysisRecord::LargeFileCandidate(path) => candidates.push(path),
+                    FastAnalysisRecord::HardLinkedFile { .. } => {}
                 }
                 Ok(())
             },

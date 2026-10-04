@@ -257,6 +257,10 @@ export const useAnalysisStore = defineStore('analysis', {
         const removed = await AnalysisService.deletePermanently(this.result.scanId, entry.path);
 
         if (removed.requiresRescan) {
+          // Shared allocation can move to a sibling outside the deleted path.
+          // Core may expire every session; never retain their old scan IDs.
+          this.cache = {};
+          this.cacheOrder = [];
           this.deleting = false;
           this.deletingPath = null;
           await this.refreshAfterDelete(sourceResult.root, entry.path, false);

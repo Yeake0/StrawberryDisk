@@ -66,6 +66,8 @@ See where your storage is going at a glance. Drill down through a treemap and li
 
 > **Privacy & Security**
 
+On macOS and Linux, analysis counts a hard-linked file's allocated space once per scan. Shared allocation belongs to one stable path, so child totals reflect the selected scan root. Deleting from a shared-allocation scan invalidates navigation snapshots and refreshes the current folder so surviving links receive the allocation. Sizes use decimal units (GB); `du -h` commonly uses binary units (GiB).
+
 ### 5. Privacy Cleanup
 
 Keep browsing history, searches, cookies, recent items, and clipboard data from lingering on your computer. Clear traces left by browsers, applications, and the system to reduce exposure of your activity and make everyday privacy easier to manage.

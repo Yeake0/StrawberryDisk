@@ -50,6 +50,7 @@ struct DirectoryTotals {
     logical_bytes: u64,
     allocated_bytes: u64,
     file_count: u64,
+    direct_file_count: u64,
     skipped_count: u64,
 }
 
@@ -99,6 +100,7 @@ impl DirectoryTotals {
             .ok_or_else(|| {
                 LayoutScanError::Platform("directory_allocation_overflow".to_string())
             })?;
+        self.direct_file_count += u64::from(usage.allocated_bytes > 0);
         self.file_count = self.file_count.checked_add(1).ok_or_else(|| {
             LayoutScanError::Platform("directory_file_count_overflow".to_string())
         })?;
@@ -411,6 +413,7 @@ fn collect_analysis(
             logical_bytes: totals.logical_bytes,
             allocated_bytes: totals.allocated_bytes,
             file_count: totals.file_count,
+            direct_file_count: totals.direct_file_count,
             skipped_count: totals.skipped_count,
         })
         .map_err(LayoutScanError::Consumer)?;
@@ -896,6 +899,7 @@ mod tests {
                         logical_bytes: 100,
                         allocated_bytes: 100,
                         file_count: 1,
+                        direct_file_count: 1,
                         skipped_count: 0,
                     },
                 ),
@@ -905,6 +909,7 @@ mod tests {
                         logical_bytes: 10,
                         allocated_bytes: 10,
                         file_count: 1,
+                        direct_file_count: 1,
                         skipped_count: 0,
                     },
                 ),
@@ -914,6 +919,7 @@ mod tests {
                         logical_bytes: 5,
                         allocated_bytes: 5,
                         file_count: 1,
+                        direct_file_count: 1,
                         skipped_count: 1,
                     },
                 ),
@@ -923,6 +929,7 @@ mod tests {
                         logical_bytes: 1_000,
                         allocated_bytes: 1_000,
                         file_count: 1,
+                        direct_file_count: 1,
                         skipped_count: 0,
                     },
                 ),
@@ -932,6 +939,7 @@ mod tests {
                         logical_bytes: 2_000,
                         allocated_bytes: 2_000,
                         file_count: 1,
+                        direct_file_count: 1,
                         skipped_count: 0,
                     },
                 ),
@@ -941,6 +949,7 @@ mod tests {
                         logical_bytes: 4_000,
                         allocated_bytes: 4_000,
                         file_count: 1,
+                        direct_file_count: 1,
                         skipped_count: 0,
                     },
                 ),
@@ -950,6 +959,7 @@ mod tests {
                         logical_bytes: 8_000,
                         allocated_bytes: 8_000,
                         file_count: 1,
+                        direct_file_count: 1,
                         skipped_count: 0,
                     },
                 ),

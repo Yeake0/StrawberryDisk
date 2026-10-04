@@ -32,6 +32,8 @@ pub(crate) struct DirectoryAggregate {
     /// Content length retained for immutable snapshot and delete preflight checks.
     pub(crate) logical_bytes: u64,
     pub(crate) file_count: u64,
+    /// Direct files with positive charged allocation, after hard-link reconciliation.
+    pub(crate) direct_file_count: u64,
     pub(crate) skipped_count: u64,
     pub(crate) scanned_at_ms: u64,
     pub(crate) fingerprint: Option<[u8; 32]>,
@@ -303,13 +305,18 @@ pub(crate) fn analysis_result(root: &Path) -> Result<Option<AnalysisResult>, Str
     let cache = cache()
         .lock()
         .map_err(|_| ANALYSIS_CACHE_UNAVAILABLE_ERROR.to_string())?;
-    Ok(Some(build_analysis_result(
+    let mut result = build_analysis_result(
         root,
         root_aggregate,
         children,
         |path| cache.directories.get(path).copied(),
         |path| cache.files.get(path).copied(),
-    )))
+    );
+    result.requires_delete_rescan = cache
+        .scan_roots
+        .keys()
+        .any(|scan_root| root.starts_with(scan_root) && has_shared_allocation(&cache, scan_root));
+    Ok(Some(result))
 }
 
 pub(crate) fn analysis_result_from_snapshot(
@@ -321,13 +328,17 @@ pub(crate) fn analysis_result_from_snapshot(
     excluded_names: &mangodisk_platform::NameExclusions,
 ) -> Result<AnalysisResult, String> {
     let children = read_analysis_children(root, excluded_roots, excluded_names)?;
-    Ok(build_analysis_result(
+    let mut result = build_analysis_result(
         root,
         root_aggregate,
         children,
         |path| directories.get(path).copied(),
         |path| files.get(path).copied(),
-    ))
+    );
+    result.requires_delete_rescan = files
+        .iter()
+        .any(|(path, file)| path.starts_with(root) && file.bytes == 0);
+    Ok(result)
 }
 
 fn read_analysis_children(
@@ -386,6 +397,7 @@ fn build_analysis_result(
         skipped_count: root_aggregate.skipped_count,
         truncated,
         entries,
+        requires_delete_rescan: false,
     }
 }
 
@@ -468,6 +480,18 @@ pub(crate) fn store_memory_only(
             return Ok(false);
         }
         let mut removed_monitors = Vec::new();
+        // Allocation ownership is scoped to a full scan. Refreshing only a child cannot patch
+        // an ancestor with shared allocation: a surviving link in a sibling may own the bytes.
+        let shared_roots: Vec<_> = cache
+            .scan_roots
+            .keys()
+            .filter(|cached_root| root.starts_with(cached_root.as_path()))
+            .filter(|cached_root| has_shared_allocation(&cache, cached_root))
+            .cloned()
+            .collect();
+        for cached_root in shared_roots {
+            removed_monitors.extend(evict_cached_root(&mut cache, &cached_root));
+        }
         // The directory and file maps are flattened across cached roots. Any overlapping
         // publication must therefore replace its subtree atomically, even when the caller did not
         // request an explicit refresh. This occurs when two compatible scan kinds finish out of
@@ -594,6 +618,17 @@ pub(crate) fn remove_entry(
             return;
         };
         cache.mutation_revision = cache.mutation_revision.saturating_add(1);
+        let shared_roots: Vec<_> = cache
+            .scan_roots
+            .keys()
+            .filter(|root| target.starts_with(root.as_path()))
+            .filter(|root| has_shared_allocation(&cache, root))
+            .cloned()
+            .collect();
+        let mut shared_monitors = Vec::new();
+        for root in shared_roots {
+            shared_monitors.extend(evict_cached_root(&mut cache, &root));
+        }
         let removed_usage = if is_directory {
             cache
                 .directories
@@ -642,10 +677,17 @@ pub(crate) fn remove_entry(
                     .logical_bytes
                     .saturating_sub(removed_usage.logical_bytes);
                 aggregate.file_count = aggregate.file_count.saturating_sub(file_count);
+                if !is_directory
+                    && target.parent() == Some(directory.as_path())
+                    && removed_usage.allocated_bytes > 0
+                {
+                    aggregate.direct_file_count = aggregate.direct_file_count.saturating_sub(1);
+                }
                 aggregate.fingerprint = None;
             }
         }
-        removed_monitors
+        shared_monitors.extend(removed_monitors);
+        shared_monitors
     };
     drop(removed_monitors);
 }
@@ -808,6 +850,13 @@ fn evict_cached_root(cache: &mut AnalysisCache, root: &Path) -> Vec<FilesystemCh
         .change_tokens
         .retain(|path, _| !path.starts_with(root));
     take_monitors(cache, |path| path.starts_with(root))
+}
+
+fn has_shared_allocation(cache: &AnalysisCache, root: &Path) -> bool {
+    cache
+        .files
+        .iter()
+        .any(|(path, file)| path.starts_with(root) && file.bytes == 0)
 }
 
 #[cfg(test)]

@@ -3,7 +3,7 @@ use std::{
     path::PathBuf,
 };
 
-use mangodisk_platform::FilesystemChangeToken;
+use mangodisk_platform::{FilesystemChangeToken, PhysicalFileIdentity};
 
 use crate::storage::index::cache::{DirectoryAggregate, IndexedFile};
 
@@ -15,6 +15,7 @@ use crate::storage::index::cache::{DirectoryAggregate, IndexedFile};
 pub(super) struct IndexRecordSink {
     directories: HashMap<PathBuf, DirectoryAggregate>,
     files: HashMap<PathBuf, IndexedFile>,
+    hard_links: HashMap<(u64, u64), Vec<(PathBuf, IndexedFile)>>,
     change_token: Option<FilesystemChangeToken>,
 }
 
@@ -29,6 +30,7 @@ impl IndexRecordSink {
         Self {
             directories: HashMap::new(),
             files: HashMap::new(),
+            hard_links: HashMap::new(),
             change_token,
         }
     }
@@ -70,6 +72,58 @@ impl IndexRecordSink {
     }
 
     pub(super) fn finish(self) -> Result<CompletedIndexSink, String> {
+        Ok(CompletedIndexSink {
+            directories: self.directories,
+            files: self.files,
+            change_token: self.change_token,
+        })
+    }
+
+    pub(super) fn push_hard_link(
+        &mut self,
+        path: PathBuf,
+        identity: PhysicalFileIdentity,
+        file: IndexedFile,
+    ) {
+        self.hard_links
+            .entry((identity.volume, identity.index))
+            .or_default()
+            .push((path, file));
+    }
+
+    /// Assign shared allocation to a stable path within this scan, regardless of worker ordering.
+    /// Only multiply linked files are retained; ordinary files add no identity-map overhead.
+    pub(super) fn finish_analysis(mut self) -> Result<CompletedIndexSink, String> {
+        for mut links in self.hard_links.into_values() {
+            links.sort_unstable_by(|left, right| left.0.cmp(&right.0));
+            for (path, mut file) in links.into_iter().skip(1) {
+                for ancestor in path.ancestors().skip(1) {
+                    if let Some(directory) = self.directories.get_mut(ancestor) {
+                        directory.bytes =
+                            directory.bytes.checked_sub(file.bytes).ok_or_else(|| {
+                                "hard-link allocation exceeds the containing directory".to_string()
+                            })?;
+                        // Removing a link can change allocation ownership in another subtree.
+                        directory.fingerprint = None;
+                    }
+                }
+                if file.bytes > 0 {
+                    if let Some(parent) = path
+                        .parent()
+                        .and_then(|parent| self.directories.get_mut(parent))
+                    {
+                        parent.direct_file_count =
+                            parent.direct_file_count.checked_sub(1).ok_or_else(|| {
+                                "hard-link count exceeds the containing directory".to_string()
+                            })?;
+                    }
+                }
+                file.bytes = 0;
+                // Keep zero-charge aliases even below the candidate floor so live row assembly
+                // cannot reintroduce their full allocation through its metadata fallback.
+                self.files.insert(path, file);
+            }
+        }
         Ok(CompletedIndexSink {
             directories: self.directories,
             files: self.files,

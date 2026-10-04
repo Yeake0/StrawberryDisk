@@ -20,6 +20,24 @@ use super::{
 };
 
 pub trait Platform: Send + Sync {
+    /// Returns an identity only when allocation can be shared by multiple directory entries.
+    /// Unix metadata already contains these facts, so ordinary traversal adds no filesystem call.
+    fn hard_link_identity(&self, metadata: &fs::Metadata) -> Option<super::PhysicalFileIdentity> {
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::MetadataExt;
+            (metadata.is_file() && metadata.nlink() > 1).then(|| super::PhysicalFileIdentity {
+                volume: metadata.dev(),
+                index: metadata.ino(),
+            })
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = metadata;
+            None
+        }
+    }
+
     fn os_name(&self) -> &'static str;
     fn system_volume_path(&self) -> PathBuf;
     fn system_volume(&self) -> PlatformResult<VolumeInfo>;

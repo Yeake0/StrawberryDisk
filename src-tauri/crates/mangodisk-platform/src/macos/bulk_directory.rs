@@ -28,6 +28,8 @@ pub(super) const VNODE_TYPE_SYMBOLIC_LINK: FileSystemObjectType = 5;
 pub(super) struct BulkDirectoryEntry {
     pub(super) name: OsString,
     pub(super) device: u64,
+    pub(super) file_id: u64,
+    pub(super) link_count: u32,
     pub(super) object_type: FileSystemObjectType,
     pub(super) mount_status: u32,
     pub(super) flags: u32,
@@ -189,10 +191,13 @@ fn bulk_attributes() -> libc::attrlist {
             | libc::ATTR_CMN_DEVID
             | libc::ATTR_CMN_OBJTYPE
             | libc::ATTR_CMN_MODTIME
-            | libc::ATTR_CMN_FLAGS,
+            | libc::ATTR_CMN_FLAGS
+            | libc::ATTR_CMN_FILEID,
         volattr: 0,
         dirattr: libc::ATTR_DIR_MOUNTSTATUS,
-        fileattr: libc::ATTR_FILE_ALLOCSIZE | libc::ATTR_FILE_DATALENGTH,
+        fileattr: libc::ATTR_FILE_LINKCOUNT
+            | libc::ATTR_FILE_ALLOCSIZE
+            | libc::ATTR_FILE_DATALENGTH,
         forkattr: 0,
     }
 }
@@ -261,7 +266,20 @@ fn parse_entry(buffer: &[u8], offset: usize) -> io::Result<BulkDirectoryEntry> {
     } else {
         0
     };
+    let file_id = required_attribute(
+        returned.commonattr & libc::ATTR_CMN_FILEID != 0,
+        read_unaligned::<u64>(buffer, cursor),
+        "file identity attribute missing",
+    )?;
+    cursor += size_of::<u64>();
     let mount_status = if returned.dirattr & libc::ATTR_DIR_MOUNTSTATUS != 0 {
+        let value = read_unaligned::<u32>(buffer, cursor)?;
+        cursor += size_of::<u32>();
+        value
+    } else {
+        0
+    };
+    let link_count = if returned.fileattr & libc::ATTR_FILE_LINKCOUNT != 0 {
         let value = read_unaligned::<u32>(buffer, cursor)?;
         cursor += size_of::<u32>();
         value
@@ -295,6 +313,8 @@ fn parse_entry(buffer: &[u8], offset: usize) -> io::Result<BulkDirectoryEntry> {
     Ok(BulkDirectoryEntry {
         name: OsString::from_vec(name),
         device: u64::try_from(raw_device).map_err(|_| invalid_data("negative device id"))?,
+        file_id,
+        link_count,
         object_type,
         mount_status,
         flags,

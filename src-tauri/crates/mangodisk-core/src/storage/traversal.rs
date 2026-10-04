@@ -873,6 +873,19 @@ fn measure_analysis_directory(
             }
         } else if metadata.is_file() {
             let usage = current_platform().file_space_usage(&child_path, &metadata);
+            if traversal.purpose == ScanPurpose::Analysis {
+                if let Some(identity) = current_platform().hard_link_identity(&metadata) {
+                    traversal.sink.push_hard_link(
+                        child_path.clone(),
+                        identity,
+                        IndexedFile {
+                            bytes: usage.allocated_bytes,
+                            logical_bytes: usage.logical_bytes,
+                            modified_at_ms: modified_ms(&metadata),
+                        },
+                    );
+                }
+            }
             traversal.progress.visit_file(
                 traversal_stage(traversal.purpose),
                 &child_path,
@@ -881,6 +894,7 @@ fn measure_analysis_directory(
             aggregate.bytes += usage.allocated_bytes;
             aggregate.logical_bytes += usage.logical_bytes;
             aggregate.file_count += 1;
+            aggregate.direct_file_count += u64::from(usage.allocated_bytes > 0);
             if traversal.purpose != ScanPurpose::LargeFiles {
                 if let Some(entry) = metadata_fingerprint_entry(&child_path, &metadata, None) {
                     fingerprint_entries.push(entry);
@@ -949,11 +963,35 @@ impl<'a> FastAnalysisStreamValidation<'a> {
             return Err(OPERATION_CANCELLED_ERROR.to_string());
         }
         match record {
+            FastAnalysisRecord::HardLinkedFile {
+                path,
+                identity,
+                logical_bytes,
+                allocated_bytes,
+                modified_at_ms,
+            } => {
+                if !path.starts_with(self.root) || path == self.root {
+                    return Err("hard-link record is outside the scan root".to_string());
+                }
+                if !self.exclusions.matches(&path) {
+                    sink.push_hard_link(
+                        path,
+                        identity,
+                        IndexedFile {
+                            bytes: allocated_bytes,
+                            logical_bytes,
+                            modified_at_ms,
+                        },
+                    );
+                }
+                Ok(())
+            }
             FastAnalysisRecord::Directory {
                 path,
                 logical_bytes,
                 allocated_bytes,
                 file_count,
+                direct_file_count,
                 skipped_count,
             } => {
                 self.directory_count = self.directory_count.checked_add(1).ok_or_else(|| {
@@ -984,6 +1022,7 @@ impl<'a> FastAnalysisStreamValidation<'a> {
                     bytes: allocated_bytes,
                     logical_bytes,
                     file_count,
+                    direct_file_count,
                     skipped_count,
                     scanned_at_ms: self.scanned_at_ms,
                     // Native fast paths validate snapshots with a platform change token rather
@@ -1284,7 +1323,9 @@ fn stream_complete_large_files(
         },
         &mut |record| match record {
             FastAnalysisRecord::LargeFileCandidate(path) => validation.consume(path, &mut sink),
-            FastAnalysisRecord::Directory { .. } => Ok(()),
+            FastAnalysisRecord::Directory { .. } | FastAnalysisRecord::HardLinkedFile { .. } => {
+                Ok(())
+            }
         },
     );
     match summary {
@@ -1420,13 +1461,21 @@ fn stream_fast_analysis(
         &mut sink,
     );
     match attempt {
-        Ok(Some((aggregate, summary))) => Ok(FastAnalysisOutcome::Completed(Box::new(
-            CompletedFastAnalysis {
-                aggregate,
-                completed_sink: sink.finish()?,
-                summary,
-            },
-        ))),
+        Ok(Some((_, mut summary))) => {
+            let completed_sink = sink.finish_analysis()?;
+            let aggregate = *completed_sink.directories.get(root).ok_or_else(|| {
+                AnalysisStreamError::Failed("analysis root is missing".to_string())
+            })?;
+            summary.root_allocated_bytes = aggregate.bytes;
+            progress.replace_scan_observations(aggregate.file_count, aggregate.bytes);
+            Ok(FastAnalysisOutcome::Completed(Box::new(
+                CompletedFastAnalysis {
+                    aggregate,
+                    completed_sink,
+                    summary,
+                },
+            )))
+        }
         Ok(None) => Ok(FastAnalysisOutcome::Unsupported),
         Err(FastAnalysisScanError::Cancelled) => Err(AnalysisStreamError::Cancelled),
         Err(FastAnalysisScanError::Busy) => Err(AnalysisStreamError::ResourcesReleasing),
@@ -1508,7 +1557,19 @@ fn traverse_memory_only(
         &mut sink,
         scan_exclusions,
     )?;
-    let completed = sink.finish()?;
+    let completed = if purpose == ScanPurpose::Analysis {
+        sink.finish_analysis()?
+    } else {
+        sink.finish()?
+    };
+    let aggregate = completed
+        .directories
+        .get(root)
+        .copied()
+        .unwrap_or(aggregate);
+    if purpose == ScanPurpose::Analysis {
+        progress.replace_scan_observations(aggregate.file_count, aggregate.bytes);
+    }
     Ok((aggregate, completed))
 }
 

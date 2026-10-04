@@ -74,6 +74,14 @@ pub(super) fn resolve_entry_candidate(
         .find(|entry| entry.path == selected_path)
         .ok_or_else(|| "the selected item is not part of the current disk analysis".to_string())?;
     Ok(AnalysisEntryCandidate {
+        requires_rescan: result.result.requires_delete_rescan
+            || sessions.iter().any(|session| {
+                session.result.requires_delete_rescan
+                    && current_platform().path_is_same_or_child(
+                        Path::new(&result.result.root),
+                        Path::new(&session.result.root),
+                    )
+            }),
         exclusions: result.exclusions.clone(),
         root: result.result.root.clone(),
         path: entry.path.clone(),
@@ -92,6 +100,12 @@ pub(super) fn invalidate_changed_path(changed_path: &Path) -> Result<(), String>
         !current_platform().path_is_same_or_child(root, changed_path)
             && !current_platform().path_is_same_or_child(changed_path, root)
     });
+    Ok(())
+}
+
+/// Hard-link ownership can move between sibling snapshots, not just ancestors.
+pub(super) fn invalidate_all() -> Result<(), String> {
+    lock_sessions()?.clear();
     Ok(())
 }
 
@@ -153,6 +167,7 @@ mod tests {
             total_bytes: 4,
             skipped_count: 0,
             truncated: false,
+            requires_delete_rescan: false,
             entries: vec![DirectoryEntryInfo {
                 name: "sample.bin".to_string(),
                 path: path.to_string(),

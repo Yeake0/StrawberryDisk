@@ -208,6 +208,13 @@ impl ProgressTracker {
         self.last_emit_ms.store(0, Ordering::Relaxed);
     }
 
+    /// Replaces path observations with the completed scan's reconciled physical allocation.
+    /// Called after workers exit, before publishing the final analysis event.
+    pub(crate) fn replace_scan_observations(&self, files: u64, bytes: u64) {
+        self.items_scanned.store(files, Ordering::Relaxed);
+        self.bytes_scanned.store(bytes, Ordering::Relaxed);
+    }
+
     /// Normal progress is throttled to 100 ms. Counters advance before
     /// throttling so a later or final event always contains the latest state.
     pub(crate) fn emit(&self, stage: TraversalStage, path: &Path) {

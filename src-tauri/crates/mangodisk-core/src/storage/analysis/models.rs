@@ -28,11 +28,16 @@ pub struct AnalysisResult {
     /// True when direct children were omitted from the displayed result.
     pub truncated: bool,
     pub entries: Vec<DirectoryEntryInfo>,
+    /// Zero-charge aliases require allocation to be reassigned after deletion.
+    /// Keep this with the authoritative session even when the index is evicted.
+    #[serde(skip)]
+    pub(crate) requires_delete_rescan: bool,
 }
 
 /// Captures an entry from an authoritative analysis snapshot.
 #[derive(Debug, Clone)]
 pub(crate) struct AnalysisEntryCandidate {
+    pub(crate) requires_rescan: bool,
     pub(crate) exclusions: crate::filesystem::ScanExclusionOptions,
     pub(crate) root: String,
     pub(crate) path: String,
@@ -46,7 +51,8 @@ pub(crate) struct AnalysisEntryCandidate {
 #[serde(rename_all = "camelCase")]
 pub struct AnalysisDeleteResult {
     pub removed_path: String,
-    /// The original path was recreated or could not be verified absent.
+    /// The original path changed or shared allocation must be reassigned.
+    /// Clients must discard navigation snapshots before refreshing this result.
     pub requires_rescan: bool,
     /// Scan-time allocated bytes to remove from the displayed snapshot.
     /// This is not a live measurement of storage reclaimed by the filesystem.

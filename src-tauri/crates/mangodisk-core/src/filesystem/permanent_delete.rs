@@ -2162,6 +2162,7 @@ mod permanent_delete_tests {
         fs::write(path.join("new-after-analysis.bin"), b"new")
             .expect("write the new analysis fixture");
         let candidate = AnalysisEntryCandidate {
+            requires_rescan: false,
             exclusions: Default::default(),
             root: sandbox.0.to_string_lossy().into_owned(),
             path: path.to_string_lossy().into_owned(),
