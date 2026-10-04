@@ -8,8 +8,6 @@
   <a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="README.ja.md">日本語</a> · 한국어 · <a href="README.ru.md">Русский</a>
 </p>
 
-앱에서 영어, 중국어 간체·번체, 일본어, 한국어, 튀르키예어, 브라질 포르투갈어를 선택할 수 있습니다.
-
 <p align="center">
   <a href="https://github.com/harry0703/MangoDisk/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/harry0703/MangoDisk?display_name=tag&sort=semver"></a>
   <img alt="macOS supported" src="https://img.shields.io/badge/macOS-supported-111827?logo=apple&logoColor=white">
@@ -58,7 +56,7 @@
 
 ### 4. 디스크 공간 분석
 
-저장 공간이 어디에 쓰이는지 한눈에 봅니다. 트리맵과 목록으로 파고들어 가장 큰 폴더와 파일을 찾고, 무작정 정리하는 대신 정확히 짚어냅니다.
+디스크 공간이 어디에 쓰이는지 한눈에 확인하세요. **트리맵**과 **선버스트**를 전환하고 표시할 폴더 계층의 깊이를 조절해 공간 사용 비율과 폴더 구조를 살펴볼 수 있습니다. 파일 목록과 함께 폴더를 차례로 탐색하면 용량이 큰 폴더와 파일을 빠르게 찾아 무엇을 정리할지 쉽게 판단할 수 있습니다.
 
 > **개인정보 보호 및 보안**
 

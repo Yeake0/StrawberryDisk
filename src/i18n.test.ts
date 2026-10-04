@@ -54,7 +54,7 @@ describe('i18n resources', () => {
     const englishEntries = new Map(leafEntries(enUS));
     const argumentsIn = (value: unknown) =>
       typeof value === 'string' ? [...new Set(value.match(/\{[a-zA-Z][a-zA-Z0-9_]*\}/gu) ?? [])].sort() : [];
-    for (const resource of [trTR, ptBR]) {
+    for (const resource of [trTR, ptBR, ruRU]) {
       const mismatchedKeys = leafEntries(resource)
         .filter(
           ([key, value]) => JSON.stringify(argumentsIn(value)) !== JSON.stringify(argumentsIn(englishEntries.get(key)))
@@ -164,6 +164,25 @@ describe('i18n resources', () => {
     expect(i18n.global.t('common.fileCount', { count: 22 }, 22)).toBe('22 файла');
     expect(i18n.global.t('common.fileCount', { count: 25 }, 25)).toBe('25 файлов');
     expect(i18n.global.t('cleanup.applicationComponentCount', { count: 0 }, 0)).toBe('Нет элементов для оптимизации');
+  });
+
+  it.each([1, 21, 31, 101, 1001])('shows the actual Russian history clear count for %s records', count => {
+    i18n.global.locale.value = LANGUAGE_IDS.ruRU;
+    expect(i18n.global.t('history.clearConfirmCount', { count }, count)).toBe(`${count} запись`);
+  });
+
+  it.each([
+    [0, 'Нет элементов для оптимизации'],
+    [1, 'Доступен 1 элемент'],
+    [2, 'Доступно 2 элемента'],
+    [5, 'Доступно 5 элементов'],
+    [11, 'Доступно 11 элементов'],
+    [21, 'Доступен 21 элемент'],
+    [22, 'Доступно 22 элемента'],
+    [25, 'Доступно 25 элементов'],
+  ])('preserves the Russian explicit zero and plural forms for %s items', (count, expected) => {
+    i18n.global.locale.value = LANGUAGE_IDS.ruRU;
+    expect(i18n.global.t('cleanup.applicationComponentCount', { count }, count)).toBe(expected);
   });
 
   it('applies interpolation and pluralization for the active locale', () => {

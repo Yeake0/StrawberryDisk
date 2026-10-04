@@ -531,7 +531,7 @@
       "authorizationRequired": "Для применения выбранных изменений требуется разрешение администратора",
       "requiresRestart": "Вступит в силу после перезапуска соответствующего компонента системы или повторного входа в систему",
       "caution": "Осторожно",
-      "highImpact": "Высокая отдача",
+      "highImpact": "Высокий риск",
       "riskDescriptions": {
         "caution": "У этого параметра есть явный компромисс; убедитесь, что он подходит для ваших задач",
         "high": "Этот параметр может снизить уровень безопасности, восстановления или защиты при обновлении"
@@ -1647,6 +1647,7 @@
     }
   },
   "common": {
+    "retry": "Повторить попытку",
     "scrollbar": "Вертикальная полоса прокрутки",
     "decreaseValue": "Уменьшить {label}",
     "increaseValue": "Увеличить {label}",
@@ -1947,16 +1948,21 @@
     }
   },
   "analysis": {
+    "totalSizeLabel": "Общий размер",
+    "shareOfCurrentFolder": "От текущей папки",
+    "shareOfParentFolder": "От родительской папки",
     "title": "Анализ дискового пространства",
     "pathLabel": "Текущее расположение",
+    "switchSiblingFolder": "Перейти к соседней папке: {name}",
+    "collapseFileList": "Свернуть список файлов",
+    "expandFileList": "Развернуть список файлов",
     "start": "Начать анализ",
     "analyzing": "Сканирование папок…",
     "rescan": "Повторить анализ",
     "result": "Текущая папка",
     "treemap": "Древовидная карта",
-    "treemapRemainder": "Меньший элемент · {count} | Меньшие элементы · {count} | Меньшие элементы · {count}",
-    "treemapRemainderHint": "{count} меньший элемент занимает {size} в сумме. Полные сведения доступны в списке | {count} меньших элемента занимают {size} в сумме. Полные сведения доступны в списке | {count} меньших элементов занимают {size} в сумме. Полные сведения доступны в списке",
-    "details": "Список",
+    "other": "Прочее",
+    "treemapRemainder": "Прочее · {count} элемент | Прочее · {count} элемента | Прочее · {count} элементов",
     "back": "Назад",
     "forward": "Вперед",
     "home": "Вернуться к началу анализа",
@@ -1975,9 +1981,13 @@
     "emptyDescription": "Проанализируйте, сколько места занимают файлы и папки в выбранном расположении",
     "folderFileSummary": "Папок: {folders} · файлов: {files}",
     "folderSpaceSummary": "{folders} папка · {size} | {folders} папки · {size} | {folders} папок · {size}",
-    "limitedEntries": "Показано до 100 крупнейших элементов",
+    "limitedEntries": "Показано до {count} крупнейших элементов",
     "exclusionHint": "Здесь учитываются только просканированные данные; исключения не меняют фактический объём занятого места на диске",
-    "deleting": "Удаление…"
+    "deleting": "Удаление…",
+    "sunburst": "Кольцевая диаграмма",
+    "sunburstDepth": "Глубина",
+    "sunburstLevels": "Глубина {count}",
+    "sunburstRemainder": "Файлы и другие элементы"
   },
   "storageScanExclusions": {
     "title": "Исключения из сканирования",
@@ -2309,7 +2319,7 @@
     "clearConfirmTitle": "Очистить всю историю операций?",
     "clearConfirmDescription": "Это нельзя отменить",
     "clearConfirmScope": "Все записи об операциях",
-    "clearConfirmCount": "1 запись | {count} записи | {count} записей",
+    "clearConfirmCount": "{count} запись | {count} записи | {count} записей",
     "clearConfirmNote": "Будет очищена только история. Ваши файлы сохранятся",
     "clearConfirmAction": "Очистить историю",
     "privacyRecordSummary": "Выбрано элементов: {selected} · очищено следов: {changed}",
@@ -2430,7 +2440,7 @@
     "scanAnalysisSection": "Сканирование и анализ",
     "scanExclusionsTitle": "Исключения из сканирования",
     "scanExclusionsDescription": "Пропустить пути или имена в выбранных параметрах",
-    "scanExclusionsCount": "{count} правил",
+    "scanExclusionsCount": "{count} правило | {count} правила | {count} правил",
     "supportSection": "Поддержка",
     "aboutSection": "О программе",
     "languageTitle": "Язык",
@@ -3998,6 +4008,7 @@
     "automatic": "Автоматически",
     "volume": "Том",
     "systemDisk": "Системный диск",
+    "diskCapacityHint": "Доступное место — оценка системы. В macOS она включает место, которое система может освободить",
     "savedDisconnected": "Сохранённое устройство · отключено",
     "saveFailed": "Не удалось сохранить. Повторите попытку",
     "catalogueFailed": "Не удаётся прочитать устройства",

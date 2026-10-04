@@ -8,8 +8,6 @@
   <a href="README.md">English</a> · 简体中文 · <a href="README.zh-TW.md">繁體中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.ru.md">Русский</a>
 </p>
 
-应用界面支持英语、简体中文、繁体中文、日语、韩语、土耳其语和巴西葡萄牙语。
-
 <p align="center">
   <a href="https://github.com/harry0703/MangoDisk/releases/latest"><img alt="最新版本" src="https://img.shields.io/github/v/release/harry0703/MangoDisk?display_name=tag&sort=semver"></a>
   <img alt="支持 macOS" src="https://img.shields.io/badge/macOS-supported-111827?logo=apple&logoColor=white">
@@ -58,7 +56,7 @@
 
 ### 4. 磁盘空间分析
 
-直观看清磁盘空间都用在了哪里，逐层定位占用最大的目录和文件，减少盲目清理。
+直观看清磁盘空间都用在了哪里。支持切换**矩形图**与**旭日图**，自定义显示的层级深度，查看空间占比与目录结构；结合文件列表逐层浏览，快速定位占用最大的目录和文件，让清理更有依据。
 
 > **隐私与安全**
 

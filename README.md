@@ -8,8 +8,6 @@
   English · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.ru.md">Русский</a>
 </p>
 
-The app interface supports English, Simplified and Traditional Chinese, Japanese, Korean, Turkish, and Brazilian Portuguese.
-
 <p align="center">
   <a href="https://github.com/harry0703/MangoDisk/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/harry0703/MangoDisk?display_name=tag&sort=semver"></a>
   <img alt="macOS supported" src="https://img.shields.io/badge/macOS-supported-111827?logo=apple&logoColor=white">
@@ -48,16 +46,6 @@ Find cleanable content scattered across the system, applications, developer tool
 
 Smart recommendations help you make safe choices quickly. You can also review items individually and see the estimated reclaimable space upfront, keeping every cleanup predictable and under your control.
 
-Disk capacity uses the same availability estimate across cleanup, volume selection, and resident monitoring. On macOS, available storage includes space the system can reclaim; it is not limited to currently free filesystem blocks. The macOS estimate is shared for up to five seconds and falls back to filesystem free space if the native query fails. Cleanup and deletion force a fresh estimate. Active main windows also refresh capacity every 15 seconds and when regaining focus. Capacity estimates do not change file-size measurement or verified cleanup accounting.
-
-Startup logs record the operating system's product version, kernel/build version, architecture, and WebView runtime separately to help diagnose platform-specific reports.
-
-Linux capacity excludes filesystem blocks reserved from ordinary users, matching GIO availability. Storage and network sizes use decimal units on macOS and Linux and binary units on Windows; memory remains binary on every platform. Linux inventory and resident monitoring share the same `statvfs` calculation.
-
-If a scan cannot read some locations, its details show up to 50 failed read operations with paths and native errors. The failure total counts read attempts, not unique folders. A read failure alone does not indicate missing Full Disk Access.
-
-The details dialog can remember a choice to hide all Deep Cleanup read-failure alerts, including automatic macOS privacy guidance. This changes presentation only: unreadable items are still skipped and diagnostics remain available. Cleanup execution errors and other operation failures are still reported. Restore read-failure alerts from Settings → Scanning & analysis. These alerts are shown by default.
-
 ### 2. Large File Cleanup
 
 Quickly find the largest files and reclaim space used by old installers, videos, archives, and other bulky content without digging through folders one by one.
@@ -68,19 +56,9 @@ Reclaim space taken up by duplicate copies without treating files as duplicates 
 
 ### 4. Disk Space Analysis
 
-See where your storage is going at a glance. Use one to six nested treemap levels to compare sizes, or explore two to six levels in the sunburst chart. Both charts show folders and indexed files within bounded child projections. Click a folder to drill down; the adjacent list keeps file actions within reach. The list shows up to 500 largest items. Smaller items remain available in paged Other details, and aggregate tiles retain their actual share of disk usage.
-
-The last selected chart and each chart's depth are restored across folders and application restarts. These global view preferences use the separate `analysisViewPreferences` key in `settings.json`; restoring them does not trigger a scan.
+See where your disk space is going at a glance. Switch between a **treemap** and a **sunburst chart**, and choose how many levels to display to explore space usage and folder structure. Browse folders alongside the file list to quickly find the largest folders and files and decide what to clean up.
 
 > **Privacy & Security**
-
-On macOS and Linux, analysis counts a hard-linked file's allocated space once per scan. Shared allocation belongs to one stable path, so child totals reflect the selected scan root. Deleting from a shared-allocation scan invalidates navigation snapshots and refreshes the current folder so surviving links receive the allocation. Sizes use decimal units (GB); `du -h` commonly uses binary units (GiB).
-
-Analysis reuses native enumeration metadata to retain smaller file candidates independently of the 50 MiB large-file discovery floor. Supplemental cached candidates are capped at 64 per directory and 8,192 per scan; the hierarchy sent to the charts remains capped at 2,048 nodes. Larger branches are prioritized when shared-allocation candidate buffers reach their budget. Files outside these budgets remain in Other with their actual capacity and item count.
-
-Other labels include the number of positive-allocation direct items grouped at each treemap level. Counts reuse scan aggregates and the in-memory directory index without additional filesystem reads; hierarchy and rendering limits remain unchanged.
-
-The Other details list tolerates changes since the scan and shows its listed total. Each opening retains a read-only listing so pagination stays consistent while files change; reopening refreshes it. Directory and indexed-file sizes reuse scan measurements. Only visible rows and a small overscan are mounted, keeping icon and tooltip work bounded as pages accumulate. Closing the dialog releases its listing, and at most two listings are retained. Viewing details does not update deletion authority; destructive operations still validate the original snapshot before execution. Remainder protocol schema 2 carries a listing ID on subsequent pages; older schemas are rejected and listings are never persisted.
 
 ### 5. Privacy Cleanup
 
@@ -352,10 +330,6 @@ mangodisk clean --apply --selection all --dry-run
 # Produce machine-readable JSON output
 mangodisk clean --format json --no-progress
 ```
-
-Cleanup scan schema `1.11` adds `readFailureDetails` (at most 50 records) alongside the complete `readFailureCount`. Readers of earlier snapshots should treat an absent details field as unavailable evidence, not as a successful read.
-
-Schema `1.12` adds the complete `permissionDeniedReadFailureCount`, allowing readers to distinguish permission-only failures even when the details are truncated. Earlier snapshots without this count may only be classified from details when the number of retained records equals the complete failure count.
 
 `mangodisk clean` only scans and never modifies files by default. To perform cleanup in a non-interactive environment, you must also pass `--yes` to confirm explicitly. Run the following command for all available options:
 

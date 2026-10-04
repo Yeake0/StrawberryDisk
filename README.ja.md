@@ -8,8 +8,6 @@
 <a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a> · 日本語 · <a href="README.ko.md">한국어</a> · <a href="README.ru.md">Русский</a>
 </p>
 
-アプリの表示言語は、英語、簡体字中国語、繁体字中国語、日本語、韓国語、トルコ語、ブラジルポルトガル語から選べます。
-
 <p align="center">
 <a href="https://github.com/harry0703/MangoDisk/releases/latest"><img alt="最新リリース" src="https://img.shields.io/github/v/release/harry0703/MangoDisk?display_name=tag&sort=semver"></a>
   <img alt="macOS 対応" src="https://img.shields.io/badge/macOS-supported-111827?logo=apple&logoColor=white">
@@ -58,7 +56,7 @@
 
 ### 4. ディスク容量分析
 
-ディスク容量が何に使われているかをひと目で把握できます。ツリーマップとリストをたどって容量の大きいフォルダーやファイルを見つけ、むやみな削除を避けられます。
+ディスク容量が何に使われているかをひと目で把握できます。**ツリーマップ**と**サンバースト**を切り替え、表示する階層の深さを調整して、容量の割合やフォルダー構成を確認できます。ファイル一覧とあわせてフォルダーをたどれば、容量の大きいフォルダーやファイルをすばやく見つけ、何を整理するか判断しやすくなります。
 
 > **プライバシーとセキュリティ**
 

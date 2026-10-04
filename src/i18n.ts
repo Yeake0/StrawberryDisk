@@ -4,8 +4,8 @@ import { LANGUAGE_IDS, type LanguageId } from '@/lib/models/settings';
 import enUS from '@/locales/modules/en-us';
 import jaJP from '@/locales/modules/ja-jp';
 import koKR from '@/locales/modules/ko-kr';
-import ruRU from '@/locales/modules/ru-ru';
 import ptBR from '@/locales/modules/pt-br';
+import ruRU from '@/locales/modules/ru-ru';
 import trTR from '@/locales/modules/tr-tr';
 import zhCN from '@/locales/modules/zh-cn';
 import zhTW from '@/locales/modules/zh-tw';
@@ -62,6 +62,7 @@ if (import.meta.hot) {
       './locales/modules/ja-jp',
       './locales/modules/ko-kr',
       './locales/modules/pt-br',
+      './locales/modules/ru-ru',
       './locales/modules/tr-tr',
       './locales/modules/zh-cn',
       './locales/modules/zh-tw',
@@ -72,6 +73,7 @@ if (import.meta.hot) {
         LANGUAGE_IDS.jaJP,
         LANGUAGE_IDS.koKR,
         LANGUAGE_IDS.ptBR,
+        LANGUAGE_IDS.ruRU,
         LANGUAGE_IDS.trTR,
         LANGUAGE_IDS.zhCN,
         LANGUAGE_IDS.zhTW,
