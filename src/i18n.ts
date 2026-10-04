@@ -31,3 +31,35 @@ export const i18n = createI18n<[MessageSchema], SupportedLocale, false>({
     [LANGUAGE_IDS.ptBR]: ptBR,
   },
 });
+
+// Locale modules can update while Vue retains the active composer. Replace
+// its messages too, so new keys do not appear as raw labels during development.
+if (import.meta.hot) {
+  import.meta.hot.accept(
+    [
+      './locales/modules/en-us',
+      './locales/modules/ja-jp',
+      './locales/modules/ko-kr',
+      './locales/modules/pt-br',
+      './locales/modules/tr-tr',
+      './locales/modules/zh-cn',
+      './locales/modules/zh-tw',
+    ],
+    updatedModules => {
+      const locales = [
+        LANGUAGE_IDS.enUS,
+        LANGUAGE_IDS.jaJP,
+        LANGUAGE_IDS.koKR,
+        LANGUAGE_IDS.ptBR,
+        LANGUAGE_IDS.trTR,
+        LANGUAGE_IDS.zhCN,
+        LANGUAGE_IDS.zhTW,
+      ];
+      updatedModules.forEach((updatedModule, index) => {
+        const locale = locales[index];
+        const messages = updatedModule?.default as MessageSchema | undefined;
+        if (locale && messages) i18n.global.setLocaleMessage(locale, messages);
+      });
+    }
+  );
+}
