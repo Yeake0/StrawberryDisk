@@ -190,6 +190,9 @@
    */
   --result-item-gap: 2px;
   --result-item-background-inset: 1px;
+  /* Explicit opacity keeps proportional fills consistent on older WebViews. */
+  --result-item-share-color: var(--foreground);
+  --result-item-share-opacity: 0.05;
 }
 
 @supports (color: color-mix(in oklab, black, white)) {

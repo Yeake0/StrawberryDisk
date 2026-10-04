@@ -62,11 +62,17 @@ Reclaim space taken up by duplicate copies without treating files as duplicates 
 
 ### 4. Disk Space Analysis
 
-See where your storage is going at a glance. Drill down through a treemap and list to locate the largest folders and files instead of cleaning blindly.
+See where your storage is going at a glance. Use one to six nested treemap levels to compare sizes, or explore two to six levels in the sunburst chart. Both charts show folders and indexed files within bounded child projections. Click a folder to drill down; the adjacent list keeps file actions within reach. The list shows up to 500 largest items. Smaller items remain available in paged Other details, and aggregate tiles retain their actual share of disk usage.
 
 > **Privacy & Security**
 
 On macOS and Linux, analysis counts a hard-linked file's allocated space once per scan. Shared allocation belongs to one stable path, so child totals reflect the selected scan root. Deleting from a shared-allocation scan invalidates navigation snapshots and refreshes the current folder so surviving links receive the allocation. Sizes use decimal units (GB); `du -h` commonly uses binary units (GiB).
+
+Analysis reuses native enumeration metadata to retain smaller file candidates independently of the 50 MiB large-file discovery floor. Supplemental cached candidates are capped at 64 per directory and 8,192 per scan; the hierarchy sent to the charts remains capped at 2,048 nodes. Larger branches are prioritized when shared-allocation candidate buffers reach their budget. Files outside these budgets remain in Other with their actual capacity and item count.
+
+Other labels include the number of positive-allocation direct items grouped at each treemap level. Counts reuse scan aggregates and the in-memory directory index without additional filesystem reads; hierarchy and rendering limits remain unchanged.
+
+The Other details list tolerates changes since the scan and shows its listed total. Each opening retains a read-only listing so pagination stays consistent while files change; reopening refreshes it. Directory and indexed-file sizes reuse scan measurements. Only visible rows and a small overscan are mounted, keeping icon and tooltip work bounded as pages accumulate. Closing the dialog releases its listing, and at most two listings are retained. Viewing details does not update deletion authority; destructive operations still validate the original snapshot before execution. Remainder protocol schema 2 carries a listing ID on subsequent pages; older schemas are rejected and listings are never persisted.
 
 ### 5. Privacy Cleanup
 

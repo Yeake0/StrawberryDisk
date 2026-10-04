@@ -140,7 +140,8 @@ mod windows_benchmark {
                         file_count,
                         skipped_count,
                     )),
-                    FastAnalysisRecord::HardLinkedFile { .. } => {}
+                    FastAnalysisRecord::HardLinkedFile { .. }
+                    | FastAnalysisRecord::AnalysisFile(_) => {}
                     FastAnalysisRecord::LargeFileCandidate(path) => {
                         candidates.push(path_digest(&path));
                     }

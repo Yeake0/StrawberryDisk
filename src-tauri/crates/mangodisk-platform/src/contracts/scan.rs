@@ -273,6 +273,35 @@ impl FileSpaceUsage {
     }
 }
 
+/// Read-only file facts already measured during native directory enumeration.
+/// These bounded chart candidates are not live-validated large-file discovery results.
+#[derive(Debug)]
+pub struct FastAnalysisFile {
+    pub path: PathBuf,
+    pub allocated_bytes: u64,
+    pub logical_bytes: u64,
+    pub modified_at_ms: Option<u64>,
+}
+
+impl PartialEq for FastAnalysisFile {
+    fn eq(&self, other: &Self) -> bool {
+        self.allocated_bytes == other.allocated_bytes && self.path == other.path
+    }
+}
+impl Eq for FastAnalysisFile {}
+impl PartialOrd for FastAnalysisFile {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for FastAnalysisFile {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.allocated_bytes
+            .cmp(&other.allocated_bytes)
+            .then_with(|| other.path.cmp(&self.path))
+    }
+}
+
 /// Native analysis emits only records needed to build the existing core index.
 /// Directory aggregates include all visible descendants. Large-file paths are
 /// untrusted candidates whose live metadata is revalidated by core. A single
@@ -299,6 +328,8 @@ pub enum FastAnalysisRecord {
         skipped_count: u64,
     },
     LargeFileCandidate(PathBuf),
+    /// Bounded supplemental files for analysis charts; no extra metadata read is required.
+    AnalysisFile(FastAnalysisFile),
 }
 
 /// The summary stores no user paths. It contains only root aggregates and

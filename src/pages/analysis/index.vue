@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ScanNameExclusion } from '@/lib/models/storage-scan';
 import { useI18n } from 'vue-i18n';
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onDeactivated, ref, watch } from 'vue';
 
 import MdDelayedOperationWorkspace from '@/components/custom/md-delayed-operation-workspace.vue';
 import MdStorageScopeSelect from '@/components/custom/md-storage-scope-select.vue';
@@ -33,6 +33,7 @@ const { t } = useI18n({ useScope: 'global' });
 
 const props = defineProps<{
   result: AnalysisResult | null;
+  cachedResults?: Readonly<Record<string, AnalysisResult>>;
   excludedFolders: string[];
   excludedNames?: ScanNameExclusion[];
   homePath: string;
@@ -73,6 +74,22 @@ const primaryAnalysisPending = ref(false);
 const confirmOpen = ref(false);
 const pendingDelete = ref<DirectoryEntryInfo | null>(null);
 const viewMode = ref<AnalysisViewId>(ANALYSIS_VIEW_IDS.treemap);
+const hoveredEntryPath = ref<string | null>(null);
+const listCollapsed = ref(false);
+const treemapDepth = ref(1);
+const sunburstDepth = ref(3);
+
+function hoverEntry(path: string | null) {
+  hoveredEntryPath.value = props.busy || props.deleting ? null : path;
+}
+
+// A hover belongs to one visible result, never to a later scan or view.
+watch([() => props.result, () => props.busy, () => props.deleting, viewMode, listCollapsed], () => {
+  hoveredEntryPath.value = null;
+});
+onDeactivated(() => {
+  hoveredEntryPath.value = null;
+});
 
 const entries = computed(() => [...(props.result?.entries ?? [])].sort((left, right) => right.bytes - left.bytes));
 const folderCount = computed(() => entries.value.filter(entry => entry.isDirectory).length);
@@ -116,10 +133,13 @@ const scopeIsAnalysisRoot = computed(
     PathUtils.comparisonKey(props.homePath) === PathUtils.comparisonKey(selectedScopePath.value)
 );
 const breadcrumbs = computed(() =>
-  AnalysisBreadcrumbUtils.create(
-    props.result?.root ?? selectedScopePath.value,
-    activeDisk.value,
-    t('analysis.localDisk')
+  AnalysisBreadcrumbUtils.withSiblingFolders(
+    AnalysisBreadcrumbUtils.create(
+      props.result?.root ?? selectedScopePath.value,
+      activeDisk.value,
+      t('analysis.localDisk')
+    ),
+    [...(props.result ? [props.result] : []), ...Object.values(props.cachedResults ?? {})]
   )
 );
 const canGoBack = computed(() => navigationIndex.value > 0);
@@ -313,6 +333,8 @@ function navigateHistory(index: number) {
         :can-go-back="canGoBack"
         :can-go-forward="canGoForward"
         :home-disabled="!homePath"
+        :list-collapsed="listCollapsed"
+        @toggle-list="listCollapsed = !listCollapsed"
         @back="navigateHistory(navigationIndex - 1)"
         @forward="navigateHistory(navigationIndex + 1)"
         @home="analyze(homePath)"
@@ -364,12 +386,13 @@ function navigateHistory(index: number) {
       <div
         v-else-if="!showFullAnalysisProgress"
         class="browser-content"
-        :class="{ 'browser-content--details': viewMode === ANALYSIS_VIEW_IDS.details }"
+        :class="{ 'browser-content--list-collapsed': listCollapsed }"
         :inert="busy || undefined"
         :aria-busy="busy"
       >
         <MdAnalysisFolderPane
-          v-if="viewMode === ANALYSIS_VIEW_IDS.treemap"
+          v-show="!listCollapsed"
+          id="analysis-file-list"
           :entries="entries"
           :total-bytes="result.totalBytes"
           :folder-count="folderCount"
@@ -378,12 +401,16 @@ function navigateHistory(index: number) {
           :open-disabled="busy || deleting"
           :delete-disabled="busy || deleting || !resultMatchesExclusions"
           :deleting-path="deletingPath"
+          :hovered-entry-path="hoveredEntryPath"
+          @hover-entry="hoverEntry"
           @activate="activateEntry"
           @open-entry="openEntry"
           @reveal="emit('reveal', $event)"
           @delete="requestDelete"
         />
         <MdAnalysisVisualPane
+          v-model:treemap-depth="treemapDepth"
+          v-model:sunburst-depth="sunburstDepth"
           :result="result"
           :exclusions-active="hasRelevantExclusions"
           :entries="entries"
@@ -392,7 +419,11 @@ function navigateHistory(index: number) {
           :open-disabled="busy || deleting"
           :delete-disabled="busy || deleting || !resultMatchesExclusions"
           :deleting-path="deletingPath"
+          :hovered-entry-path="hoveredEntryPath"
+          @hover-entry="hoverEntry"
           @update:view-mode="viewMode = $event"
+          @navigate="analyze"
+          @refresh-directory="analyze($event, true)"
           @open-exclusions="emit('openExclusions')"
           @activate="activateEntry"
           @open-entry="openEntry"
@@ -483,6 +514,7 @@ function navigateHistory(index: number) {
 
 .browser-content {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-height: 0;
   flex: 1;
   overflow: hidden;
@@ -491,26 +523,24 @@ function navigateHistory(index: number) {
 }
 
 /*
- * Treemap mode keeps the rank pane for quick directory lookup. Details mode
- * already exposes the same entries with sorting and actions, so it owns the
- * full workspace instead of repeating that data beside another list.
+ * Keep the mounted rank pane and chart state when the user expands the chart.
  */
 @container analysis (min-width: 672px) {
-  .browser-content:not(.browser-content--details) {
-    grid-template-columns: minmax(300px, 42%) minmax(0, 58%);
+  .browser-content:not(.browser-content--list-collapsed) {
+    grid-template-columns: minmax(300px, 38%) minmax(0, 1fr);
   }
 }
 
 @container analysis (max-width: 671px) {
   /* Keep one primary view on small windows instead of splitting scarce height. */
-  .browser-content:not(.browser-content--details) :deep(.folder-pane) {
+  .browser-content :deep(.folder-pane) {
     display: none;
   }
 }
 
 @container analysis (min-width: 1024px) {
-  .browser-content:not(.browser-content--details) {
-    grid-template-columns: minmax(330px, 36%) minmax(0, 64%);
+  .browser-content:not(.browser-content--list-collapsed) {
+    grid-template-columns: minmax(330px, 32%) minmax(0, 1fr);
   }
 }
 
@@ -519,8 +549,8 @@ function navigateHistory(index: number) {
  */
 @supports not (container-type: inline-size) {
   @media (min-width: 900px) {
-    .browser-content:not(.browser-content--details) {
-      grid-template-columns: minmax(300px, 42%) minmax(0, 58%);
+    .browser-content:not(.browser-content--list-collapsed) {
+      grid-template-columns: minmax(300px, 38%) minmax(0, 1fr);
     }
   }
 }

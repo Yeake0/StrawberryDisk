@@ -18,51 +18,68 @@ type TreemapLayoutNode =
       kind: typeof TREEMAP_TILE_KINDS.remainder;
       entry: null;
       bytes: number;
-      entryCount: number;
+      entryCount: number | null;
     };
 export interface TreemapLayoutOptions {
   minimumVisibleShare?: number;
+  aspectRatio?: number;
+  totalBytes?: number;
+  totalEntryCount?: number;
+  viewport?: { width: number; height: number };
 }
 const DEFAULT_MINIMUM_VISIBLE_SHARE = 0.0075;
+const MINIMUM_VISIBLE_PIXEL_AREA = 600;
 export function layout(entries: DirectoryEntryInfo[], options: TreemapLayoutOptions = {}): TreemapTile[] {
   const candidates = entries.filter(entry => entry.bytes > 0).sort((left, right) => right.bytes - left.bytes);
-  if (!candidates.length) return [];
-  const total = candidates.reduce((sum, entry) => sum + entry.bytes, 0);
-  const minimumVisibleShare = Math.min(1, Math.max(0, options.minimumVisibleShare ?? DEFAULT_MINIMUM_VISIBLE_SHARE));
-  // Treemap area is proportional to byte share. Keeping only entries that can
-  // receive a useful share avoids unreadable pixel fragments independently
-  // of the current window size. Do not impose a fixed item limit: a folder
-  // containing many similarly sized files still needs to show every item
-  // because none of them is less meaningful than the others.
+  const listedBytes = candidates.reduce((sum, entry) => sum + entry.bytes, 0);
+  const total = Math.max(listedBytes, options.totalBytes ?? 0);
+  if (!(total > 0)) return [];
+  const unlistedBytes = total - listedBytes;
+  const viewportArea = options.viewport ? options.viewport.width * options.viewport.height : 0;
+  const defaultVisibleShare =
+    Number.isFinite(viewportArea) && viewportArea > 0
+      ? MINIMUM_VISIBLE_PIXEL_AREA / viewportArea
+      : DEFAULT_MINIMUM_VISIBLE_SHARE;
+  const minimumVisibleShare = Math.min(1, Math.max(0, options.minimumVisibleShare ?? defaultVisibleShare));
+  // Select by proportional pixel area, not the resulting rectangle's shape.
+  // A larger viewport lowers this floor and can only reveal more candidates.
+  // Label visibility is handled separately; it must not change membership.
   let visibleCount = candidates.length;
   while (visibleCount > 1 && candidates[visibleCount - 1].bytes / total < minimumVisibleShare) {
     visibleCount -= 1;
   }
-  const visibleEntries = candidates.slice(0, visibleCount);
-  const hiddenEntries = candidates.slice(visibleCount);
-  const nodes: TreemapLayoutNode[] = visibleEntries.map(entry => ({
-    kind: TREEMAP_TILE_KINDS.entry,
-    entry,
-    bytes: entry.bytes,
-  }));
-  if (hiddenEntries.length) {
-    nodes.push({
-      kind: TREEMAP_TILE_KINDS.remainder,
-      entry: null,
-      bytes: hiddenEntries.reduce((sum, entry) => sum + entry.bytes, 0),
-      entryCount: hiddenEntries.length,
-    });
-  }
-  // The aggregated remainder may be larger than individual visible entries.
-  // Sorting it with the other nodes lets the layout consider its real weight
-  // instead of forcing it into a narrow final strip.
-  nodes.sort((left, right) => right.bytes - left.bytes);
-  return squarify(nodes, {
-    left: 0,
-    top: 0,
-    width: 100,
-    height: 100,
-  });
+  const requestedAspectRatio = options.aspectRatio ?? 1;
+  const aspectRatio = Number.isFinite(requestedAspectRatio) && requestedAspectRatio > 0 ? requestedAspectRatio : 1;
+  const remainderBytes = total - candidates.slice(0, visibleCount).reduce((sum, entry) => sum + entry.bytes, 0);
+  const render = (count: number, bytes: number): TreemapTile[] => {
+    const nodes: TreemapLayoutNode[] = candidates.slice(0, count).map(entry => ({
+      kind: TREEMAP_TILE_KINDS.entry,
+      entry,
+      bytes: entry.bytes,
+    }));
+    if (bytes > 0) {
+      nodes.push({
+        kind: TREEMAP_TILE_KINDS.remainder,
+        entry: null,
+        bytes,
+        // A truncated file list or bounded hierarchy projection cannot supply
+        // an exact item count. Never present its partial count as authoritative.
+        entryCount:
+          options.totalEntryCount !== undefined
+            ? Math.max(0, options.totalEntryCount - count)
+            : unlistedBytes > 0
+              ? null
+              : candidates.length - count,
+      });
+    }
+    nodes.sort((left, right) => right.bytes - left.bytes);
+    return squarify(nodes, { left: 0, top: 0, width: 100 * aspectRatio, height: 100 }).map(tile => ({
+      ...tile,
+      left: tile.left / aspectRatio,
+      width: tile.width / aspectRatio,
+    }));
+  };
+  return render(visibleCount, remainderBytes);
 }
 /**
  * Lays out descending nodes in strips that minimize the worst tile aspect

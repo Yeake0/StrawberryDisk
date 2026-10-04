@@ -1647,6 +1647,7 @@
     }
   },
   "common": {
+    "retry": "Retry",
     "scrollbar": "Vertical scrollbar",
     "decreaseValue": "Decrease {label}",
     "increaseValue": "Increase {label}",
@@ -1947,16 +1948,21 @@
     }
   },
   "analysis": {
+    "totalSizeLabel": "Total size",
+    "shareOfCurrentFolder": "Of current folder",
+    "shareOfParentFolder": "Of parent folder",
     "title": "Disk Space Analysis",
     "pathLabel": "Current location",
+    "switchSiblingFolder": "Switch sibling folder: {name}",
+    "collapseFileList": "Collapse file list",
+    "expandFileList": "Expand file list",
     "start": "Start Analysis",
     "analyzing": "Scanning folders…",
     "rescan": "Analyze Again",
     "result": "Current folder",
     "treemap": "Treemap",
-    "treemapRemainder": "Smaller item · {count} | Smaller items · {count}",
-    "treemapRemainderHint": "{count} smaller item uses {size} in total. Full details are available in the list | {count} smaller items use {size} in total. Full details are available in the list",
-    "details": "List",
+    "other": "Other",
+    "treemapRemainder": "Other · {count} item | Other · {count} items",
     "back": "Back",
     "forward": "Forward",
     "home": "Return to analysis root",
@@ -1975,9 +1981,13 @@
     "emptyDescription": "Analyze how files and folders use space in the selected location",
     "folderFileSummary": "{folders} folder · {files} file | {folders} folders · {files} files",
     "folderSpaceSummary": "{folders} folder · {size} | {folders} folders · {size}",
-    "limitedEntries": "Showing up to 100 largest items",
+    "limitedEntries": "Showing up to {count} largest items",
     "exclusionHint": "This view counts scanned content only; exclusions do not change the disk's actual used space",
-    "deleting": "Deleting…"
+    "deleting": "Deleting…",
+    "sunburst": "Sunburst",
+    "sunburstDepth": "Depth",
+    "sunburstLevels": "Depth {count}",
+    "sunburstRemainder": "Files and other items"
   },
   "storageScanExclusions": {
     "title": "Scan exclusions",

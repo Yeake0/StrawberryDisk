@@ -11,6 +11,8 @@ export const ICON_NAMES = {
   cleanup: 'sparkles',
   deepCleanup: 'brushCleaning',
   analysis: 'chartPie',
+  chartSunburst: 'chartSunburst',
+  chartTreemap: 'chartTreemap',
   largeFiles: 'fileSearch',
   fileSearch: 'fileSearch',
   copy: 'copy',

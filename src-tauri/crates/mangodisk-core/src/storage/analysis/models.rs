@@ -1,4 +1,23 @@
-use serde::Serialize;
+/// Bounds snapshot transport and follow-up authority independently of virtual row rendering.
+pub(crate) const ANALYSIS_VISIBLE_ENTRY_LIMIT: usize = 500;
+
+use serde::{Deserialize, Serialize};
+
+/// A bounded hierarchy projection of the same index used by the flat result.
+/// Omitted files and directories remain part of the parent's byte total.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalysisDirectoryNode {
+    pub name: String,
+    pub path: String,
+    pub bytes: u64,
+    pub file_count: u64,
+    /// Positive-byte direct children before hierarchy and viewport filtering.
+    pub total_entry_count: u64,
+    pub children: Vec<AnalysisDirectoryNode>,
+    /// Read-only file projections share the child and node budgets with directories.
+    pub files: Vec<DirectoryEntryInfo>,
+}
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -24,14 +43,55 @@ pub struct AnalysisResult {
     pub scanned_at_ms: u64,
     /// Physical storage charged to all direct result entries.
     pub total_bytes: u64,
+    /// Positive-byte direct children, counted before the bounded projection.
+    pub total_entry_count: usize,
     pub skipped_count: u64,
     /// True when direct children were omitted from the displayed result.
     pub truncated: bool,
     pub entries: Vec<DirectoryEntryInfo>,
+    /// Up to six directory levels, bounded independently of the full scan index.
+    pub directory_hierarchy: Vec<AnalysisDirectoryNode>,
     /// Zero-charge aliases require allocation to be reassigned after deletion.
     /// Keep this with the authoritative session even when the index is evicted.
     #[serde(skip)]
     pub(crate) requires_delete_rescan: bool,
+}
+
+/// Reads omitted direct children without extending destructive-operation authority.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalysisRemainderRequest {
+    /// Unsupported wire schemas are rejected; details are never persisted.
+    pub schema_version: u8,
+    pub scan_id: u64,
+    pub parent_path: String,
+    pub visible_paths: Vec<String>,
+    /// Displayed scan total for diagnostics only; live details may have changed.
+    pub expected_bytes: u64,
+    pub offset: usize,
+    pub snapshot_id: Option<u64>,
+}
+
+impl AnalysisRemainderRequest {
+    pub const SCHEMA_VERSION: u8 = 2;
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalysisRemainderPage {
+    pub snapshot_id: u64,
+    pub schema_version: u8,
+    pub parent_path: String,
+    pub total_bytes: u64,
+    pub total_count: usize,
+    pub entries: Vec<DirectoryEntryInfo>,
+    pub next_offset: Option<usize>,
+}
+
+pub(crate) struct AnalysisRemainderParent {
+    pub(crate) path: String,
+    pub(crate) bytes: u64,
+    pub(crate) exclusions: crate::filesystem::ScanExclusionOptions,
 }
 
 /// Captures an entry from an authoritative analysis snapshot.

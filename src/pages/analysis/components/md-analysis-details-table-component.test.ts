@@ -4,9 +4,11 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@tauri-apps/plugin-os', () => ({ platform: () => 'macos' }));
 import { i18n } from '@/i18n';
+import { Select } from '@/components/ui/select';
 import type { DirectoryEntryInfo } from '@/lib/models/analysis';
 import MdAnalysisDetailsTable from './md-analysis-details-table.vue';
 import MdAnalysisVisualPane from './md-analysis-visual-pane.vue';
+import MdAnalysisSunburst from './md-analysis-sunburst.vue';
 
 const entries: DirectoryEntryInfo[] = Array.from({ length: 5000 }, (_, index) => ({
   name: `file-${String(index).padStart(4, '0')}.gguf`,
@@ -28,6 +30,7 @@ const global = {
     MdIconAction: true,
     MdIcon: true,
     MdAnalysisTreemap: true,
+    MdIconSunburst: true,
   },
 };
 beforeEach(() => {
@@ -61,7 +64,7 @@ describe('analysis details virtualization', () => {
     wrapper.unmount();
   });
 
-  it('caches both modes and keeps details sorting and scroll position when switching back', async () => {
+  it('caches both charts and keeps the sunburst depth when switching back', async () => {
     const wrapper = mount(MdAnalysisVisualPane, {
       attachTo: document.body,
       props: {
@@ -77,30 +80,22 @@ describe('analysis details virtualization', () => {
         },
         exclusionsActive: false,
         folderCount: 0,
-        viewMode: 'details',
+        viewMode: 'sunburst',
         openDisabled: false,
         deleteDisabled: false,
       },
       global,
     });
     await flushPromises();
-    const instance = wrapper.findComponent(MdAnalysisDetailsTable).vm.$.uid;
-    const sort = wrapper.get('.details-head-grid button');
-    await sort.trigger('click');
-    await sort.trigger('click');
-    const scroll = wrapper.get('.result-table-scroll');
-    scroll.element.scrollTop = 20000;
-    await scroll.trigger('scroll');
+    const instance = wrapper.findComponent(MdAnalysisSunburst).vm.$.uid;
+    wrapper.getComponent(Select).vm.$emit('update:modelValue', '4');
     await flushPromises();
-    const previousKeys = wrapper.findAll('.virtual-row').map(row => row.attributes('data-entry-key'));
     await wrapper.setProps({ viewMode: 'treemap' });
-    expect(wrapper.find('.details-view').exists()).toBe(false);
-    await wrapper.setProps({ viewMode: 'details' });
+    expect(wrapper.find('.sunburst-workspace').exists()).toBe(false);
+    await wrapper.setProps({ viewMode: 'sunburst' });
     await flushPromises();
-    expect(wrapper.findComponent(MdAnalysisDetailsTable).vm.$.uid).toBe(instance);
-    expect(wrapper.get('.result-table-scroll').element).toBe(scroll.element);
-    expect(wrapper.findAll('.virtual-row').map(row => row.attributes('data-entry-key'))).toEqual(previousKeys);
-    expect(wrapper.get('.details-head-grid button').attributes('data-active')).toBe('true');
+    expect(wrapper.findComponent(MdAnalysisSunburst).vm.$.uid).toBe(instance);
+    expect(wrapper.getComponent(Select).props('modelValue')).toBe('4');
     wrapper.unmount();
   });
   it('renders loading only for the deleting entry and clears it without recycling other rows', async () => {

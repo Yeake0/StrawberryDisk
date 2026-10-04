@@ -674,8 +674,8 @@ fn isolated_analysis_scans_only_requested_root() {
     assert_eq!(result.entries[0].name, "fingerprint-test");
     assert_eq!(
         cache::memory_entry_counts().expect("memory-cache counts should be readable"),
-        (1, 2, 0),
-        "a completed analysis should publish one authoritative in-memory directory snapshot"
+        (1, 2, usize::from(expected_allocated > 0)),
+        "the directory snapshot should retain a bounded supplemental file candidate"
     );
 }
 
@@ -1252,6 +1252,22 @@ fn analysis_charges_hard_links_once_with_stable_native_and_fallback_ownership() 
             StorageTraversal::analyze_path_with_diagnostics(Some(root_text.clone()), true, |_| {})
                 .unwrap();
         assert_eq!(diagnostics.fast_path, "used");
+        assert_eq!(
+            result
+                .directory_hierarchy
+                .iter()
+                .find(|node| node.name == "a")
+                .unwrap()
+                .total_entry_count,
+            1
+        );
+        let owner_node = result
+            .directory_hierarchy
+            .iter()
+            .find(|node| node.name == "a")
+            .unwrap();
+        assert_eq!(owner_node.files.len(), 1);
+        assert_eq!(owner_node.files[0].name, "alias.bin");
         assert_eq!(result.total_bytes, allocation);
         assert_eq!(
             result.entries.iter().map(|entry| entry.bytes).sum::<u64>(),
@@ -1340,5 +1356,134 @@ fn analysis_charges_hard_links_once_with_stable_native_and_fallback_ownership() 
     .unwrap()
     .0;
     assert_eq!(refreshed.total_bytes, allocation);
+    cache::clear_all().unwrap();
+}
+
+#[test]
+fn hierarchy_counts_small_direct_items_without_recursive_descendants_or_empty_files() {
+    let _operation_lock = crate::shared::operation::test_operation_lock();
+    cache::clear_all().unwrap();
+    let fixture = tempfile::tempdir().unwrap();
+    let root = current_platform()
+        .canonicalize_no_links(fixture.path())
+        .unwrap();
+    let branch = root.join("branch");
+    fs::create_dir_all(branch.join("child")).unwrap();
+    fs::create_dir(branch.join("empty-dir")).unwrap();
+    fs::write(branch.join("large.bin"), vec![5; 1024 * 1024]).unwrap();
+    fs::write(branch.join("empty.bin"), []).unwrap();
+    for index in 0..80 {
+        fs::write(branch.join(format!("small-{index}")), [3; 32]).unwrap();
+        fs::write(
+            branch.join("child").join(format!("nested-{index}")),
+            [4; 32],
+        )
+        .unwrap();
+    }
+    let result = StorageTraversal::analyze_path_with_progress(
+        Some(current_platform().display_path(&root)),
+        true,
+        |_| {},
+    )
+    .unwrap();
+    let node = result
+        .directory_hierarchy
+        .iter()
+        .find(|node| node.name == "branch")
+        .unwrap();
+    assert_eq!(
+        node.total_entry_count, 82,
+        "81 nonempty direct files plus one nonempty child directory"
+    );
+    assert!(node.files.len() + node.children.len() <= 64);
+    let child = cache::analysis_result(&branch).unwrap().unwrap();
+    assert_eq!(node.total_entry_count, child.total_entry_count as u64);
+    let progress = Arc::new(ProgressTracker::new(0, |_| {}, 0));
+    let (_, snapshot) = traverse_memory_only(
+        &root,
+        ScanPurpose::Analysis,
+        now_ms(),
+        None,
+        &progress,
+        &AtomicBool::new(false),
+        None,
+    )
+    .unwrap();
+    assert_eq!(snapshot.directories[&branch].direct_file_count, 81);
+    assert_eq!(
+        snapshot.directories[&branch.join("child")].direct_file_count,
+        80
+    );
+}
+
+#[test]
+fn hierarchy_projects_medium_files_below_large_file_floor_in_native_and_fallback_scans() {
+    let _operation_lock = crate::shared::operation::test_operation_lock();
+    cache::clear_all().unwrap();
+    let fixture = tempfile::tempdir().unwrap();
+    let root = current_platform()
+        .canonicalize_no_links(fixture.path())
+        .unwrap();
+    let branch = root.join("branch");
+    fs::create_dir(&branch).unwrap();
+    for index in 0..96 {
+        fs::write(
+            branch.join(format!("file-{index:03}")),
+            vec![3; 256 * 1024 + index * 4096],
+        )
+        .unwrap();
+    }
+    let result = StorageTraversal::analyze_path_with_progress(
+        Some(current_platform().display_path(&root)),
+        true,
+        |_| {},
+    )
+    .unwrap();
+    let node = result
+        .directory_hierarchy
+        .iter()
+        .find(|node| node.name == "branch")
+        .unwrap();
+    assert_eq!(
+        node.files.len(),
+        64,
+        "medium files must be available before area filtering"
+    );
+    assert_eq!(node.total_entry_count, 96);
+    assert_eq!(node.files[0].name, "file-095");
+    assert_eq!(node.files[63].name, "file-032");
+    assert!(node
+        .files
+        .iter()
+        .all(|file| file.bytes < LARGE_FILE_CANDIDATE_FLOOR_BYTES));
+    let progress = Arc::new(ProgressTracker::new(0, |_| {}, 0));
+    let (aggregate, snapshot) = traverse_memory_only(
+        &root,
+        ScanPurpose::Analysis,
+        now_ms(),
+        None,
+        &progress,
+        &AtomicBool::new(false),
+        None,
+    )
+    .unwrap();
+    let fallback = cache::analysis_result_from_snapshot(
+        &root,
+        aggregate,
+        &snapshot.directories,
+        &snapshot.files,
+        &[],
+        &mangodisk_platform::NameExclusions::default(),
+    )
+    .unwrap();
+    let fallback_node = fallback
+        .directory_hierarchy
+        .iter()
+        .find(|node| node.name == "branch")
+        .unwrap();
+    assert_eq!(fallback_node.files.len(), 64);
+    assert_eq!(fallback_node.files[0].name, "file-095");
+    assert_eq!(fallback_node.total_entry_count, 96);
+    assert_eq!(fallback.total_bytes, result.total_bytes);
     cache::clear_all().unwrap();
 }

@@ -1,19 +1,28 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import { computed, onDeactivated, ref, watch } from 'vue';
 
 import MdScanExclusionLink from '@/components/custom/md-scan-exclusion-link.vue';
-import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { ANALYSIS_VIEW_IDS } from '@/lib/models/analysis';
+import { ANALYSIS_CHART_MAX_DEPTH, ANALYSIS_VIEW_IDS } from '@/lib/models/analysis';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ICON_NAMES } from '@/lib/models/ui';
-import type { AnalysisResult, AnalysisViewId, DirectoryEntryInfo } from '@/lib/models/analysis';
+import type {
+  AnalysisRemainderSelection,
+  AnalysisResult,
+  AnalysisViewId,
+  DirectoryEntryInfo,
+} from '@/lib/models/analysis';
 import { ByteSizeService } from '@/lib/services/byte-size-service';
 import * as FormatUtils from '@/lib/utils/format';
 
-import MdAnalysisDetailsTable from './md-analysis-details-table.vue';
+import MdAnalysisSunburst from './md-analysis-sunburst.vue';
 import MdAnalysisTreemap from './md-analysis-treemap.vue';
+import MdAnalysisOtherDialog from './md-analysis-other-dialog.vue';
 
 const { t } = useI18n({ useScope: 'global' });
+const treemapDepth = defineModel<number>('treemapDepth', { default: 1 });
+const sunburstDepth = defineModel<number>('sunburstDepth', { default: 3 });
 
 const props = defineProps<{
   result: AnalysisResult;
@@ -24,6 +33,7 @@ const props = defineProps<{
   openDisabled: boolean;
   deleteDisabled: boolean;
   deletingPath?: string | null;
+  hoveredEntryPath?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -31,85 +41,133 @@ const emit = defineEmits<{
   openEntry: [entry: DirectoryEntryInfo];
   reveal: [path: string];
   delete: [entry: DirectoryEntryInfo];
+  hoverEntry: [path: string | null];
+  navigate: [path: string];
+  refreshDirectory: [path: string];
   openExclusions: [];
   'update:viewMode': [viewMode: AnalysisViewId];
 }>();
+const remainderSelection = ref<AnalysisRemainderSelection | null>(null);
+function showRemainder(selection: AnalysisRemainderSelection) {
+  if (props.openDisabled) return;
+  emit('hoverEntry', null);
+  remainderSelection.value = selection;
+}
+watch([() => props.result, () => props.openDisabled, () => props.viewMode], () => {
+  remainderSelection.value = null;
+});
+onDeactivated(() => {
+  remainderSelection.value = null;
+});
+const minimumDepth = computed(() => (props.viewMode === ANALYSIS_VIEW_IDS.treemap ? 1 : 2));
+const depth = computed(() => (props.viewMode === ANALYSIS_VIEW_IDS.treemap ? treemapDepth.value : sunburstDepth.value));
+const depthLevels = computed(() =>
+  Array.from({ length: ANALYSIS_CHART_MAX_DEPTH - minimumDepth.value + 1 }, (_, index) => index + minimumDepth.value)
+);
+function updateDepth(value: unknown) {
+  const level = Number(value);
+  if (!Number.isInteger(level) || level < minimumDepth.value || level > ANALYSIS_CHART_MAX_DEPTH) return;
+  if (props.viewMode === ANALYSIS_VIEW_IDS.treemap) treemapDepth.value = level;
+  else sunburstDepth.value = level;
+}
 </script>
 
 <template>
   <section class="visual-pane">
     <header class="md-workspace-toolbar">
       <div class="space-summary">
-        <p>
-          {{
+        <p
+          :aria-label="
             t(
               'analysis.folderSpaceSummary',
               { folders: FormatUtils.integer(folderCount), size: ByteSizeService.bytes(result.totalBytes) },
               folderCount
             )
-          }}
-        </p>
-        <MdTooltip
-          v-if="result.truncated && viewMode === ANALYSIS_VIEW_IDS.details"
-          :text="t('analysis.limitedEntries')"
+          "
         >
-          <button type="button" class="md-help-action" :aria-label="t('analysis.limitedEntries')">
-            <MdIcon :name="ICON_NAMES.help" :size="14" aria-hidden="true" />
-          </button>
-        </MdTooltip>
+          <strong>{{ ByteSizeService.bytes(result.totalBytes) }}</strong>
+          <span>{{ t('analysis.totalSizeLabel') }}</span>
+        </p>
         <MdScanExclusionLink
           v-if="exclusionsActive"
           :hint="t('analysis.exclusionHint')"
           @open="emit('openExclusions')"
         />
       </div>
-      <div class="view-switcher" role="group" :aria-label="t('analysis.result')">
-        <button
-          type="button"
-          :class="{ active: props.viewMode === ANALYSIS_VIEW_IDS.treemap }"
-          :aria-pressed="props.viewMode === ANALYSIS_VIEW_IDS.treemap"
-          @click="emit('update:viewMode', ANALYSIS_VIEW_IDS.treemap)"
-        >
-          <MdIcon :name="ICON_NAMES.grid" :size="15" />
-          {{ t('analysis.treemap') }}
-        </button>
-        <button
-          type="button"
-          :class="{ active: props.viewMode === ANALYSIS_VIEW_IDS.details }"
-          :aria-pressed="props.viewMode === ANALYSIS_VIEW_IDS.details"
-          @click="emit('update:viewMode', ANALYSIS_VIEW_IDS.details)"
-        >
-          <MdIcon :name="ICON_NAMES.list" :size="15" />
-          {{ t('analysis.details') }}
-        </button>
+      <div class="chart-controls">
+        <Select :model-value="String(depth)" :disabled="openDisabled" @update:model-value="updateDepth">
+          <SelectTrigger size="sm" class="chart-depth" :aria-label="t('analysis.sunburstDepth')">
+            <SelectValue>{{ t('analysis.sunburstLevels', { count: depth }, depth) }}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="level in depthLevels" :key="level" :value="String(level)">
+              {{ t('analysis.sunburstLevels', { count: level }, level) }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <div class="view-switcher" role="group" :aria-label="t('analysis.result')">
+          <button
+            type="button"
+            :class="{ active: props.viewMode === ANALYSIS_VIEW_IDS.treemap }"
+            :aria-pressed="props.viewMode === ANALYSIS_VIEW_IDS.treemap"
+            @click="emit('update:viewMode', ANALYSIS_VIEW_IDS.treemap)"
+          >
+            <MdIcon :name="ICON_NAMES.chartTreemap" :size="15" />
+            {{ t('analysis.treemap') }}
+          </button>
+          <button
+            type="button"
+            :class="{ active: props.viewMode === ANALYSIS_VIEW_IDS.sunburst }"
+            :aria-pressed="props.viewMode === ANALYSIS_VIEW_IDS.sunburst"
+            @click="emit('update:viewMode', ANALYSIS_VIEW_IDS.sunburst)"
+          >
+            <MdIcon :name="ICON_NAMES.chartSunburst" :size="15" />
+            {{ t('analysis.sunburst') }}
+          </button>
+        </div>
       </div>
     </header>
 
     <KeepAlive>
       <MdAnalysisTreemap
         v-if="props.viewMode === ANALYSIS_VIEW_IDS.treemap"
-        :entries="entries"
-        :total-bytes="result.totalBytes"
+        :depth="treemapDepth"
+        :result="result"
         :open-disabled="openDisabled"
         :delete-disabled="deleteDisabled"
         :deleting-path="deletingPath"
+        :hovered-entry-path="hoveredEntryPath"
+        @hover-entry="emit('hoverEntry', $event)"
+        @navigate="emit('navigate', $event)"
         @activate="emit('activate', $event)"
         @open-entry="emit('openEntry', $event)"
         @reveal="emit('reveal', $event)"
         @delete="emit('delete', $event)"
+        @show-remainder="showRemainder"
       />
-      <MdAnalysisDetailsTable
+      <MdAnalysisSunburst
         v-else
-        :entries="entries"
-        :open-disabled="openDisabled"
+        :depth="sunburstDepth"
+        :result="result"
         :delete-disabled="deleteDisabled"
         :deleting-path="deletingPath"
-        @activate="emit('activate', $event)"
+        :open-disabled="openDisabled"
+        :hovered-entry-path="hoveredEntryPath"
+        @navigate="emit('navigate', $event)"
+        @hover-entry="emit('hoverEntry', $event)"
         @open-entry="emit('openEntry', $event)"
         @reveal="emit('reveal', $event)"
         @delete="emit('delete', $event)"
+        @show-remainder="showRemainder"
       />
     </KeepAlive>
+    <MdAnalysisOtherDialog
+      :scan-id="result.scanId"
+      :selection="remainderSelection"
+      @close="remainderSelection = null"
+      @navigate="emit('navigate', $event)"
+      @refresh-directory="emit('refreshDirectory', $event)"
+    />
   </section>
 </template>
 
@@ -126,9 +184,52 @@ const emit = defineEmits<{
 
 .visual-pane > header {
   display: flex;
+  height: auto;
+  flex: none;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
   padding: 2px 12px;
+}
+
+.chart-controls {
+  display: flex;
+  min-width: 0;
+  margin-left: auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-depth {
+  width: auto;
+  height: var(--layout-workspace-control-height);
+  flex: none;
+  font-size: var(--font-content-secondary);
+  @apply border-border/50 bg-transparent text-muted-foreground shadow-none;
+}
+
+.chart-depth:hover:not(:disabled),
+.chart-depth[data-state='open'] {
+  @apply border-border bg-accent/35 text-foreground;
+}
+
+.chart-depth[data-state='open'] {
+  @apply ring-0;
+}
+
+.chart-depth:focus-visible {
+  @apply border-ring/60 ring-2 ring-ring/25;
+}
+
+.chart-depth :deep(svg) {
+  opacity: 0.4;
+}
+
+.chart-depth:hover:not(:disabled) :deep(svg),
+.chart-depth:focus-visible :deep(svg),
+.chart-depth[data-state='open'] :deep(svg) {
+  opacity: 0.55;
 }
 
 .space-summary {
@@ -139,13 +240,28 @@ const emit = defineEmits<{
 }
 
 .visual-pane header p {
+  display: flex;
   min-width: 0;
+  align-items: baseline;
+  gap: 8px;
   margin: 0;
   overflow: hidden;
   @apply text-muted-foreground;
   font-size: var(--font-content-secondary);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.space-summary strong {
+  @apply text-card-foreground;
+  font-size: var(--font-content-section-title);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.space-summary p > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .view-switcher {
@@ -166,7 +282,7 @@ const emit = defineEmits<{
   border: 0;
   border-left-width: 1px;
   padding: 0 11px;
-  @apply border-border bg-card text-card-foreground transition-colors duration-200;
+  @apply border-border bg-card text-muted-foreground transition-colors duration-200;
   font: inherit;
   font-size: var(--font-content-secondary);
   cursor: pointer;
@@ -181,7 +297,8 @@ const emit = defineEmits<{
 }
 
 .view-switcher button.active {
-  @apply bg-accent text-accent-foreground;
+  background: var(--surface-primary-subtle);
+  @apply text-primary;
 }
 
 .view-switcher button:focus-visible {

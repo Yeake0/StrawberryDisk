@@ -264,9 +264,8 @@ button:focus-visible {
   position: absolute;
   z-index: -1;
   inset: 0 auto 0 0;
-  /* Explicit opacity also works in the WebView shipped with macOS 12.5. */
-  background: var(--foreground);
-  opacity: 0.05;
+  background: var(--result-item-share-color);
+  opacity: var(--result-item-share-opacity);
   pointer-events: none;
 }
 .excluded-badge {

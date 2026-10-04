@@ -25,15 +25,15 @@ use crate::storage::large_files::{
 };
 use crate::storage::StorageScanExclusions;
 use mangodisk_platform::{
-    current_platform, FastAnalysisQuery, FastAnalysisRecord, FastAnalysisScanError,
-    FastAnalysisSummary, FilesystemChangeToken, LargeFileCandidateScanError,
+    current_platform, FastAnalysisFile, FastAnalysisQuery, FastAnalysisRecord,
+    FastAnalysisScanError, FastAnalysisSummary, FilesystemChangeToken, LargeFileCandidateScanError,
     LargeFileCandidateSummary, Platform, ScanPurpose,
 };
 
 mod index_sink;
 mod indexed_scopes;
 
-use index_sink::{CompletedIndexSink, IndexRecordSink};
+use index_sink::{AnalysisCandidates, CompletedIndexSink, IndexRecordSink};
 #[cfg(any(debug_assertions, test))]
 const ANALYSIS_ROOT_ENV: &str = "MANGODISK_ANALYSIS_ROOT";
 #[derive(Debug, Default)]
@@ -812,6 +812,7 @@ fn measure_analysis_directory(
         return Ok(aggregate);
     };
     let mut fingerprint_entries = Vec::new();
+    let mut analysis_files = AnalysisCandidates::new(64);
 
     for entry in entries {
         if traversal.cancelled.load(Ordering::Relaxed) {
@@ -902,6 +903,22 @@ fn measure_analysis_directory(
                     aggregate.skipped_count += 1;
                 }
             }
+            if traversal.purpose == ScanPurpose::Analysis
+                && usage.allocated_bytes > 0
+                && usage.allocated_bytes < LARGE_FILE_CANDIDATE_FLOOR_BYTES
+                && current_platform().hard_link_identity(&metadata).is_none()
+                && analysis_files.would_retain(usage.allocated_bytes, &child_path)
+                && current_platform()
+                    .should_skip(&child_path, traversal.scan_root, ScanPurpose::LargeFiles)
+                    .is_none()
+            {
+                analysis_files.push(FastAnalysisFile {
+                    path: child_path.clone(),
+                    allocated_bytes: usage.allocated_bytes,
+                    logical_bytes: usage.logical_bytes,
+                    modified_at_ms: modified_ms(&metadata),
+                });
+            }
             // Analysis includes system-owned allocation in directory totals, while cached file
             // rows still use the stricter large-file safety boundary. This keeps later analysis
             // navigation and destructive cache updates from exposing protected file targets.
@@ -925,6 +942,9 @@ fn measure_analysis_directory(
     }
     if traversal.purpose != ScanPurpose::LargeFiles && aggregate.skipped_count == 0 {
         aggregate.fingerprint = Some(finalize_metadata_fingerprint(fingerprint_entries));
+    }
+    for file in analysis_files.into_files() {
+        traversal.sink.push_analysis_file(file);
     }
     if traversal.purpose != ScanPurpose::LargeFiles || path == traversal.scan_root {
         traversal
@@ -963,6 +983,20 @@ impl<'a> FastAnalysisStreamValidation<'a> {
             return Err(OPERATION_CANCELLED_ERROR.to_string());
         }
         match record {
+            FastAnalysisRecord::AnalysisFile(file) => {
+                if !file.path.starts_with(self.root) || file.path == self.root {
+                    return Err("analysis file record is outside the scan root".to_string());
+                }
+                if !self.exclusions.matches(&file.path)
+                    && current_platform()
+                        .should_skip(&file.path, self.root, ScanPurpose::LargeFiles)
+                        .is_none()
+                    && file.allocated_bytes < LARGE_FILE_CANDIDATE_FLOOR_BYTES
+                {
+                    sink.push_analysis_file(file);
+                }
+                Ok(())
+            }
             FastAnalysisRecord::HardLinkedFile {
                 path,
                 identity,
@@ -1323,9 +1357,9 @@ fn stream_complete_large_files(
         },
         &mut |record| match record {
             FastAnalysisRecord::LargeFileCandidate(path) => validation.consume(path, &mut sink),
-            FastAnalysisRecord::Directory { .. } | FastAnalysisRecord::HardLinkedFile { .. } => {
-                Ok(())
-            }
+            FastAnalysisRecord::Directory { .. }
+            | FastAnalysisRecord::HardLinkedFile { .. }
+            | FastAnalysisRecord::AnalysisFile(_) => Ok(()),
         },
     );
     match summary {

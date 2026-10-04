@@ -516,7 +516,8 @@ impl NativeCandidateCollector<'_> {
             &mut |path, file_count, bytes| self.progress.observe_batch(path, file_count, bytes),
             &mut |record| match record {
                 FastAnalysisRecord::Directory { .. }
-                | FastAnalysisRecord::HardLinkedFile { .. } => Ok(()),
+                | FastAnalysisRecord::HardLinkedFile { .. }
+                | FastAnalysisRecord::AnalysisFile(_) => Ok(()),
                 FastAnalysisRecord::LargeFileCandidate(path) => {
                     if self.exclusions.matches(&path) {
                         return Ok(());

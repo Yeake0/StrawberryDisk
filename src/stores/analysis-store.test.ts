@@ -1,3 +1,4 @@
+import { isReactive } from 'vue';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -57,6 +58,22 @@ describe('analysis store', () => {
 
     expect(appStore.currentPage).toBe(PAGE_IDS.settings);
     expect(analysisStore.result).toEqual(result);
+  });
+
+  it('keeps large native snapshots outside deep reactivity across cached navigation', async () => {
+    const snapshot = {
+      ...result,
+      entries: Array.from({ length: 500 }, (_, index) => ({ ...entry, path: `/fixture/${index}.bin` })),
+    };
+    const analyze = vi.spyOn(AnalysisService, 'analyze').mockResolvedValue(snapshot);
+    const store = useAnalysisStore();
+    await store.analyze('/fixture', true);
+    expect(store.result).toBe(snapshot);
+    expect(isReactive(store.result?.entries)).toBe(false);
+    await store.analyze('/fixture');
+    expect(analyze).toHaveBeenCalledOnce();
+    expect(store.result).toBe(snapshot);
+    expect(isReactive(store.result?.entries[499])).toBe(false);
   });
 
   it('starts the pending state before loading preferences and cancels before the native scan', async () => {

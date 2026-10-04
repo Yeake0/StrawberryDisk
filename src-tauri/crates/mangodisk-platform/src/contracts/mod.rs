@@ -63,8 +63,8 @@ pub use processes::{
 #[cfg(not(target_os = "linux"))]
 pub(crate) use scan::FilesystemChangeMonitorBackend;
 pub use scan::{
-    DirectoryEntryIdentities, FastAnalysisQuery, FastAnalysisRecord, FastAnalysisScanError,
-    FastAnalysisSummary, FileSpaceUsage, FilesystemChangeImpactError,
+    DirectoryEntryIdentities, FastAnalysisFile, FastAnalysisQuery, FastAnalysisRecord,
+    FastAnalysisScanError, FastAnalysisSummary, FileSpaceUsage, FilesystemChangeImpactError,
     FilesystemChangeImpactOutcome, FilesystemChangeImpactPlan, FilesystemChangeImpactSummary,
     FilesystemChangeImpactUnavailable, FilesystemChangeMonitor, FilesystemChangeStatus,
     FilesystemChangeToken, LargeFileCandidateScanError, LargeFileCandidateSummary,

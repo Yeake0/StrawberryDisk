@@ -1,4 +1,5 @@
 import type { ScanNameExclusion } from '@/lib/models/storage-scan';
+import { markRaw } from 'vue';
 import { defineStore } from 'pinia';
 
 import { ANALYSIS_RESULT_CACHE_LIMIT } from '@/lib/models/analysis';
@@ -129,7 +130,9 @@ export const useAnalysisStore = defineStore('analysis', {
           excludedNameCount: requestedNames.length,
         });
         this.scanStarted = true;
-        const result = await AnalysisService.analyze(target, refresh, requestedExclusions, requestedNames);
+        // Published snapshots are replaced rather than edited in place. Keep large
+        // entry arrays out of deep reactivity; workflow state remains reactive.
+        const result = markRaw(await AnalysisService.analyze(target, refresh, requestedExclusions, requestedNames));
         if (
           !StorageScanPreferenceUtils.sameExcludedFolders(requestedExclusions, preferences.pathsForScope('analysis')) ||
           !StorageScanPreferenceUtils.sameExcludedNames(requestedNames, preferences.namesForScope('analysis'))
@@ -208,7 +211,7 @@ export const useAnalysisStore = defineStore('analysis', {
           excludedNameCount: names.length,
         });
         this.scanStarted = true;
-        const refreshed = await AnalysisService.analyze(root, true, paths, names);
+        const refreshed = markRaw(await AnalysisService.analyze(root, true, paths, names));
         if (this.cancelling) return;
         if (
           StorageScanPreferenceUtils.sameExcludedFolders(paths, preferences.pathsForScope('analysis')) &&
@@ -267,13 +270,15 @@ export const useAnalysisStore = defineStore('analysis', {
         } else {
           // Reconcile the current scan and expire overlapping snapshots so
           // navigation cannot revive deleted entries or expired scan IDs.
-          this.cache = AnalysisCacheUtils.syncAfterDelete(
+          const synchronized = AnalysisCacheUtils.syncAfterDelete(
             this.cache,
             removed.removedPath,
             removed.releasedBytes,
             removed.removedFileCount,
             sourceResult.root
           );
+          for (const result of Object.values(synchronized)) markRaw(result);
+          this.cache = synchronized;
           this.cacheOrder = AnalysisCacheUtils.retainExisting(this.cacheOrder, this.cache);
           // Refresh the currently visible result rather than the path where the
           // operation started, preserving correctness if a future UI can navigate.

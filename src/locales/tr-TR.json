@@ -1647,6 +1647,7 @@
     }
   },
   "common": {
+    "retry": "Yeniden dene",
     "scrollbar": "Dikey kaydırma çubuğu",
     "decreaseValue": "{label} değerini azalt",
     "increaseValue": "{label} değerini artır",
@@ -1947,16 +1948,21 @@
     }
   },
   "analysis": {
+    "totalSizeLabel": "Toplam boyut",
+    "shareOfCurrentFolder": "Geçerli klasördeki pay",
+    "shareOfParentFolder": "Üst klasördeki pay",
     "title": "Disk Alanı Analizi",
     "pathLabel": "Geçerli konum",
+    "switchSiblingFolder": "Aynı düzeydeki klasöre geç: {name}",
+    "collapseFileList": "Dosya listesini daralt",
+    "expandFileList": "Dosya listesini genişlet",
     "start": "Analizi Başlat",
     "analyzing": "Klasörler taranıyor…",
     "rescan": "Tekrar Analiz Et",
     "result": "Geçerli klasör",
     "treemap": "Alan Haritası",
-    "treemapRemainder": "Daha küçük öğe · {count} | Daha küçük öğeler · {count}",
-    "treemapRemainderHint": "{count} küçük öğe toplam {size} alan kullanıyor. Tüm ayrıntılar listede görülebilir | {count} küçük öğe toplam {size} alan kullanıyor. Tüm ayrıntılar listede görülebilir",
-    "details": "Liste",
+    "other": "Diğer",
+    "treemapRemainder": "Diğer · {count} öğe",
     "back": "Geri",
     "forward": "İleri",
     "home": "Analiz köküne dön",
@@ -1975,9 +1981,13 @@
     "emptyDescription": "Seçili konumdaki dosya ve klasörlerin disk alanını nasıl kullandığını analiz edin",
     "folderFileSummary": "{folders} klasör · {files} dosya | {folders} klasör · {files} dosya",
     "folderSpaceSummary": "{folders} klasör · {size} | {folders} klasör · {size}",
-    "limitedEntries": "En büyük 100 öğeye kadar gösterilir",
+    "limitedEntries": "En büyük {count} öğeye kadar gösterilir",
     "exclusionHint": "Bu görünüm yalnızca taranan içeriği sayar; hariç tutulanlar diskin gerçek kullanım alanını değiştirmez",
-    "deleting": "Siliniyor…"
+    "deleting": "Siliniyor…",
+    "sunburst": "Güneş grafiği",
+    "sunburstDepth": "Derinlik",
+    "sunburstLevels": "Derinlik {count}",
+    "sunburstRemainder": "Dosyalar ve diğer öğeler"
   },
   "storageScanExclusions": {
     "title": "Tarama dışında tutulanlar",

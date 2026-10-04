@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onDeactivated, ref, watch } from 'vue';
+import { onBeforeUnmount, onDeactivated, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import MdIcon from '@/components/icons/md-icon.vue';
@@ -11,12 +11,14 @@ const { t } = useI18n({ useScope: 'global' });
 const props = withDefaults(
   defineProps<{
     entryKey?: string;
+    enabled?: boolean;
     openDisabled?: boolean;
     deleteDisabled?: boolean;
     revealDisabled?: boolean;
   }>(),
   {
     entryKey: undefined,
+    enabled: true,
     openDisabled: false,
     deleteDisabled: false,
     revealDisabled: false,
@@ -31,7 +33,19 @@ const emit = defineEmits<{
 }>();
 // Recycled virtual rows must not leave a menu targeting the previous file.
 const open = ref(false);
+// Owners must observe programmatic closure as well as menu-originated updates,
+// otherwise chart tooltips can remain suppressed after a result is replaced.
+watch(open, value => emit('menuStateChange', value), { flush: 'sync' });
+watch(
+  () => props.enabled,
+  enabled => {
+    if (!enabled) open.value = false;
+  }
+);
 onDeactivated(() => {
+  open.value = false;
+});
+onBeforeUnmount(() => {
   open.value = false;
 });
 watch(
@@ -45,7 +59,8 @@ watch(
 
 <template>
   <!-- The owning domain maps these presentation-only actions to its trusted entry model. -->
-  <ContextMenu v-model:open="open" @update:open="emit('menuStateChange', $event)">
+  <slot v-if="!enabled" />
+  <ContextMenu v-else v-model:open="open">
     <ContextMenuTrigger as-child>
       <slot />
     </ContextMenuTrigger>

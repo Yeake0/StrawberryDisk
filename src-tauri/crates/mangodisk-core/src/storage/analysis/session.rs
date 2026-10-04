@@ -9,7 +9,10 @@ use std::{
 
 use mangodisk_platform::{current_platform, Platform};
 
-use super::{AnalysisEntryCandidate, AnalysisResult};
+use super::{
+    AnalysisDirectoryNode, AnalysisEntryCandidate, AnalysisRemainderParent, AnalysisResult,
+    DirectoryEntryInfo,
+};
 
 const ANALYSIS_RESULT_SESSION_LIMIT: usize = 80;
 
@@ -92,6 +95,92 @@ pub(super) fn resolve_entry_candidate(
     })
 }
 
+fn find_directory<'a>(
+    nodes: &'a [AnalysisDirectoryNode],
+    path: &str,
+) -> Option<&'a AnalysisDirectoryNode> {
+    for node in nodes {
+        if current_platform().paths_equal(Path::new(&node.path), Path::new(path)) {
+            return Some(node);
+        }
+        if let Some(found) = find_directory(&node.children, path) {
+            return Some(found);
+        }
+    }
+    None
+}
+
+fn find_projected_file<'a>(
+    nodes: &'a [AnalysisDirectoryNode],
+    path: &str,
+) -> Option<&'a DirectoryEntryInfo> {
+    for node in nodes {
+        if let Some(file) = node
+            .files
+            .iter()
+            .find(|file| current_platform().paths_equal(Path::new(&file.path), Path::new(path)))
+        {
+            return Some(file);
+        }
+        if let Some(file) = find_projected_file(&node.children, path) {
+            return Some(file);
+        }
+    }
+    None
+}
+
+/// Read-only open actions can target published hierarchy files and directories. The
+/// complete entry resolver remains the only authority for destructive actions.
+pub(super) fn resolve_open_path(scan_id: u64, selected_path: &str) -> Result<String, String> {
+    let sessions = lock_sessions()?;
+    let result = &sessions
+        .iter()
+        .find(|session| session.result.scan_id == scan_id)
+        .ok_or_else(|| "the disk-analysis result session expired; scan again".to_string())?
+        .result;
+    result
+        .entries
+        .iter()
+        .find(|entry| entry.path == selected_path)
+        .map(|entry| entry.path.clone())
+        .or_else(|| {
+            find_directory(&result.directory_hierarchy, selected_path).map(|node| node.path.clone())
+        })
+        .or_else(|| {
+            find_projected_file(&result.directory_hierarchy, selected_path)
+                .map(|file| file.path.clone())
+        })
+        .ok_or_else(|| "the selected item is not part of the current disk analysis".to_string())
+}
+
+/// Only published parents can supply read-only remainder details.
+pub(super) fn resolve_remainder_parent(
+    scan_id: u64,
+    path: &str,
+) -> Result<AnalysisRemainderParent, String> {
+    let sessions = lock_sessions()?;
+    let session = sessions
+        .iter()
+        .find(|session| session.result.scan_id == scan_id)
+        .ok_or_else(|| "the disk-analysis result session expired; scan again".to_string())?;
+    let result = &session.result;
+    let (path, bytes) = if current_platform().paths_equal(Path::new(&result.root), Path::new(path))
+    {
+        (result.root.clone(), result.total_bytes)
+    } else {
+        find_directory(&result.directory_hierarchy, path)
+            .map(|node| (node.path.clone(), node.bytes))
+            .ok_or_else(|| {
+                "the remainder parent is not part of the current disk analysis".to_string()
+            })?
+    };
+    Ok(AnalysisRemainderParent {
+        path,
+        bytes,
+        exclusions: session.exclusions.clone(),
+    })
+}
+
 /// Expires authoritative snapshots whose contents may have changed after a failed delete.
 pub(super) fn invalidate_changed_path(changed_path: &Path) -> Result<(), String> {
     let mut sessions = lock_sessions()?;
@@ -135,6 +224,12 @@ pub(super) fn synchronize_removed_path(
         .entries
         .retain(|entry| !current_platform().paths_equal(Path::new(&entry.path), removed_path));
     source.total_bytes = source.total_bytes.saturating_sub(displayed_bytes);
+    if displayed_bytes > 0 {
+        source.total_entry_count = source.total_entry_count.saturating_sub(1);
+    }
+    source
+        .directory_hierarchy
+        .retain(|node| !current_platform().paths_equal(Path::new(&node.path), removed_path));
 
     let invalidated = sessions
         .iter()
@@ -165,8 +260,10 @@ mod tests {
             root: "/fixture".to_string(),
             scanned_at_ms: 1,
             total_bytes: 4,
+            total_entry_count: 1,
             skipped_count: 0,
             truncated: false,
+            directory_hierarchy: Vec::new(),
             requires_delete_rescan: false,
             entries: vec![DirectoryEntryInfo {
                 name: "sample.bin".to_string(),
@@ -183,6 +280,7 @@ mod tests {
 
     #[test]
     fn entry_candidate_must_belong_to_the_authoritative_analysis_result() {
+        let _operation_lock = crate::shared::operation::test_operation_lock();
         let result = publish_result_session(result("/fixture/sample.bin"))
             .expect("publish the analysis fixture");
 
@@ -201,9 +299,58 @@ mod tests {
         );
     }
 
+    #[test]
+    fn hierarchy_open_targets_do_not_authorize_deletion_or_unpublished_descendants() {
+        let _operation_lock = crate::shared::operation::test_operation_lock();
+        let mut fixture = result("/context-fixture/sample.bin");
+        fixture.root = "/context-fixture".into();
+        fixture.directory_hierarchy = vec![AnalysisDirectoryNode {
+            name: "A".into(),
+            path: "/context-fixture/A".into(),
+            bytes: 4,
+            file_count: 1,
+            total_entry_count: 1,
+            children: vec![AnalysisDirectoryNode {
+                name: "B".into(),
+                path: "/context-fixture/A/B".into(),
+                bytes: 4,
+                file_count: 1,
+                total_entry_count: 0,
+                children: vec![],
+                files: vec![],
+            }],
+            files: vec![],
+        }];
+        let published = publish_result_session(fixture).unwrap();
+        assert_eq!(
+            resolve_open_path(published.scan_id, "/context-fixture/sample.bin").unwrap(),
+            "/context-fixture/sample.bin"
+        );
+        assert_eq!(
+            resolve_open_path(published.scan_id, "/context-fixture/A/B").unwrap(),
+            "/context-fixture/A/B"
+        );
+        assert!(resolve_entry_candidate(published.scan_id, "/context-fixture/A/B").is_err());
+        for path in [
+            "/context-fixture/A/B/unpublished.bin",
+            "/context-fixture/A/B/../unknown",
+            "/outside",
+            "/context-fixture",
+        ] {
+            assert!(
+                resolve_open_path(published.scan_id, path).is_err(),
+                "unpublished target must fail: {path}"
+            );
+        }
+        assert!(resolve_open_path(published.scan_id + 10000, "/context-fixture/A/B").is_err());
+        invalidate_changed_path(Path::new("/context-fixture/A")).unwrap();
+        assert!(resolve_open_path(published.scan_id, "/context-fixture/A/B").is_err());
+    }
+
     #[cfg(windows)]
     #[test]
     fn canonical_deleted_path_updates_display_path_session() {
+        let _operation_lock = crate::shared::operation::test_operation_lock();
         let root = std::env::temp_dir().join(format!(
             "mangodisk-analysis-session-{}-{}",
             std::process::id(),

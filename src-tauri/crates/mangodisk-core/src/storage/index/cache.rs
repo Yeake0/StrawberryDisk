@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::{HashMap, HashSet, VecDeque},
     fs,
     path::{Path, PathBuf},
     sync::{Mutex, OnceLock},
@@ -10,17 +10,21 @@ use mangodisk_platform::{
     FilesystemChangeToken, Platform, ScanPurpose, SkipReason,
 };
 
+use crate::storage::analysis::ANALYSIS_VISIBLE_ENTRY_LIMIT;
+
 use crate::{
     filesystem::metadata::{display_fingerprint, display_path, is_link_like, modified_ms},
     shared::operation::OPERATION_CANCELLED_ERROR,
     storage::{
-        analysis::{AnalysisResult, DirectoryEntryInfo},
+        analysis::{
+            AnalysisDirectoryNode, AnalysisRemainderParent, AnalysisRemainderRequest,
+            AnalysisResult, DirectoryEntryInfo,
+        },
         large_files::LargeFileEntry,
     },
 };
 
 const ANALYSIS_CACHE_ROOT_LIMIT: usize = 2;
-const ANALYSIS_VISIBLE_ENTRY_LIMIT: usize = 100;
 const ANALYSIS_CACHE_UNAVAILABLE_ERROR: &str = "the analysis cache is unavailable";
 
 static ANALYSIS_CACHE: OnceLock<Mutex<AnalysisCache>> = OnceLock::new();
@@ -250,7 +254,10 @@ pub(crate) fn large_file_entries_from_snapshot(
 ) -> Vec<LargeFileEntry> {
     let mut entries = files
         .iter()
-        .filter(|(path, _)| path.starts_with(root))
+        .filter(|(path, file)| {
+            path.starts_with(root)
+                && file.bytes >= crate::storage::large_files::LARGE_FILE_CANDIDATE_FLOOR_BYTES
+        })
         .filter(|(path, _)| {
             current_platform()
                 .should_skip(path, root, ScanPurpose::LargeFiles)
@@ -312,11 +319,89 @@ pub(crate) fn analysis_result(root: &Path) -> Result<Option<AnalysisResult>, Str
         |path| cache.directories.get(path).copied(),
         |path| cache.files.get(path).copied(),
     );
+    result.directory_hierarchy = build_directory_hierarchy(root, &cache.directories, &cache.files);
     result.requires_delete_rescan = cache
         .scan_roots
         .keys()
         .any(|scan_root| root.starts_with(scan_root) && has_shared_allocation(&cache, scan_root));
     Ok(Some(result))
+}
+
+/// Reads current direct children, reusing scan sizes for indexed entries.
+/// Read-only details tolerate filesystem and cache changes without extending
+/// the authoritative snapshot used by destructive operations.
+pub(crate) fn analysis_remainder_entries(
+    root: &Path,
+    parent: &AnalysisRemainderParent,
+    request: &AnalysisRemainderRequest,
+) -> Result<(u64, Vec<DirectoryEntryInfo>), String> {
+    // Exclusions belong to the published session, not to the evictable index.
+    let exclusions = crate::storage::exclusions::StorageScanExclusions::resolve_options(
+        root,
+        &parent.exclusions,
+    )
+    .map_err(|error| error.to_string())?;
+    // Do not hold the shared scan-cache lock while enumerating filesystem metadata.
+    let mut children = read_analysis_children(root, exclusions.roots(), exclusions.names())?;
+    let mut entries = {
+        let cache = cache()
+            .lock()
+            .map_err(|_| ANALYSIS_CACHE_UNAVAILABLE_ERROR.to_string())?;
+        // Directory sizes require recursive scan data. Do not silently hide all
+        // directories if that data was evicted; direct-file lists need no index.
+        if !cache.directories.contains_key(root)
+            && children.iter().any(|(_, _, metadata)| metadata.is_dir())
+        {
+            return Err("the analysis directory index is unavailable; scan again".to_string());
+        }
+        children.retain(|(_, path, metadata)| {
+            if metadata.is_dir() {
+                cache.directories.contains_key(path)
+            } else {
+                metadata.is_file()
+            }
+        });
+        build_analysis_entries(
+            children,
+            |path| cache.directories.get(path).copied(),
+            |path| cache.files.get(path).copied(),
+        )
+    };
+    let children_bytes = entries
+        .iter()
+        .try_fold(0_u64, |total, entry| total.checked_add(entry.bytes))
+        .ok_or_else(|| "analysis child byte total overflowed".to_string())?;
+    let visible_paths = request
+        .visible_paths
+        .iter()
+        .map(|path| current_platform().path_identity_key(Path::new(path)))
+        .collect::<HashSet<_>>();
+    entries.retain(|entry| {
+        entry.bytes > 0
+            && !visible_paths
+                .contains(&current_platform().path_identity_key(Path::new(&entry.path)))
+    });
+    let total_bytes = entries
+        .iter()
+        .try_fold(0_u64, |total, entry| total.checked_add(entry.bytes))
+        .ok_or_else(|| "analysis remainder byte total overflowed".to_string())?;
+    if children_bytes != parent.bytes || total_bytes != request.expected_bytes {
+        log::debug!(
+            "analysis_remainder_totals_changed path={} snapshot_parent_bytes={} listed_children_bytes={} snapshot_remainder_bytes={} listed_remainder_bytes={} outcome=displayed",
+            crate::filesystem::metadata::diagnostic_path(root),
+            parent.bytes,
+            children_bytes,
+            request.expected_bytes,
+            total_bytes
+        );
+    }
+    entries.sort_by(|left, right| {
+        right
+            .bytes
+            .cmp(&left.bytes)
+            .then_with(|| left.path.cmp(&right.path))
+    });
+    Ok((total_bytes, entries))
 }
 
 pub(crate) fn analysis_result_from_snapshot(
@@ -335,10 +420,175 @@ pub(crate) fn analysis_result_from_snapshot(
         |path| directories.get(path).copied(),
         |path| files.get(path).copied(),
     );
+    result.directory_hierarchy = build_directory_hierarchy(root, directories, files);
     result.requires_delete_rescan = files
         .iter()
         .any(|(path, file)| path.starts_with(root) && file.bytes == 0);
     Ok(result)
+}
+
+fn build_directory_hierarchy(
+    root: &Path,
+    directories: &HashMap<PathBuf, DirectoryAggregate>,
+    files: &HashMap<PathBuf, IndexedFile>,
+) -> Vec<AnalysisDirectoryNode> {
+    const MAX_DEPTH: usize = 6;
+    const MAX_CHILDREN: usize = 64;
+    const MAX_NODES: usize = 2048;
+    enum HierarchyEntry<'a> {
+        Directory(&'a DirectoryAggregate),
+        File(&'a IndexedFile),
+    }
+    impl HierarchyEntry<'_> {
+        fn bytes(&self) -> u64 {
+            match self {
+                Self::Directory(directory) => directory.bytes,
+                Self::File(file) => file.bytes,
+            }
+        }
+    }
+    let minimum_bytes = directories
+        .get(root)
+        .map_or(1, |aggregate| (aggregate.bytes / 2000).max(1));
+    let mut children: HashMap<&Path, Vec<(&Path, HierarchyEntry<'_>)>> = HashMap::new();
+    // Reuse both indexes without enumerating descendant files again. Reject small
+    // candidates before parsing paths while navigation holds the shared cache lock.
+    for (path, aggregate) in directories {
+        if aggregate.bytes < minimum_bytes {
+            continue;
+        }
+        let Ok(relative) = path.strip_prefix(root) else {
+            continue;
+        };
+        let depth = relative.components().take(MAX_DEPTH + 1).count();
+        if depth == 0 || depth > MAX_DEPTH {
+            continue;
+        }
+        if let Some(parent) = path.parent() {
+            children
+                .entry(parent)
+                .or_default()
+                .push((path, HierarchyEntry::Directory(aggregate)));
+        }
+    }
+    for (path, file) in files {
+        if file.bytes < minimum_bytes {
+            continue;
+        }
+        let Ok(relative) = path.strip_prefix(root) else {
+            continue;
+        };
+        let depth = relative.components().take(MAX_DEPTH + 1).count();
+        // Root files already belong to the complete flat result. Only descendants
+        // need a read-only projection in the additional chart levels.
+        if !(2..=MAX_DEPTH).contains(&depth) {
+            continue;
+        }
+        if let Some(parent) = path.parent() {
+            children
+                .entry(parent)
+                .or_default()
+                .push((path, HierarchyEntry::File(file)));
+        }
+    }
+    fn project<'a>(
+        parent: &Path,
+        children: &mut HashMap<&'a Path, Vec<(&'a Path, HierarchyEntry<'a>)>>,
+        remaining: &mut usize,
+        counts: &mut HashMap<&'a Path, u64>,
+    ) -> (Vec<AnalysisDirectoryNode>, Vec<DirectoryEntryInfo>) {
+        if *remaining == 0 {
+            return (Vec::new(), Vec::new());
+        }
+        // Rank files and directories together so large files cannot be hidden by
+        // directory-only limits. Unreachable branches never need sorting.
+        let mut siblings = children.remove(parent).unwrap_or_default();
+        siblings.sort_by(|(left_path, left), (right_path, right)| {
+            right
+                .bytes()
+                .cmp(&left.bytes())
+                .then_with(|| left_path.cmp(right_path))
+        });
+        siblings.truncate(MAX_CHILDREN);
+        let mut nodes = Vec::new();
+        let mut file_nodes = Vec::new();
+        for (path, entry) in siblings {
+            if *remaining == 0 {
+                break;
+            }
+            *remaining -= 1;
+            let name = path
+                .file_name()
+                .map(|name| name.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            match entry {
+                HierarchyEntry::Directory(aggregate) => {
+                    let (descendants, files) = project(path, children, remaining, counts);
+                    counts.insert(path, aggregate.direct_file_count);
+                    nodes.push(AnalysisDirectoryNode {
+                        name,
+                        path: display_path(path),
+                        bytes: aggregate.bytes,
+                        file_count: aggregate.file_count,
+                        total_entry_count: 0,
+                        children: descendants,
+                        files,
+                    });
+                }
+                HierarchyEntry::File(file) => file_nodes.push(DirectoryEntryInfo {
+                    name,
+                    path: display_path(path),
+                    bytes: file.bytes,
+                    logical_bytes: file.logical_bytes,
+                    file_count: 1,
+                    is_directory: false,
+                    modified_at_ms: file.modified_at_ms,
+                    content_fingerprint: None,
+                }),
+            }
+        }
+        (nodes, file_nodes)
+    }
+    let mut remaining = MAX_NODES;
+    let mut counts = HashMap::new();
+    let mut nodes = project(root, &mut children, &mut remaining, &mut counts).0;
+    // Count small child directories too, but retain counters only for projected nodes.
+    // This touches the in-memory directory index once; files need no second traversal.
+    for (path, aggregate) in directories {
+        if aggregate.bytes > 0 {
+            if let Some(count) = path.parent().and_then(|parent| counts.get_mut(parent)) {
+                *count += 1;
+            }
+        }
+    }
+    let counts: HashMap<String, u64> = counts
+        .into_iter()
+        .map(|(path, count)| (display_path(path), count))
+        .collect();
+    fn apply_counts(nodes: &mut [AnalysisDirectoryNode], counts: &HashMap<String, u64>) {
+        for node in nodes {
+            node.total_entry_count = counts.get(&node.path).copied().unwrap_or(0);
+            apply_counts(&mut node.children, counts);
+        }
+    }
+    apply_counts(&mut nodes, &counts);
+    nodes
+}
+
+fn rank_visible_analysis_entries(entries: &mut Vec<DirectoryEntryInfo>) {
+    let compare = |left: &DirectoryEntryInfo, right: &DirectoryEntryInfo| {
+        right
+            .bytes
+            .cmp(&left.bytes)
+            .then_with(|| left.path.cmp(&right.path))
+    };
+    // The result publishes only the largest bounded prefix. Partition first so
+    // a directory with tens of thousands of files does not sort its entire tail.
+    if entries.len() > ANALYSIS_VISIBLE_ENTRY_LIMIT {
+        entries.select_nth_unstable_by(ANALYSIS_VISIBLE_ENTRY_LIMIT, compare);
+        entries.truncate(ANALYSIS_VISIBLE_ENTRY_LIMIT);
+    }
+    entries.sort_unstable_by(compare);
 }
 
 fn read_analysis_children(
@@ -380,23 +630,20 @@ fn build_analysis_result(
     indexed_file: impl FnMut(&Path) -> Option<IndexedFile>,
 ) -> AnalysisResult {
     let mut entries = build_analysis_entries(children, directory_aggregate, indexed_file);
+    let total_entry_count = entries.iter().filter(|entry| entry.bytes > 0).count();
     let truncated = entries.len() > ANALYSIS_VISIBLE_ENTRY_LIMIT;
-    entries.sort_by(|left, right| {
-        right
-            .bytes
-            .cmp(&left.bytes)
-            .then_with(|| left.path.cmp(&right.path))
-    });
-    entries.truncate(ANALYSIS_VISIBLE_ENTRY_LIMIT);
+    rank_visible_analysis_entries(&mut entries);
 
     AnalysisResult {
         scan_id: 0,
         root: display_path(root),
         scanned_at_ms: root_aggregate.scanned_at_ms,
         total_bytes: root_aggregate.bytes,
+        total_entry_count,
         skipped_count: root_aggregate.skipped_count,
         truncated,
         entries,
+        directory_hierarchy: Vec::new(),
         requires_delete_rescan: false,
     }
 }
@@ -413,6 +660,13 @@ fn build_analysis_entries(
                 directory_aggregate(&path).unwrap_or_default()
             } else {
                 let usage = indexed_file(&path)
+                    // Reopened read-only lists must reflect changed ordinary files.
+                    // Zero-charge aliases keep scan ownership until a shared-allocation rescan.
+                    .filter(|file| {
+                        file.bytes == 0
+                            || (file.logical_bytes == metadata.len()
+                                && file.modified_at_ms == modified_ms(&metadata))
+                    })
                     .map(|file| mangodisk_platform::FileSpaceUsage {
                         logical_bytes: file.logical_bytes,
                         allocated_bytes: file.bytes,
@@ -861,14 +1115,139 @@ fn has_shared_allocation(cache: &AnalysisCache, root: &Path) -> bool {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn bounded_analysis_ranking_matches_full_sort_at_limits_and_equal_byte_ties() {
+        for count in [0, 1, 499, 500, 501, 30_000] {
+            let mut entries = (0..count)
+                .rev()
+                .map(|index| super::DirectoryEntryInfo {
+                    name: format!("file-{index}"),
+                    path: format!("/fixture/file-{index:05}"),
+                    bytes: (index * 7919 % 97) as u64,
+                    logical_bytes: 0,
+                    file_count: 1,
+                    is_directory: false,
+                    modified_at_ms: None,
+                    content_fingerprint: None,
+                })
+                .collect::<Vec<_>>();
+            let mut expected = entries.clone();
+            expected.sort_by(|left, right| {
+                right
+                    .bytes
+                    .cmp(&left.bytes)
+                    .then_with(|| left.path.cmp(&right.path))
+            });
+            expected.truncate(super::ANALYSIS_VISIBLE_ENTRY_LIMIT);
+            super::rank_visible_analysis_entries(&mut entries);
+            assert_eq!(
+                entries.iter().map(|entry| &entry.path).collect::<Vec<_>>(),
+                expected.iter().map(|entry| &entry.path).collect::<Vec<_>>()
+            );
+        }
+    }
+
+    #[test]
+    #[ignore = "manual ranking benchmark on a fixed large direct-child workload"]
+    fn benchmark_bounded_analysis_ranking() {
+        let source = (0..100_000)
+            .map(|index| super::DirectoryEntryInfo {
+                name: format!("file-{index}"),
+                path: format!("/fixture/file-{index:06}"),
+                bytes: (index * 7919 % 104729) as u64,
+                logical_bytes: 0,
+                file_count: 1,
+                is_directory: false,
+                modified_at_ms: None,
+                content_fingerprint: None,
+            })
+            .collect::<Vec<_>>();
+        for run in 0..10 {
+            for bounded in if run % 2 == 0 {
+                [false, true]
+            } else {
+                [true, false]
+            } {
+                let mut entries = source.clone();
+                let start = std::time::Instant::now();
+                if bounded {
+                    super::rank_visible_analysis_entries(&mut entries);
+                } else {
+                    entries.sort_by(|left, right| {
+                        right
+                            .bytes
+                            .cmp(&left.bytes)
+                            .then_with(|| left.path.cmp(&right.path))
+                    });
+                    entries.truncate(super::ANALYSIS_VISIBLE_ENTRY_LIMIT);
+                }
+                println!(
+                    "analysis_ranking bounded={bounded} run={run} elapsed_us={}",
+                    start.elapsed().as_micros()
+                );
+                assert_eq!(entries.len(), 500);
+            }
+        }
+    }
+
     use super::*;
     use crate::storage::large_files::LARGE_FILE_CANDIDATE_FLOOR_BYTES;
 
     #[test]
-    fn analysis_result_limits_entries_only_when_more_than_one_hundred_exist() {
+    fn hierarchy_projection_preserves_byte_floor_and_bounded_sorted_branches() {
+        let root = Path::new("fixture");
+        let mut directories = HashMap::new();
+        directories.insert(
+            root.to_path_buf(),
+            DirectoryAggregate {
+                bytes: 2_000_000,
+                ..DirectoryAggregate::default()
+            },
+        );
+        for index in 0..96 {
+            let branch = root.join(format!("branch-{index:02}"));
+            directories.insert(
+                branch.clone(),
+                DirectoryAggregate {
+                    bytes: 20_000 + index,
+                    file_count: 2,
+                    ..DirectoryAggregate::default()
+                },
+            );
+            for (name, bytes) in [("visible", 1_000), ("small", 999)] {
+                directories.insert(
+                    branch.join(name),
+                    DirectoryAggregate {
+                        bytes,
+                        file_count: 1,
+                        ..DirectoryAggregate::default()
+                    },
+                );
+            }
+        }
+        directories.insert(
+            PathBuf::from("unrelated/large"),
+            DirectoryAggregate {
+                bytes: 3_000_000,
+                ..DirectoryAggregate::default()
+            },
+        );
+        let nodes = build_directory_hierarchy(root, &directories, &HashMap::new());
+        assert_eq!(nodes.len(), 64);
+        for (offset, node) in nodes.iter().enumerate() {
+            assert_eq!(node.name, format!("branch-{:02}", 95 - offset));
+            assert_eq!(node.total_entry_count, 2);
+            assert_eq!(node.children.len(), 1);
+            assert_eq!(node.children[0].name, "visible");
+            assert_eq!(node.children[0].bytes, 1_000);
+        }
+    }
+
+    #[test]
+    fn analysis_result_bounds_large_projections_and_preserves_exact_totals() {
         let root = tempfile::tempdir().unwrap();
         for index in 1..=ANALYSIS_VISIBLE_ENTRY_LIMIT {
-            fs::write(root.path().join(format!("{index:03}.bin")), []).unwrap();
+            fs::write(root.path().join(format!("{index:05}.bin")), []).unwrap();
         }
         let build = || {
             let children = read_analysis_children(
@@ -886,8 +1265,8 @@ mod tests {
                     let bytes = path.file_stem()?.to_str()?.parse().ok()?;
                     Some(IndexedFile {
                         bytes,
-                        logical_bytes: bytes,
-                        modified_at_ms: None,
+                        logical_bytes: 0,
+                        modified_at_ms: modified_ms(&fs::metadata(path).unwrap()),
                     })
                 },
             )
@@ -895,13 +1274,33 @@ mod tests {
         let exact = build();
         assert_eq!(exact.entries.len(), ANALYSIS_VISIBLE_ENTRY_LIMIT);
         assert!(!exact.truncated);
+        assert_eq!(exact.total_entry_count, ANALYSIS_VISIBLE_ENTRY_LIMIT);
 
-        fs::write(root.path().join("101.bin"), []).unwrap();
+        fs::write(
+            root.path()
+                .join(format!("{:05}.bin", ANALYSIS_VISIBLE_ENTRY_LIMIT + 1)),
+            [],
+        )
+        .unwrap();
         let limited = build();
         assert_eq!(limited.entries.len(), ANALYSIS_VISIBLE_ENTRY_LIMIT);
         assert!(limited.truncated);
-        assert_eq!(limited.entries.first().unwrap().name, "101.bin");
-        assert_eq!(limited.entries.last().unwrap().name, "002.bin");
+        assert_eq!(limited.total_entry_count, ANALYSIS_VISIBLE_ENTRY_LIMIT + 1);
+        assert_eq!(
+            limited.entries.first().unwrap().bytes,
+            (ANALYSIS_VISIBLE_ENTRY_LIMIT + 1) as u64
+        );
+        assert_eq!(limited.entries.last().unwrap().name, "00002.bin");
+        fs::write(root.path().join("000.bin"), []).unwrap();
+        assert_eq!(
+            build().total_entry_count,
+            ANALYSIS_VISIBLE_ENTRY_LIMIT + 1,
+            "zero-byte items are not part of Other"
+        );
+        assert_eq!(
+            serde_json::to_value(limited).unwrap()["totalEntryCount"],
+            ANALYSIS_VISIBLE_ENTRY_LIMIT + 1
+        );
     }
 
     fn store_test_analysis_root(root: &Path, scanned_at_ms: u64) {
@@ -926,6 +1325,101 @@ mod tests {
     }
 
     #[test]
+    fn remainder_entries_include_unindexed_small_files_and_reconcile_allocated_bytes() {
+        let _operation_lock = crate::shared::operation::test_operation_lock();
+        clear_all().unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let root = fs::canonicalize(directory.path()).unwrap();
+        let allocated = |path: &Path| {
+            current_platform()
+                .file_space_usage(path, &fs::symlink_metadata(path).unwrap())
+                .allocated_bytes
+        };
+        let visible = root.join("visible.bin");
+        fs::write(&visible, vec![3; 32_768]).unwrap();
+        let mut remainder_bytes = 0;
+        for index in 0..230 {
+            let path = root.join(format!("small-{index:03}.bin"));
+            fs::write(&path, vec![index as u8; 1_024]).unwrap();
+            remainder_bytes += allocated(&path);
+        }
+        let nested = root.join("nested");
+        fs::create_dir(&nested).unwrap();
+        let child = nested.join("child.bin");
+        fs::write(&child, vec![1; 1_024]).unwrap();
+        let child_bytes = allocated(&child);
+        remainder_bytes += child_bytes;
+        let aggregate = DirectoryAggregate {
+            bytes: remainder_bytes + allocated(&visible),
+            scanned_at_ms: 12,
+            ..Default::default()
+        };
+        store_memory_only(
+            &root,
+            aggregate,
+            HashMap::from([
+                (root.clone(), aggregate),
+                (
+                    nested.clone(),
+                    DirectoryAggregate {
+                        bytes: child_bytes,
+                        scanned_at_ms: 12,
+                        ..Default::default()
+                    },
+                ),
+            ]),
+            HashMap::new(),
+            SnapshotPublication::new(
+                ScanPurpose::Analysis,
+                true,
+                None,
+                12,
+                mutation_revision().unwrap(),
+            ),
+        )
+        .unwrap();
+        let parent = AnalysisRemainderParent {
+            path: display_path(&root),
+            bytes: aggregate.bytes,
+            exclusions: Default::default(),
+        };
+        let mut request = AnalysisRemainderRequest {
+            schema_version: AnalysisRemainderRequest::SCHEMA_VERSION,
+            snapshot_id: None,
+            scan_id: 1,
+            parent_path: parent.path.clone(),
+            visible_paths: vec![display_path(&visible)],
+            expected_bytes: remainder_bytes,
+            offset: 0,
+        };
+        let (total_bytes, entries) = analysis_remainder_entries(&root, &parent, &request).unwrap();
+        assert_eq!(entries.len(), 231);
+        assert_eq!(total_bytes, remainder_bytes);
+        assert_eq!(
+            entries.iter().map(|entry| entry.bytes).sum::<u64>(),
+            remainder_bytes
+        );
+        assert_eq!(
+            entries
+                .iter()
+                .map(|entry| &entry.path)
+                .collect::<HashSet<_>>()
+                .len(),
+            231
+        );
+        assert!(entries
+            .iter()
+            .any(|entry| entry.name == "nested" && entry.is_directory));
+        assert!(entries.iter().all(|entry| entry.name != "visible.bin"));
+        fs::write(root.join("new.bin"), vec![7; 1_024]).unwrap();
+        request.offset = 0;
+        let (changed_bytes, changed_entries) =
+            analysis_remainder_entries(&root, &parent, &request).unwrap();
+        assert_eq!(changed_entries.len(), 232);
+        assert!(changed_bytes > remainder_bytes);
+    }
+
+    #[test]
     fn missing_change_token_is_stale() {
         let validation =
             validate_change_token(Path::new("/missing-change-token"), None, None, &|| false)
@@ -937,7 +1431,7 @@ mod tests {
     fn large_file_entries_are_derived_from_an_index_snapshot() {
         let root = PathBuf::from("/memory-large-files");
         let file = root.join("large.bin");
-        let files = HashMap::from([(
+        let mut files = HashMap::from([(
             file,
             IndexedFile {
                 bytes: LARGE_FILE_CANDIDATE_FLOOR_BYTES,
@@ -946,6 +1440,14 @@ mod tests {
             },
         )]);
 
+        files.insert(
+            root.join("chart-candidate.bin"),
+            IndexedFile {
+                bytes: 4096,
+                logical_bytes: 4096,
+                modified_at_ms: None,
+            },
+        );
         let entries = large_file_entries_from_snapshot(&root, &files);
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].bytes, LARGE_FILE_CANDIDATE_FLOOR_BYTES);

@@ -12,8 +12,10 @@ use std::{
     time::{Duration, Instant},
 };
 
+use crate::analysis_file_candidates::AnalysisFileCandidates;
 use crate::{
-    FastAnalysisRecord, FastAnalysisScanError, FastAnalysisSummary, Platform, ScanPurpose,
+    FastAnalysisFile, FastAnalysisRecord, FastAnalysisScanError, FastAnalysisSummary, Platform,
+    ScanPurpose,
 };
 
 use super::{
@@ -126,6 +128,7 @@ struct DirectoryReadResult {
     child_directories: Vec<PathBuf>,
     candidates: Vec<PathBuf>,
     hard_links: Vec<FastAnalysisRecord>,
+    analysis_files: AnalysisFileCandidates,
     page_count: u64,
     entry_count: u64,
     returned_bytes: u64,
@@ -174,6 +177,7 @@ struct DirectoryReadAccumulator {
     child_directories: Vec<PathBuf>,
     candidates: Vec<PathBuf>,
     hard_links: Vec<FastAnalysisRecord>,
+    analysis_files: AnalysisFileCandidates,
     remote_file_count: u64,
     remote_directory_count: u64,
 }
@@ -301,6 +305,10 @@ impl<'a> AnalysisCoordinator<'a> {
         );
         for record in result.hard_links {
             (self.consumer)(record).map_err(FastAnalysisScanError::Consumer)?;
+        }
+        for file in result.analysis_files.into_files() {
+            (self.consumer)(FastAnalysisRecord::AnalysisFile(file))
+                .map_err(FastAnalysisScanError::Consumer)?;
         }
         for candidate in result.candidates {
             emit_candidate(candidate, self.consumer, &mut self.diagnostics)?;
@@ -625,6 +633,7 @@ fn read_directory(
                 child_directories: Vec::new(),
                 candidates: Vec::new(),
                 hard_links: Vec::new(),
+                analysis_files: AnalysisFileCandidates::default(),
                 page_count: 0,
                 entry_count: 0,
                 returned_bytes: 0,
@@ -678,6 +687,7 @@ fn read_directory(
         child_directories: accumulator.child_directories,
         candidates: accumulator.candidates,
         hard_links: accumulator.hard_links,
+        analysis_files: accumulator.analysis_files,
         page_count,
         entry_count: entry_count_total,
         returned_bytes,
@@ -772,6 +782,25 @@ fn process_entry(
                 ScanPurpose::DuplicateFiles => entry.logical_bytes,
                 _ => entry.allocated_bytes,
             };
+            if policy.purpose == ScanPurpose::Analysis
+                && entry.link_count <= 1
+                && entry.allocated_bytes > 0
+                && entry.allocated_bytes < policy.large_file_minimum_bytes
+                && accumulator
+                    .analysis_files
+                    .would_retain(entry.allocated_bytes, &path)
+                && policy
+                    .platform
+                    .should_skip(&path, policy.root, ScanPurpose::LargeFiles)
+                    .is_none()
+            {
+                accumulator.analysis_files.push(FastAnalysisFile {
+                    path: path.clone(),
+                    allocated_bytes: entry.allocated_bytes,
+                    logical_bytes: entry.logical_bytes,
+                    modified_at_ms: entry.modified_at_ms,
+                });
+            }
             if candidate_bytes >= policy.large_file_minimum_bytes
                 && policy
                     .platform
@@ -1050,7 +1079,8 @@ mod tests {
                         );
                     }
                     FastAnalysisRecord::LargeFileCandidate(path) => candidates.push(path),
-                    FastAnalysisRecord::HardLinkedFile { .. } => {}
+                    FastAnalysisRecord::HardLinkedFile { .. }
+                    | FastAnalysisRecord::AnalysisFile(_) => {}
                 }
                 Ok(())
             },

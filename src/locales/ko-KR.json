@@ -1647,6 +1647,7 @@
     }
   },
   "common": {
+    "retry": "다시 시도",
     "scrollbar": "세로 스크롤 막대",
     "decreaseValue": "{label} 줄이기",
     "increaseValue": "{label} 늘리기",
@@ -1947,16 +1948,21 @@
     }
   },
   "analysis": {
+    "totalSizeLabel": "전체 크기",
+    "shareOfCurrentFolder": "현재 폴더에서 차지하는 비율",
+    "shareOfParentFolder": "상위 폴더에서 차지하는 비율",
     "title": "디스크 공간 분석",
     "pathLabel": "현재 위치",
+    "switchSiblingFolder": "같은 수준의 폴더로 전환: {name}",
+    "collapseFileList": "파일 목록 접기",
+    "expandFileList": "파일 목록 펼치기",
     "start": "분석 시작",
     "analyzing": "폴더 스캔 중…",
     "rescan": "다시 분석",
     "result": "현재 폴더",
     "treemap": "트리맵",
-    "treemapRemainder": "작은 항목 · {count}개",
-    "treemapRemainderHint": "작은 항목 {count}개가 총 {size}를 사용합니다. 자세한 내용은 목록에서 확인할 수 있습니다",
-    "details": "목록",
+    "other": "기타",
+    "treemapRemainder": "기타 · {count}개",
     "back": "뒤로",
     "forward": "앞으로",
     "home": "분석 시작 위치로 돌아가기",
@@ -1975,9 +1981,13 @@
     "emptyDescription": "선택한 위치에서 파일과 폴더가 공간을 어떻게 사용하는지 분석합니다",
     "folderFileSummary": "폴더 {folders}개 · 파일 {files}개",
     "folderSpaceSummary": "폴더 {folders}개 · {size}",
-    "limitedEntries": "공간을 가장 많이 차지하는 항목 최대 100개만 표시합니다",
+    "limitedEntries": "공간을 가장 많이 차지하는 항목 최대 {count}개만 표시합니다",
     "exclusionHint": "여기에는 분석 대상만 집계됩니다. 제외 설정은 디스크의 실제 사용 공간을 변경하지 않습니다",
-    "deleting": "삭제 중…"
+    "deleting": "삭제 중…",
+    "sunburst": "선버스트",
+    "sunburstDepth": "깊이",
+    "sunburstLevels": "깊이 {count}단계",
+    "sunburstRemainder": "파일 및 기타 항목"
   },
   "storageScanExclusions": {
     "title": "스캔 제외",

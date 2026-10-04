@@ -1647,6 +1647,7 @@
     }
   },
   "common": {
+    "retry": "重试",
     "scrollbar": "垂直滚动条",
     "decreaseValue": "减少{label}",
     "increaseValue": "增加{label}",
@@ -1947,16 +1948,21 @@
     }
   },
   "analysis": {
+    "totalSizeLabel": "总占用",
+    "shareOfCurrentFolder": "占当前目录",
+    "shareOfParentFolder": "占父目录",
     "title": "磁盘空间分析",
     "pathLabel": "当前位置",
+    "switchSiblingFolder": "切换同级目录：{name}",
+    "collapseFileList": "收起文件列表",
+    "expandFileList": "展开文件列表",
     "start": "开始分析",
     "analyzing": "正在扫描文件夹…",
     "rescan": "重新分析",
     "result": "当前文件夹",
     "treemap": "矩形图",
-    "treemapRemainder": "较小项目 · {count} 项",
-    "treemapRemainderHint": "{count} 项较小内容共占用 {size}；完整明细可在列表中查看",
-    "details": "列表",
+    "other": "其他",
+    "treemapRemainder": "其他 · {count} 项",
     "back": "后退",
     "forward": "前进",
     "home": "返回本次分析起点",
@@ -1975,9 +1981,13 @@
     "emptyDescription": "分析所选位置中文件和文件夹的空间占用",
     "folderFileSummary": "{folders} 个文件夹 · {files} 个文件",
     "folderSpaceSummary": "{folders} 个文件夹 · {size}",
-    "limitedEntries": "最多显示占用空间最大的 100 项",
+    "limitedEntries": "最多显示占用空间最大的 {count} 项",
     "exclusionHint": "此处仅统计参与分析的内容；排除设置不会改变磁盘实际已用空间",
-    "deleting": "正在删除…"
+    "deleting": "正在删除…",
+    "sunburst": "旭日图",
+    "sunburstDepth": "深度",
+    "sunburstLevels": "深度 {count} 层",
+    "sunburstRemainder": "文件及其他项目"
   },
   "storageScanExclusions": {
     "title": "扫描排除",

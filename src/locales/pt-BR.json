@@ -1647,6 +1647,7 @@
     }
   },
   "common": {
+    "retry": "Tentar novamente",
     "scrollbar": "Barra de rolagem vertical",
     "decreaseValue": "Diminuir {label}",
     "increaseValue": "Aumentar {label}",
@@ -1947,16 +1948,21 @@
     }
   },
   "analysis": {
+    "totalSizeLabel": "Tamanho total",
+    "shareOfCurrentFolder": "Da pasta atual",
+    "shareOfParentFolder": "Da pasta superior",
     "title": "Análise de Espaço em Disco",
     "pathLabel": "Localização atual",
+    "switchSiblingFolder": "Alternar pasta no mesmo nível: {name}",
+    "collapseFileList": "Recolher lista de arquivos",
+    "expandFileList": "Expandir lista de arquivos",
     "start": "Iniciar Análise",
     "analyzing": "Analisando pastas…",
     "rescan": "Analisar Novamente",
     "result": "Pasta atual",
     "treemap": "Mapa de espaço",
-    "treemapRemainder": "Item menor · {count} | Itens menores · {count}",
-    "treemapRemainderHint": "{count} item menor usa {size} no total. Detalhes completos estão disponíveis na lista | {count} itens menores usam {size} no total. Detalhes completos estão disponíveis na lista",
-    "details": "Lista",
+    "other": "Outros",
+    "treemapRemainder": "Outros · {count} item | Outros · {count} itens",
     "back": "Voltar",
     "forward": "Avançar",
     "home": "Retornar à raiz da análise",
@@ -1975,9 +1981,13 @@
     "emptyDescription": "Analise como arquivos e pastas usam espaço na localização selecionada",
     "folderFileSummary": "{folders} pasta · {files} arquivo | {folders} pastas · {files} arquivos",
     "folderSpaceSummary": "{folders} pasta · {size} | {folders} pastas · {size}",
-    "limitedEntries": "Exibindo até os 100 maiores itens",
+    "limitedEntries": "Exibindo até os {count} maiores itens",
     "exclusionHint": "Esta visualização contabiliza apenas o conteúdo verificado; as exclusões não alteram o espaço realmente usado no disco",
-    "deleting": "Excluindo…"
+    "deleting": "Excluindo…",
+    "sunburst": "Sunburst",
+    "sunburstDepth": "Profundidade",
+    "sunburstLevels": "Profundidade {count}",
+    "sunburstRemainder": "Arquivos e outros itens"
   },
   "storageScanExclusions": {
     "title": "Exclusões da verificação",

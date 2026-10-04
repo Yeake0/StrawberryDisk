@@ -1,7 +1,8 @@
 mod parser;
 
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    cmp::Reverse,
+    collections::{BinaryHeap, HashMap, HashSet, VecDeque},
     env,
     ffi::OsString,
     path::{Path, PathBuf},
@@ -9,8 +10,8 @@ use std::{
 };
 
 use crate::{
-    FastAnalysisRecord, FastAnalysisScanError, FastAnalysisSummary, FileSpaceUsage,
-    LargeFileCandidateScanError, LargeFileCandidateSummary, Platform, ScanPurpose,
+    FastAnalysisFile, FastAnalysisRecord, FastAnalysisScanError, FastAnalysisSummary,
+    FileSpaceUsage, LargeFileCandidateScanError, LargeFileCandidateSummary, Platform, ScanPurpose,
 };
 
 use super::native_io::{file_id, OwnedHandle, VolumePaths};
@@ -119,6 +120,7 @@ impl DirectoryTotals {
 enum LayoutCollectionMode {
     CandidatesOnly,
     FullAnalysis,
+    AnalysisWithFiles,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -149,6 +151,9 @@ struct LayoutCollection {
     direct_totals: HashMap<u64, DirectoryTotals>,
     candidates: Vec<CandidateRecord>,
     candidate_path_count: usize,
+    // Allocation, parent identity, name, and logical length. NTFS enumeration
+    // already supplies these facts; defer only a bounded subset until paths resolve.
+    analysis_files: BinaryHeap<Reverse<(u64, u64, OsString, u64)>>,
     page_count: u64,
     entry_count: u64,
     returned_bytes: u64,
@@ -367,7 +372,11 @@ fn collect_analysis(
     let collection = enumerate_layout(
         volume_handle.raw(),
         large_file_minimum_bytes,
-        LayoutCollectionMode::FullAnalysis,
+        if purpose == ScanPurpose::Analysis {
+            LayoutCollectionMode::AnalysisWithFiles
+        } else {
+            LayoutCollectionMode::FullAnalysis
+        },
         candidate_size_metric(purpose),
         is_cancelled,
     )?;
@@ -417,6 +426,31 @@ fn collect_analysis(
             skipped_count: totals.skipped_count,
         })
         .map_err(LayoutScanError::Consumer)?;
+    }
+    if purpose == ScanPurpose::Analysis {
+        for Reverse((allocated_bytes, parent_id, name, logical_bytes)) in
+            prepared.collection.analysis_files.drain()
+        {
+            if is_cancelled() {
+                return Err(LayoutScanError::Cancelled);
+            }
+            let Some(parent) = prepared.path_cache.get(&parent_id).and_then(Option::as_ref) else {
+                continue;
+            };
+            let path = parent.join(name);
+            if platform
+                .should_skip(&path, root, ScanPurpose::LargeFiles)
+                .is_none()
+            {
+                consumer(FastAnalysisRecord::AnalysisFile(FastAnalysisFile {
+                    path,
+                    allocated_bytes,
+                    logical_bytes,
+                    modified_at_ms: None,
+                }))
+                .map_err(LayoutScanError::Consumer)?;
+            }
+        }
     }
     for candidate in prepared.collection.candidates.drain(..) {
         if is_cancelled() {
@@ -984,6 +1018,7 @@ mod tests {
                 logical_bytes: 1_115,
                 allocated_bytes: 1_115,
                 file_count: 4,
+                direct_file_count: 1,
                 // Reparse file under sample-user, System32, and junction.
                 skipped_count: 3,
             }
@@ -994,6 +1029,7 @@ mod tests {
                 logical_bytes: 15,
                 allocated_bytes: 15,
                 file_count: 2,
+                direct_file_count: 1,
                 skipped_count: 1,
             }
         );
@@ -1004,6 +1040,7 @@ mod tests {
                 logical_bytes: 1_000,
                 allocated_bytes: 1_000,
                 file_count: 1,
+                direct_file_count: 1,
                 skipped_count: 1,
             }
         );
@@ -1021,6 +1058,7 @@ mod tests {
                 logical_bytes: 1,
                 allocated_bytes: 1,
                 file_count: 1,
+                direct_file_count: 1,
                 skipped_count: 0,
             },
         );
@@ -1048,6 +1086,7 @@ mod tests {
             logical_bytes: 64 * 1024 * 1024,
             allocated_bytes: 4_096,
             file_count: 1,
+            direct_file_count: 1,
             skipped_count: 0,
         };
 

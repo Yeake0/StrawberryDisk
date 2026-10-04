@@ -11,20 +11,41 @@ use crate::{
     },
     storage::traversal::{AnalysisScanDiagnostics, StorageTraversal},
     storage::{
-        analysis::{AnalysisDeleteResult, AnalysisResult},
+        analysis::{
+            AnalysisDeleteResult, AnalysisRemainderPage, AnalysisRemainderRequest, AnalysisResult,
+        },
         index::cache,
     },
     ProgressSink,
 };
 
 use super::session::{
-    invalidate_changed_path, publish_result_session, resolve_entry_candidate,
-    synchronize_removed_path,
+    invalidate_changed_path, publish_result_session, resolve_entry_candidate, resolve_open_path,
+    resolve_remainder_parent, synchronize_removed_path,
 };
 
 pub struct AnalysisService;
 
 impl AnalysisService {
+    pub fn list_remainder(request: AnalysisRemainderRequest) -> CoreResult<AnalysisRemainderPage> {
+        if request.schema_version != AnalysisRemainderRequest::SCHEMA_VERSION {
+            return Err(crate::shared::CoreError::invalid_input(
+                "unsupported analysis remainder schema",
+            ));
+        }
+        if request.visible_paths.len() > super::models::ANALYSIS_VISIBLE_ENTRY_LIMIT {
+            return Err(crate::shared::CoreError::invalid_input(
+                "too many visible analysis entries",
+            ));
+        }
+        let parent = resolve_remainder_parent(request.scan_id, &request.parent_path)?;
+        super::remainder::list(&parent, &request)
+    }
+
+    pub fn release_remainder(snapshot_id: u64) -> CoreResult<()> {
+        super::remainder::release(snapshot_id)
+    }
+
     pub fn analyze_with_progress(
         path: Option<String>,
         refresh: bool,
@@ -73,7 +94,7 @@ impl AnalysisService {
     /// The platform adapter owns launching the system handler. Core only proves
     /// that the requested path was published to the current UI by a real scan.
     pub fn resolve_open_target(scan_id: u64, selected_path: String) -> CoreResult<String> {
-        Ok(resolve_entry_candidate(scan_id, &selected_path)?.path)
+        Ok(resolve_open_path(scan_id, &selected_path)?)
     }
 
     pub fn delete_entry_permanently(
@@ -340,6 +361,340 @@ mod tests {
     }
 
     #[test]
+    fn remainder_survives_ancestor_refresh_and_changed_totals() {
+        use mangodisk_platform::{current_platform, Platform};
+        let _operation_lock = crate::shared::operation::test_operation_lock();
+        cache::clear_all().unwrap();
+        let fixture = AnalysisFixture::new();
+        let root = fixture.root.join("analyzed");
+        let nested = root.join("nested");
+        fs::create_dir_all(&nested).unwrap();
+        let visible = nested.join("visible.bin");
+        let other = nested.join("other.bin");
+        fs::write(&visible, vec![1; 8192]).unwrap();
+        fs::write(&other, vec![2; 4096]).unwrap();
+        let expected_bytes = current_platform()
+            .file_space_usage(&other, &fs::symlink_metadata(&other).unwrap())
+            .allocated_bytes;
+        let initial = AnalysisService::analyze_with_progress(
+            Some(root.to_string_lossy().into_owned()),
+            true,
+            |_| {},
+        )
+        .unwrap();
+        let request = || AnalysisRemainderRequest {
+            schema_version: AnalysisRemainderRequest::SCHEMA_VERSION,
+            snapshot_id: None,
+            scan_id: initial.scan_id,
+            parent_path: fs::canonicalize(&nested)
+                .unwrap()
+                .to_string_lossy()
+                .into_owned(),
+            visible_paths: vec![fs::canonicalize(&visible)
+                .unwrap()
+                .to_string_lossy()
+                .into_owned()],
+            expected_bytes,
+            offset: 0,
+        };
+        assert_eq!(
+            AnalysisService::list_remainder(request())
+                .unwrap()
+                .total_count,
+            1
+        );
+        // A later ancestor scan replaces index timestamps without changing this directory.
+        std::thread::sleep(std::time::Duration::from_millis(2));
+        AnalysisService::analyze_with_progress(
+            Some(fixture.root.to_string_lossy().into_owned()),
+            true,
+            |_| {},
+        )
+        .unwrap();
+        let page = AnalysisService::list_remainder(request()).unwrap();
+        assert_eq!(page.total_bytes, expected_bytes);
+        assert_eq!(page.entries[0].name, "other.bin");
+        fs::write(nested.join("added.bin"), vec![3; 4096]).unwrap();
+        let changed = AnalysisService::list_remainder(request()).unwrap();
+        assert_eq!(changed.total_count, 2);
+        assert!(changed.total_bytes > expected_bytes);
+        AnalysisService::analyze_with_progress(
+            Some(fixture.root.to_string_lossy().into_owned()),
+            true,
+            |_| {},
+        )
+        .unwrap();
+        assert_eq!(
+            AnalysisService::list_remainder(request())
+                .unwrap()
+                .total_count,
+            2
+        );
+        let mut outside = request();
+        outside.parent_path = std::env::temp_dir().to_string_lossy().into_owned();
+        assert!(AnalysisService::list_remainder(outside).is_err());
+        let mut unsupported = request();
+        unsupported.schema_version += 1;
+        assert!(AnalysisService::list_remainder(unsupported).is_err());
+    }
+
+    #[test]
+    fn remainder_service_reconciles_real_scan_pages_and_recovers_after_rescan() {
+        use mangodisk_platform::{current_platform, Platform};
+        use std::collections::HashSet;
+
+        let _operation_lock = crate::shared::operation::test_operation_lock();
+        cache::clear_all().unwrap();
+        let fixture = AnalysisFixture::new();
+        let root = fs::canonicalize(&fixture.root).unwrap();
+        let allocated = |path: &std::path::Path| {
+            current_platform()
+                .file_space_usage(path, &fs::symlink_metadata(path).unwrap())
+                .allocated_bytes
+        };
+        let visible = root.join("visible.bin");
+        fs::write(&visible, vec![5; 131_072]).unwrap();
+        let mut expected_bytes = 0;
+        for index in 0..230 {
+            let path = root.join(format!("small-{index:03}.bin"));
+            fs::write(&path, vec![index as u8; 4_096]).unwrap();
+            expected_bytes += allocated(&path);
+        }
+        let nested = root.join("nested");
+        fs::create_dir(&nested).unwrap();
+        let nested_file = nested.join("data.bin");
+        fs::write(&nested_file, vec![3; 8_192]).unwrap();
+        expected_bytes += allocated(&nested_file);
+        let initial = AnalysisService::analyze_with_progress(
+            Some(root.to_string_lossy().into_owned()),
+            true,
+            |_| {},
+        )
+        .unwrap();
+        assert_eq!(initial.total_bytes, expected_bytes + allocated(&visible));
+        let request = |scan_id, expected_bytes, offset| AnalysisRemainderRequest {
+            schema_version: AnalysisRemainderRequest::SCHEMA_VERSION,
+            snapshot_id: None,
+            scan_id,
+            parent_path: initial.root.clone(),
+            visible_paths: vec![visible.to_string_lossy().into_owned()],
+            expected_bytes,
+            offset,
+        };
+        let first =
+            AnalysisService::list_remainder(request(initial.scan_id, expected_bytes, 0)).unwrap();
+        assert_eq!(first.total_bytes, expected_bytes);
+        assert_eq!(first.total_count, 231);
+        assert_eq!(first.entries.len(), 200);
+        let mut next = request(initial.scan_id, expected_bytes, first.next_offset.unwrap());
+        next.snapshot_id = Some(first.snapshot_id);
+        let second = AnalysisService::list_remainder(next).unwrap();
+        assert_eq!(second.entries.len(), 31);
+        assert_eq!(second.next_offset, None);
+        let entries = first
+            .entries
+            .into_iter()
+            .chain(second.entries)
+            .collect::<Vec<_>>();
+        assert_eq!(
+            entries.iter().map(|entry| entry.bytes).sum::<u64>(),
+            expected_bytes
+        );
+        assert_eq!(
+            entries
+                .iter()
+                .map(|entry| &entry.path)
+                .collect::<HashSet<_>>()
+                .len(),
+            231
+        );
+        let directory = entries.iter().find(|entry| entry.is_directory).unwrap();
+        let navigated =
+            AnalysisService::analyze_with_progress(Some(directory.path.clone()), false, |_| {})
+                .unwrap();
+        assert_eq!(navigated.total_bytes, allocated(&nested_file));
+
+        let added = root.join("added.bin");
+        fs::write(&added, vec![7; 4_096]).unwrap();
+        let mut latest_snapshot_id = first.snapshot_id;
+        for _ in 0..2 {
+            let changed =
+                AnalysisService::list_remainder(request(initial.scan_id, expected_bytes, 0))
+                    .unwrap();
+            latest_snapshot_id = changed.snapshot_id;
+            assert_eq!(changed.total_count, 232);
+            assert_eq!(changed.total_bytes, expected_bytes + allocated(&added));
+        }
+        fs::remove_file(&added).unwrap();
+        let mut next = request(initial.scan_id, expected_bytes, 232);
+        next.snapshot_id = Some(latest_snapshot_id);
+        let exhausted = AnalysisService::list_remainder(next).unwrap();
+        assert!(exhausted.entries.is_empty());
+        assert_eq!(exhausted.next_offset, None);
+        fs::write(&added, vec![7; 4_096]).unwrap();
+        let refreshed =
+            AnalysisService::analyze_with_progress(Some(initial.root.clone()), true, |_| {})
+                .unwrap();
+        let recovered = AnalysisService::list_remainder(request(
+            refreshed.scan_id,
+            expected_bytes + allocated(&added),
+            0,
+        ))
+        .unwrap();
+        assert_eq!(recovered.total_bytes, expected_bytes + allocated(&added));
+        assert_eq!(recovered.total_count, 232);
+    }
+
+    #[test]
+    fn remainder_keeps_session_exclusions_after_scan_cache_eviction() {
+        let _operation_lock = crate::shared::operation::test_operation_lock();
+        cache::clear_all().unwrap();
+        let fixture = AnalysisFixture::new();
+        let root = fs::canonicalize(&fixture.root).unwrap();
+        fs::write(root.join("listed.bin"), vec![1; 4096]).unwrap();
+        let excluded = root.join("excluded");
+        fs::create_dir(&excluded).unwrap();
+        fs::write(excluded.join("data.bin"), vec![2; 4096]).unwrap();
+        fs::write(root.join("ignored.bin"), vec![3; 4096]).unwrap();
+        let result = AnalysisService::analyze_with_exclusions_progress(
+            Some(root.to_string_lossy().into_owned()),
+            true,
+            ScanExclusionOptions {
+                paths: vec![excluded.to_string_lossy().into_owned()],
+                names: vec![mangodisk_platform::ScanNameExclusion {
+                    name: "ignored.bin".into(),
+                    kind: mangodisk_platform::ExcludedNameKind::File,
+                }],
+            },
+            |_| {},
+        )
+        .unwrap();
+        cache::clear_all().unwrap();
+        let page = AnalysisService::list_remainder(AnalysisRemainderRequest {
+            schema_version: AnalysisRemainderRequest::SCHEMA_VERSION,
+            snapshot_id: None,
+            scan_id: result.scan_id,
+            parent_path: result.root,
+            visible_paths: Vec::new(),
+            expected_bytes: result.total_bytes,
+            offset: 0,
+        })
+        .unwrap();
+        assert_eq!(page.total_count, 1);
+        assert_eq!(page.entries[0].name, "listed.bin");
+        fs::create_dir(root.join("uncached-folder")).unwrap();
+        let unavailable = AnalysisService::list_remainder(AnalysisRemainderRequest {
+            schema_version: AnalysisRemainderRequest::SCHEMA_VERSION,
+            snapshot_id: None,
+            scan_id: result.scan_id,
+            parent_path: root.to_string_lossy().into_owned(),
+            visible_paths: Vec::new(),
+            expected_bytes: result.total_bytes,
+            offset: 0,
+        });
+        assert!(unavailable
+            .unwrap_err()
+            .to_string()
+            .contains("index is unavailable"));
+    }
+
+    #[test]
+    fn remainder_pagination_keeps_each_entry_once_when_directory_changes() {
+        use std::collections::HashSet;
+        let _operation_lock = crate::shared::operation::test_operation_lock();
+        cache::clear_all().unwrap();
+        let fixture = AnalysisFixture::new();
+        for index in 0..230 {
+            fs::write(
+                fixture.root.join(format!("small-{index:03}.bin")),
+                vec![1; 4096],
+            )
+            .unwrap();
+        }
+        let result = AnalysisService::analyze_with_progress(
+            Some(fixture.root.to_string_lossy().into_owned()),
+            true,
+            |_| {},
+        )
+        .unwrap();
+        let request = |offset| AnalysisRemainderRequest {
+            schema_version: AnalysisRemainderRequest::SCHEMA_VERSION,
+            snapshot_id: None,
+            scan_id: result.scan_id,
+            parent_path: result.root.clone(),
+            visible_paths: Vec::new(),
+            expected_bytes: result.total_bytes,
+            offset,
+        };
+        let first = AnalysisService::list_remainder(request(0)).unwrap();
+        fs::write(fixture.root.join("new-largest.bin"), vec![2; 8192]).unwrap();
+        let mut next = request(first.next_offset.unwrap());
+        next.snapshot_id = Some(first.snapshot_id);
+        let second = AnalysisService::list_remainder(next).unwrap();
+        let paths = first
+            .entries
+            .iter()
+            .chain(&second.entries)
+            .map(|entry| entry.path.as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            paths.iter().copied().collect::<HashSet<_>>().len(),
+            paths.len(),
+            "a file inserted before the cursor must not repeat a loaded entry"
+        );
+        assert_eq!(
+            second.total_count, first.total_count,
+            "one open details list must paginate a consistent set of entries"
+        );
+        fs::remove_file(fixture.root.join("small-000.bin")).unwrap();
+        fs::write(fixture.root.join("small-001.bin"), vec![3; 16_384]).unwrap();
+        let mut next = request(first.next_offset.unwrap());
+        next.snapshot_id = Some(first.snapshot_id);
+        let changed = AnalysisService::list_remainder(next).unwrap();
+        assert_eq!(
+            changed
+                .entries
+                .iter()
+                .map(|entry| &entry.path)
+                .collect::<Vec<_>>(),
+            second
+                .entries
+                .iter()
+                .map(|entry| &entry.path)
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(changed.total_bytes, first.total_bytes);
+        let mut wrong_scope = request(0);
+        wrong_scope.snapshot_id = Some(first.snapshot_id);
+        wrong_scope.visible_paths.push(
+            fixture
+                .root
+                .join("small-002.bin")
+                .to_string_lossy()
+                .into_owned(),
+        );
+        assert!(AnalysisService::list_remainder(wrong_scope).is_err());
+        AnalysisService::release_remainder(first.snapshot_id).unwrap();
+        AnalysisService::release_remainder(first.snapshot_id).unwrap();
+        let reopened = AnalysisService::list_remainder(request(0)).unwrap();
+        assert_ne!(reopened.snapshot_id, first.snapshot_id);
+        assert!(reopened.total_bytes > first.total_bytes);
+        assert!(reopened
+            .entries
+            .iter()
+            .any(|entry| entry.name == "new-largest.bin"));
+        for _ in 0..2 {
+            AnalysisService::list_remainder(request(0)).unwrap();
+        }
+        let mut evicted = request(200);
+        evicted.snapshot_id = Some(reopened.snapshot_id);
+        let restarted = AnalysisService::list_remainder(evicted).unwrap();
+        assert_ne!(restarted.snapshot_id, reopened.snapshot_id);
+        assert_eq!(restarted.next_offset, Some(200));
+        assert_eq!(restarted.entries[0].name, "small-001.bin");
+    }
+
+    #[test]
     fn recreated_original_path_requires_rescan_including_dangling_links() {
         let root = tempfile::tempdir().unwrap();
         let target = root.path().join("selected");
@@ -425,6 +780,53 @@ mod tests {
         );
         cache::clear_all().expect("the analysis cache should be clear after the service test");
     }
+    #[test]
+    fn hierarchy_matches_independent_directory_results_and_stops_at_six_levels() {
+        let _operation_lock = crate::shared::operation::test_operation_lock();
+        cache::clear_all().unwrap();
+        let fixture = AnalysisFixture::new();
+        let deep = fixture.root.join("A/B/C/D/E/F/G");
+        fs::create_dir_all(&deep).unwrap();
+        fs::write(fixture.root.join("A/direct.bin"), vec![1_u8; 16 * 1024]).unwrap();
+        fs::write(deep.join("nested.bin"), vec![2_u8; 32 * 1024]).unwrap();
+        let result = AnalysisService::analyze_with_progress(
+            Some(fixture.root.to_string_lossy().into_owned()),
+            true,
+            |_| {},
+        )
+        .unwrap();
+        let a = &result.directory_hierarchy[0];
+        assert_eq!(a.name, "A");
+        assert_eq!(a.bytes, result.entries[0].bytes);
+        assert_eq!(a.file_count, 2);
+        let b = &a.children[0];
+        let c = &b.children[0];
+        let d = &c.children[0];
+        let e = &d.children[0];
+        let f = &e.children[0];
+        assert_eq!(f.name, "F");
+        assert!(
+            f.children.is_empty(),
+            "the seventh directory level must not be transported"
+        );
+        assert!(
+            a.bytes > b.bytes,
+            "direct files remain part of the parent total"
+        );
+        let independent =
+            AnalysisService::analyze_with_progress(Some(b.path.clone()), false, |_| {}).unwrap();
+        assert_eq!(b.bytes, independent.total_bytes);
+        assert_eq!(
+            b.file_count,
+            independent
+                .entries
+                .iter()
+                .map(|entry| entry.file_count)
+                .sum::<u64>()
+        );
+        cache::clear_all().unwrap();
+    }
+
     #[cfg(unix)]
     #[test]
     fn failed_native_directory_delete_invalidates_sessions_even_without_known_counts() {

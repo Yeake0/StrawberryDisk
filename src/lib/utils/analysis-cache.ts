@@ -66,7 +66,12 @@ export function syncAfterDelete(
     nextCache[resultKey] = {
       ...result,
       totalBytes: Math.max(0, result.totalBytes - snapshotBytes),
+      totalEntryCount:
+        result.totalEntryCount === undefined
+          ? undefined
+          : Math.max(0, result.totalEntryCount - (snapshotEntry && snapshotBytes > 0 ? 1 : 0)),
       entries,
+      directoryHierarchy: result.directoryHierarchy?.filter(node => key(node.path) !== removedKey),
     };
   }
   return nextCache;

@@ -192,6 +192,8 @@ import MdIconAdobe from '@/components/icons/md-icon-adobe.vue';
 import MdIconAiModel from '@/components/icons/md-icon-ai-model.vue';
 import MdIconBaiduNetdisk from '@/components/icons/md-icon-baidu-netdisk.vue';
 import MdIconBrave from '@/components/icons/md-icon-brave.vue';
+import MdIconCarbonChartSunburst from '@/components/icons/md-icon-carbon-chart-sunburst.vue';
+import MdIconCarbonChartTreemap from '@/components/icons/md-icon-carbon-chart-treemap.vue';
 import MdIconClaude from '@/components/icons/md-icon-claude.vue';
 import MdIconDingtalk from '@/components/icons/md-icon-dingtalk.vue';
 import MdIconDropbox from '@/components/icons/md-icon-dropbox.vue';
@@ -250,6 +252,8 @@ const iconMap: Record<IconName, IconDefinition> = {
   wrench: lucide(Wrench),
   brushCleaning: lucide(BrushCleaning),
   chartPie: lucide(ChartPie),
+  chartSunburst: custom(MdIconCarbonChartSunburst),
+  chartTreemap: custom(MdIconCarbonChartTreemap),
   fileSearch: lucide(FileSearch),
   copy: lucide(Copy),
   clock: lucide(Clock),

@@ -1,7 +1,13 @@
 mod models;
+mod remainder;
 mod service;
 mod session;
 
-pub(crate) use models::AnalysisEntryCandidate;
-pub use models::{AnalysisDeleteResult, AnalysisResult, DirectoryEntryInfo};
+pub use models::{
+    AnalysisDeleteResult, AnalysisDirectoryNode, AnalysisRemainderPage, AnalysisRemainderRequest,
+    AnalysisResult, DirectoryEntryInfo,
+};
+pub(crate) use models::{
+    AnalysisEntryCandidate, AnalysisRemainderParent, ANALYSIS_VISIBLE_ENTRY_LIMIT,
+};
 pub use service::AnalysisService;

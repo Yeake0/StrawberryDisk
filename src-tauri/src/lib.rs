@@ -251,6 +251,8 @@ pub fn run() {
             commands::cleanup::execute_cleanup,
             commands::analysis::cancel_analysis,
             commands::analysis::analyze_path,
+            commands::analysis::list_analysis_remainder,
+            commands::analysis::release_analysis_remainder,
             commands::large_files::cancel_large_files,
             commands::large_files::filter_large_files,
             commands::large_files::find_large_files,

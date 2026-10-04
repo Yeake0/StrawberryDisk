@@ -1,15 +1,16 @@
 // @vitest-environment happy-dom
 
 import { mount } from '@vue/test-utils';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { i18n } from '@/i18n';
 import MdFileEntryContextMenu from './md-file-entry-context-menu.vue';
 
 describe('file entry context menu', () => {
   it('closes an open menu before a recycled row targets a different file', async () => {
+    const menuStateChange = vi.fn();
     const wrapper = mount(MdFileEntryContextMenu, {
-      props: { entryKey: '/files/first' },
+      props: { entryKey: '/files/first', onMenuStateChange: menuStateChange },
       slots: { default: '<span>File</span>' },
       global: {
         plugins: [i18n],
@@ -28,6 +29,9 @@ describe('file entry context menu', () => {
     expect(wrapper.get('[data-open]').attributes('data-open')).toBe('true');
     await wrapper.setProps({ entryKey: '/files/second' });
     expect(wrapper.get('[data-open]').attributes('data-open')).toBe('false');
+    expect(wrapper.emitted('menuStateChange')).toEqual([[true], [false]]);
+    await wrapper.get('button').trigger('click');
     wrapper.unmount();
+    expect(menuStateChange.mock.calls).toEqual([[true], [false], [true], [false]]);
   });
 });

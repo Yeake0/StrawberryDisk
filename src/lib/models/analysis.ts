@@ -1,8 +1,10 @@
 export const ANALYSIS_RESULT_CACHE_LIMIT = 80;
+export const ANALYSIS_CHART_MAX_DEPTH = 6;
+export const ANALYSIS_REMAINDER_SCHEMA_VERSION = 2;
 
 export const ANALYSIS_VIEW_IDS = {
   treemap: 'treemap',
-  details: 'details',
+  sunburst: 'sunburst',
 } as const;
 
 export type AnalysisViewId = (typeof ANALYSIS_VIEW_IDS)[keyof typeof ANALYSIS_VIEW_IDS];
@@ -34,9 +36,40 @@ export interface AnalysisResult {
   root: string;
   scannedAtMs: number;
   totalBytes: number;
+  /** Positive-byte direct children; absent in older cached results. */
+  totalEntryCount?: number;
   skippedCount: number;
   truncated: boolean;
   entries: DirectoryEntryInfo[];
+  directoryHierarchy?: AnalysisDirectoryNode[];
+}
+
+export interface AnalysisDirectoryNode {
+  name: string;
+  path: string;
+  bytes: number;
+  fileCount: number;
+  /** Positive-byte direct children before projection; absent in older results. */
+  totalEntryCount?: number;
+  children: AnalysisDirectoryNode[];
+  /** Bounded read-only files; absent in older in-memory scan results. */
+  files?: DirectoryEntryInfo[];
+}
+
+export interface AnalysisRemainderSelection {
+  parentPath: string;
+  bytes: number;
+  visiblePaths: string[];
+}
+
+export interface AnalysisRemainderPage {
+  snapshotId: number;
+  schemaVersion: typeof ANALYSIS_REMAINDER_SCHEMA_VERSION;
+  parentPath: string;
+  totalBytes: number;
+  totalCount: number;
+  entries: DirectoryEntryInfo[];
+  nextOffset: number | null;
 }
 
 export interface AnalysisDeleteResult {
@@ -64,6 +97,6 @@ export type TreemapTile = TreemapTileRect &
         kind: typeof TREEMAP_TILE_KINDS.remainder;
         entry: null;
         bytes: number;
-        entryCount: number;
+        entryCount: number | null;
       }
   );

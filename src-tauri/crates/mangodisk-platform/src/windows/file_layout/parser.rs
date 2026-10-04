@@ -123,6 +123,7 @@ fn layout_mode_code(mode: LayoutCollectionMode) -> &'static str {
     match mode {
         LayoutCollectionMode::CandidatesOnly => "candidates",
         LayoutCollectionMode::FullAnalysis => "analysis",
+        LayoutCollectionMode::AnalysisWithFiles => "analysis_with_files",
     }
 }
 
@@ -244,7 +245,7 @@ fn parse_layout_page(
                     });
             }
         } else if !is_reserved_ntfs_record(file.FileReferenceNumber)
-            && (mode == LayoutCollectionMode::FullAnalysis
+            && (mode != LayoutCollectionMode::CandidatesOnly
                 || (!is_reparse
                     && !is_remote_placeholder
                     && candidate_size.is_some_and(|bytes| bytes >= minimum_bytes)))
@@ -254,7 +255,7 @@ fn parse_layout_page(
             // erase the large-file fast path; full analysis needs all names.
             let names = read_long_names(entry_bytes, offset, file.FirstNameOffset as usize)?;
             if !names.is_empty() {
-                if mode == LayoutCollectionMode::FullAnalysis {
+                if mode != LayoutCollectionMode::CandidatesOnly {
                     // Win32 directory enumeration returns one entry for each
                     // hard-link name, so totals also count each name link.
                     // Reparse and remote-only files contribute no bytes but increment the direct
@@ -274,6 +275,31 @@ fn parse_layout_page(
                             totals.checked_add_skipped()?;
                         } else {
                             totals.checked_add_file(space_usage)?;
+                            if mode == LayoutCollectionMode::AnalysisWithFiles
+                                && space_usage.allocated_bytes > 0
+                                && space_usage.allocated_bytes < minimum_bytes
+                            {
+                                const LIMIT: usize = 8192;
+                                let file = (
+                                    space_usage.allocated_bytes,
+                                    name.parent_id,
+                                    name.name.clone(),
+                                    space_usage.logical_bytes,
+                                );
+                                if collection.analysis_files.len() < LIMIT {
+                                    collection.analysis_files.push(std::cmp::Reverse(file));
+                                } else if collection
+                                    .analysis_files
+                                    .peek()
+                                    .is_some_and(|smallest| file > smallest.0)
+                                {
+                                    *collection
+                                        .analysis_files
+                                        .peek_mut()
+                                        .expect("a full candidate heap is nonempty") =
+                                        std::cmp::Reverse(file);
+                                }
+                            }
                         }
                     }
                 }
@@ -675,6 +701,7 @@ mod tests {
                 logical_bytes: 123,
                 allocated_bytes: 123,
                 file_count: 1,
+                direct_file_count: 1,
                 skipped_count: 0,
             }
         );
@@ -735,6 +762,7 @@ mod tests {
                 logical_bytes: 0,
                 allocated_bytes: 0,
                 file_count: 0,
+                direct_file_count: 0,
                 skipped_count: 1,
             }
         );
@@ -794,6 +822,7 @@ mod tests {
                 logical_bytes: 123,
                 allocated_bytes: 0,
                 file_count: 1,
+                direct_file_count: 0,
                 skipped_count: 0,
             }
         );

@@ -2,6 +2,8 @@
 mod elevation;
 #[cfg(windows)]
 pub use elevation::run_elevation_helper_mode;
+#[cfg(any(target_os = "macos", target_os = "linux"))]
+mod analysis_file_candidates;
 mod application_identity;
 pub mod application_quit;
 pub use application_identity::read_application_identity;

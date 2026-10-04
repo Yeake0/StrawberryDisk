@@ -668,6 +668,7 @@ async function cancelDeepCleanup() {
         <AnalysisPage
           v-else-if="store.currentPage === PAGE_IDS.analysis"
           :result="analysisStore.result"
+          :cached-results="analysisStore.cache"
           :excluded-folders="analysisStore.scanExcludedFolders"
           :excluded-names="analysisStore.scanExcludedNames"
           :home-path="analysisStore.homePath"

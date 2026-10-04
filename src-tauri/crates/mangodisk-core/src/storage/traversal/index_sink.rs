@@ -1,11 +1,20 @@
 use std::{
-    collections::{hash_map::Entry, HashMap},
+    cmp::Reverse,
+    collections::{hash_map::Entry, BinaryHeap, HashMap},
     path::PathBuf,
 };
 
-use mangodisk_platform::{FilesystemChangeToken, PhysicalFileIdentity};
+use mangodisk_platform::{
+    current_platform, FastAnalysisFile, FilesystemChangeToken, PhysicalFileIdentity, Platform,
+    ScanPurpose,
+};
+
+use crate::storage::large_files::LARGE_FILE_CANDIDATE_FLOOR_BYTES;
 
 use crate::storage::index::cache::{DirectoryAggregate, IndexedFile};
+
+const ANALYSIS_FILES_PER_DIRECTORY: usize = 64;
+const ANALYSIS_FILE_BUDGET: usize = 8192;
 
 /// Collects one completed scan in memory.
 ///
@@ -17,12 +26,53 @@ pub(super) struct IndexRecordSink {
     files: HashMap<PathBuf, IndexedFile>,
     hard_links: HashMap<(u64, u64), Vec<(PathBuf, IndexedFile)>>,
     change_token: Option<FilesystemChangeToken>,
+    analysis_files: AnalysisCandidates,
 }
 
 pub(super) struct CompletedIndexSink {
     pub(super) directories: HashMap<PathBuf, DirectoryAggregate>,
     pub(super) files: HashMap<PathBuf, IndexedFile>,
     pub(super) change_token: Option<FilesystemChangeToken>,
+}
+
+/// Keep a bounded allocation-ranked subset, with deterministic path ties.
+/// The scan-wide budget caps extra retained metadata independently of file count.
+pub(super) struct AnalysisCandidates {
+    files: BinaryHeap<Reverse<FastAnalysisFile>>,
+    limit: usize,
+}
+impl AnalysisCandidates {
+    pub(super) fn new(limit: usize) -> Self {
+        Self {
+            files: BinaryHeap::new(),
+            limit,
+        }
+    }
+    pub(super) fn would_retain(&self, bytes: u64, path: &std::path::Path) -> bool {
+        bytes > 0
+            && self.limit > 0
+            && (self.files.len() < self.limit
+                || self.files.peek().is_some_and(|smallest| {
+                    bytes > smallest.0.allocated_bytes
+                        || (bytes == smallest.0.allocated_bytes && path < smallest.0.path.as_path())
+                }))
+    }
+    pub(super) fn push(&mut self, file: FastAnalysisFile) {
+        if file.allocated_bytes == 0 || self.limit == 0 {
+            return;
+        }
+        if self.files.len() < self.limit {
+            self.files.push(Reverse(file));
+        } else if self.files.peek().is_some_and(|smallest| file > smallest.0) {
+            *self
+                .files
+                .peek_mut()
+                .expect("a full candidate heap is nonempty") = Reverse(file);
+        }
+    }
+    pub(super) fn into_files(self) -> impl Iterator<Item = FastAnalysisFile> {
+        self.files.into_iter().map(|file| file.0)
+    }
 }
 
 impl IndexRecordSink {
@@ -32,7 +82,12 @@ impl IndexRecordSink {
             files: HashMap::new(),
             hard_links: HashMap::new(),
             change_token,
+            analysis_files: AnalysisCandidates::new(ANALYSIS_FILE_BUDGET),
         }
+    }
+
+    pub(super) fn push_analysis_file(&mut self, file: FastAnalysisFile) {
+        self.analysis_files.push(file);
     }
 
     pub(super) fn push_directory(
@@ -94,8 +149,58 @@ impl IndexRecordSink {
     /// Assign shared allocation to a stable path within this scan, regardless of worker ordering.
     /// Only multiply linked files are retained; ordinary files add no identity-map overhead.
     pub(super) fn finish_analysis(mut self) -> Result<CompletedIndexSink, String> {
+        // Ownership is resolved after native enumeration. Bound its per-directory
+        // candidate buffers too, prioritizing large branches when the budget is full.
+        let parent_limit = ANALYSIS_FILE_BUDGET / ANALYSIS_FILES_PER_DIRECTORY;
+        let mut parents = BinaryHeap::new();
+        for (path, directory) in &self.directories {
+            if directory.direct_file_count == 0 {
+                continue;
+            }
+            let rank = (directory.bytes, path.as_path());
+            if parents.len() < parent_limit {
+                parents.push(Reverse(rank));
+            } else if parents.peek().is_some_and(|smallest| rank > smallest.0) {
+                *parents.peek_mut().expect("a full parent heap is nonempty") = Reverse(rank);
+            }
+        }
+        let mut owner_files: HashMap<PathBuf, AnalysisCandidates> = parents
+            .into_iter()
+            .map(|Reverse((_, path))| {
+                (
+                    path.to_path_buf(),
+                    AnalysisCandidates::new(ANALYSIS_FILES_PER_DIRECTORY),
+                )
+            })
+            .collect();
         for mut links in self.hard_links.into_values() {
             links.sort_unstable_by(|left, right| left.0.cmp(&right.0));
+            // Select charged owners only after all aliases are known. Ordinary files
+            // have already been bounded by their native directory reader.
+            if let Some((path, file)) = links.first() {
+                if let Some(candidates) =
+                    path.parent().and_then(|parent| owner_files.get_mut(parent))
+                {
+                    if file.bytes > 0
+                        && file.bytes < LARGE_FILE_CANDIDATE_FLOOR_BYTES
+                        && candidates.would_retain(file.bytes, path)
+                        && current_platform()
+                            .should_skip(
+                                path,
+                                path.parent().unwrap_or(path),
+                                ScanPurpose::LargeFiles,
+                            )
+                            .is_none()
+                    {
+                        candidates.push(FastAnalysisFile {
+                            path: path.clone(),
+                            allocated_bytes: file.bytes,
+                            logical_bytes: file.logical_bytes,
+                            modified_at_ms: file.modified_at_ms,
+                        });
+                    }
+                }
+            }
             for (path, mut file) in links.into_iter().skip(1) {
                 for ancestor in path.ancestors().skip(1) {
                     if let Some(directory) = self.directories.get_mut(ancestor) {
@@ -124,10 +229,75 @@ impl IndexRecordSink {
                 self.files.insert(path, file);
             }
         }
+        for candidates in owner_files.into_values() {
+            for file in candidates.into_files() {
+                self.analysis_files.push(file);
+            }
+        }
+        let mut candidates = self.analysis_files.into_files().collect::<Vec<_>>();
+        candidates.sort_unstable_by(|left, right| right.cmp(left));
+        let mut parent_counts = HashMap::new();
+        for file in candidates {
+            if self
+                .files
+                .get(&file.path)
+                .is_some_and(|indexed| indexed.bytes == 0)
+            {
+                continue;
+            }
+            let Some(parent) = file.path.parent() else {
+                continue;
+            };
+            let count = parent_counts.entry(parent.to_path_buf()).or_insert(0);
+            if *count >= ANALYSIS_FILES_PER_DIRECTORY {
+                continue;
+            }
+            *count += 1;
+            // Zero-charge aliases remain authoritative even if a candidate was stale.
+            self.files.entry(file.path).or_insert(IndexedFile {
+                bytes: file.allocated_bytes,
+                logical_bytes: file.logical_bytes,
+                modified_at_ms: file.modified_at_ms,
+            });
+        }
         Ok(CompletedIndexSink {
             directories: self.directories,
             files: self.files,
             change_token: self.change_token,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn supplemental_analysis_files_stay_bounded_and_never_replace_zero_charge_aliases() {
+        let mut sink = IndexRecordSink::memory(None);
+        for index in (0..12_000).rev() {
+            sink.push_analysis_file(FastAnalysisFile {
+                path: format!("/fixture/parent-{}/file-{index:05}", index / 64).into(),
+                allocated_bytes: index + 1,
+                logical_bytes: index + 1,
+                modified_at_ms: None,
+            });
+        }
+        assert_eq!(sink.analysis_files.files.len(), 8192);
+        let alias = PathBuf::from("/fixture/parent-187/file-11999");
+        sink.push_large_file(
+            alias.clone(),
+            IndexedFile {
+                bytes: 0,
+                logical_bytes: 12000,
+                modified_at_ms: None,
+            },
+        )
+        .unwrap();
+        let snapshot = sink.finish_analysis().unwrap();
+        assert_eq!(snapshot.files.len(), 8192);
+        assert_eq!(snapshot.files[&alias].bytes, 0);
+        assert!(!snapshot
+            .files
+            .contains_key(std::path::Path::new("/fixture/parent-0/file-00000")));
     }
 }

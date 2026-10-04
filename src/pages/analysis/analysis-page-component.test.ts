@@ -5,7 +5,7 @@ import { defineComponent, h } from 'vue';
 import { AnalysisService } from '@/lib/services/analysis-service';
 import { useAnalysisStore } from '@/stores/analysis-store';
 import { useStorageScanPreferencesStore } from '@/stores/storage-scan-preferences-store';
-import MdAnalysisDetailsTable from './components/md-analysis-details-table.vue';
+import MdAnalysisSunburst from './components/md-analysis-sunburst.vue';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,6 +15,7 @@ import MdAnalysisFolderPane from './components/md-analysis-folder-pane.vue';
 import MdAnalysisVisualPane from './components/md-analysis-visual-pane.vue';
 import { Button } from '@/components/ui/button';
 import { i18n } from '@/i18n';
+import { Select } from '@/components/ui/select';
 import type { AnalysisResult } from '@/lib/models/analysis';
 
 import AnalysisPage from './index.vue';
@@ -37,7 +38,7 @@ beforeEach(() => {
 });
 
 describe('analysis page', () => {
-  it('preserves details sorting while an unvisited child is resolved from the backend cache', async () => {
+  it('preserves the sunburst depth selection while an unvisited child is resolved from the backend cache', async () => {
     const store = useAnalysisStore();
     store.result = result;
     useStorageScanPreferencesStore().initialized = true;
@@ -73,6 +74,7 @@ describe('analysis page', () => {
             MdAnalysisBrowserToolbar: true,
             MdAnalysisFolderPane: true,
             MdAnalysisTreemap: true,
+            MdIconSunburst: true,
             MdDestructiveActionDialog: true,
             MdTooltip: { template: '<span><slot /></span>' },
           },
@@ -80,18 +82,18 @@ describe('analysis page', () => {
       }
     );
     try {
-      wrapper.getComponent(MdAnalysisVisualPane).vm.$emit('update:viewMode', 'details');
+      wrapper.getComponent(MdAnalysisVisualPane).vm.$emit('update:viewMode', 'sunburst');
       await flushPromises();
-      const table = wrapper.getComponent(MdAnalysisDetailsTable);
-      const nameSort = '.details-head-grid button';
-      await table.get(nameSort).trigger('click');
-      expect(table.get(nameSort).attributes('data-active')).toBe('true');
+      const table = wrapper.getComponent(MdAnalysisSunburst);
+      wrapper.getComponent(MdAnalysisVisualPane).getComponent(Select).vm.$emit('update:modelValue', '4');
+      await flushPromises();
+      expect(wrapper.getComponent(MdAnalysisVisualPane).getComponent(Select).props('modelValue')).toBe('4');
       const request = store.analyze('/fixture/child');
       await flushPromises();
       expect(analyze).toHaveBeenCalledOnce();
       expect(store.scanStarted).toBe(true);
       expect(store.progress).toBeNull();
-      const retainedWhilePending = wrapper.findComponent(MdAnalysisDetailsTable).exists();
+      const retainedWhilePending = wrapper.findComponent(MdAnalysisSunburst).exists();
       const fullProgressWhilePending = wrapper.find('.analysis-overlay--full').exists();
       complete({ ...result, root: '/fixture/child' });
       await request;
@@ -99,8 +101,84 @@ describe('analysis page', () => {
       expect(unlisten).toHaveBeenCalledOnce();
       expect.soft(retainedWhilePending).toBe(true);
       expect.soft(fullProgressWhilePending).toBe(false);
-      expect.soft(wrapper.getComponent(MdAnalysisDetailsTable).vm.$.uid).toBe(table.vm.$.uid);
-      expect(wrapper.get(nameSort).attributes('data-active')).toBe('true');
+      expect.soft(wrapper.getComponent(MdAnalysisSunburst).vm.$.uid).toBe(table.vm.$.uid);
+      expect(wrapper.getComponent(Select).props('modelValue')).toBe('4');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('expands the chart without losing the file pane or resetting layout on mode and folder changes', async () => {
+    const wrapper = shallowMount(AnalysisPage, {
+      props: {
+        result,
+        excludedFolders: [],
+        homePath: '/fixture',
+        disk: null,
+        disks: [],
+        progress: null,
+        busy: false,
+        cancelling: false,
+        deleting: false,
+      },
+      global: {
+        plugins: [i18n],
+        stubs: { MdPageShell: { template: '<div><slot /></div>' } },
+      },
+    });
+    try {
+      const pane = wrapper.getComponent(MdAnalysisFolderPane);
+      const toolbar = wrapper.getComponent(MdAnalysisBrowserToolbar);
+      const chart = wrapper.getComponent(MdAnalysisVisualPane);
+      expect(toolbar.props('listCollapsed')).toBe(false);
+      expect(pane.attributes('style') ?? '').not.toContain('display: none');
+      pane.vm.$emit('hoverEntry', '/fixture/item');
+      await flushPromises();
+      expect(chart.props('hoveredEntryPath')).toBe('/fixture/item');
+      toolbar.vm.$emit('toggleList');
+      await flushPromises();
+      expect(pane.attributes('style')).toContain('display: none');
+      expect(chart.props('hoveredEntryPath')).toBeNull();
+      expect(wrapper.get('.browser-content').classes()).toContain('browser-content--list-collapsed');
+      chart.vm.$emit('update:viewMode', 'sunburst');
+      await wrapper.setProps({ result: { ...result, root: '/fixture/child' } });
+      expect(toolbar.props('listCollapsed')).toBe(true);
+      expect(chart.props('viewMode')).toBe('sunburst');
+      toolbar.vm.$emit('toggleList');
+      await flushPromises();
+      expect(wrapper.getComponent(MdAnalysisFolderPane).vm.$.uid).toBe(pane.vm.$.uid);
+      expect(pane.attributes('style') ?? '').not.toContain('display: none');
+      expect(wrapper.get('.browser-content').classes()).not.toContain('browser-content--list-collapsed');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('retains chart depth preferences when a new scan replaces the visual pane', async () => {
+    const wrapper = shallowMount(AnalysisPage, {
+      props: {
+        result,
+        excludedFolders: [],
+        homePath: '/fixture',
+        disk: null,
+        disks: [],
+        progress: null,
+        busy: false,
+        cancelling: false,
+        deleting: false,
+      },
+      global: { plugins: [i18n], stubs: { MdPageShell: { template: '<div><slot /></div>' } } },
+    });
+    try {
+      const chart = wrapper.getComponent(MdAnalysisVisualPane);
+      chart.vm.$emit('update:treemapDepth', 6);
+      chart.vm.$emit('update:sunburstDepth', 5);
+      await flushPromises();
+      await wrapper.setProps({ result: null, busy: true });
+      expect(wrapper.findComponent(MdAnalysisVisualPane).exists()).toBe(false);
+      await wrapper.setProps({ result: { ...result, scanId: 8 }, busy: false });
+      expect(wrapper.getComponent(MdAnalysisVisualPane).props('treemapDepth')).toBe(6);
+      expect(wrapper.getComponent(MdAnalysisVisualPane).props('sunburstDepth')).toBe(5);
     } finally {
       wrapper.unmount();
     }

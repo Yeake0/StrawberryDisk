@@ -4,10 +4,12 @@ import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { i18n } from '@/i18n';
+import { Select } from '@/components/ui/select';
 import type { AnalysisResult } from '@/lib/models/analysis';
 import { ByteSizeService } from '@/lib/services/byte-size-service';
 
 import MdAnalysisVisualPane from './md-analysis-visual-pane.vue';
+import MdAnalysisSunburst from './md-analysis-sunburst.vue';
 
 const result: AnalysisResult = {
   scanId: 7,
@@ -34,9 +36,8 @@ function mountPane(exclusionsActive: boolean) {
       plugins: [i18n],
       stubs: {
         MdAnalysisTreemap: true,
-        MdAnalysisDetailsTable: true,
+        MdAnalysisSunburst: true,
         MdIcon: true,
-        MdTooltip: { template: '<span><slot /></span>' },
       },
     },
   });
@@ -71,14 +72,54 @@ describe('analysis result exclusions', () => {
     expect(wrapper.emitted('openExclusions')).toHaveLength(1);
   });
 
-  it('keeps the limit help beside the summary in details mode', async () => {
+  it('forwards sunburst context actions and operation guards to the page', async () => {
     const wrapper = mountPane(false);
-    await wrapper.setProps({ result: { ...result, truncated: true } });
-    expect(wrapper.find('.md-help-action').exists()).toBe(false);
+    try {
+      await wrapper.setProps({ viewMode: 'sunburst', deleteDisabled: true, deletingPath: '/fixture/A' });
+      const chart = wrapper.getComponent(MdAnalysisSunburst);
+      expect(chart.props('deleteDisabled')).toBe(true);
+      expect(chart.props('deletingPath')).toBe('/fixture/A');
+      const entry = {
+        name: 'A',
+        path: '/fixture/A',
+        bytes: 64,
+        fileCount: 1,
+        isDirectory: true,
+        modifiedAtMs: null,
+        contentFingerprint: null,
+      };
+      chart.vm.$emit('openEntry', entry);
+      chart.vm.$emit('reveal', entry.path);
+      chart.vm.$emit('delete', entry);
+      expect(wrapper.emitted('openEntry')).toEqual([[entry]]);
+      expect(wrapper.emitted('reveal')).toEqual([[entry.path]]);
+      expect(wrapper.emitted('delete')).toEqual([[entry]]);
+    } finally {
+      wrapper.unmount();
+    }
+  });
 
-    await wrapper.setProps({ viewMode: 'details' });
-    expect(wrapper.get('.space-summary .md-help-action').attributes('aria-label')).toBe(
-      'Showing up to 100 largest items'
-    );
+  it('places depth beside the chart switcher and preserves independent levels without a footer', async () => {
+    const wrapper = mountPane(false);
+    try {
+      expect(wrapper.find('header .chart-controls .chart-depth').exists()).toBe(true);
+      expect(wrapper.find('footer').exists()).toBe(false);
+      wrapper.getComponent(Select).vm.$emit('update:modelValue', '6');
+      await wrapper.vm.$nextTick();
+      await wrapper.setProps({ viewMode: 'sunburst' });
+      expect(wrapper.getComponent(Select).props('modelValue')).toBe('3');
+      wrapper.getComponent(Select).vm.$emit('update:modelValue', '1');
+      await wrapper.vm.$nextTick();
+      expect(wrapper.getComponent(Select).props('modelValue')).toBe('3');
+      wrapper.getComponent(Select).vm.$emit('update:modelValue', '4');
+      await wrapper.vm.$nextTick();
+      await wrapper.setProps({ viewMode: 'treemap', openDisabled: true });
+      expect(wrapper.getComponent(Select).props('modelValue')).toBe('6');
+      expect(wrapper.getComponent(Select).props('disabled')).toBe(true);
+      await wrapper.setProps({ viewMode: 'sunburst' });
+      expect(wrapper.getComponent(Select).props('modelValue')).toBe('4');
+    } finally {
+      wrapper.unmount();
+    }
   });
 });

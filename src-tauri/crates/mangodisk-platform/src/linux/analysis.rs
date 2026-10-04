@@ -11,8 +11,10 @@ use std::{
     time::{Duration, Instant},
 };
 
+use crate::analysis_file_candidates::AnalysisFileCandidates;
 use crate::{
-    FastAnalysisQuery, FastAnalysisRecord, FastAnalysisScanError, FastAnalysisSummary, ScanPurpose,
+    FastAnalysisFile, FastAnalysisQuery, FastAnalysisRecord, FastAnalysisScanError,
+    FastAnalysisSummary, ScanPurpose,
 };
 
 use super::{directories, volumes, LinuxPlatform};
@@ -102,6 +104,7 @@ struct DirectoryReadResult {
     child_directories: Vec<PathBuf>,
     candidates: Vec<PathBuf>,
     hard_links: Vec<FastAnalysisRecord>,
+    analysis_files: AnalysisFileCandidates,
     entry_count: u64,
 }
 
@@ -225,6 +228,10 @@ impl<'a> AnalysisCoordinator<'a> {
         );
         for record in result.hard_links {
             (self.consumer)(record).map_err(FastAnalysisScanError::Consumer)?;
+        }
+        for file in result.analysis_files.into_files() {
+            (self.consumer)(FastAnalysisRecord::AnalysisFile(file))
+                .map_err(FastAnalysisScanError::Consumer)?;
         }
         for candidate in result.candidates {
             emit_candidate(candidate, self.consumer, &mut self.diagnostics)?;
@@ -443,6 +450,7 @@ fn read_directory(
                 child_directories: Vec::new(),
                 candidates: Vec::new(),
                 hard_links: Vec::new(),
+                analysis_files: AnalysisFileCandidates::default(),
                 entry_count: 0,
             });
         }
@@ -452,6 +460,7 @@ fn read_directory(
     let mut child_directories = Vec::new();
     let mut candidates = Vec::new();
     let mut hard_links = Vec::new();
+    let mut analysis_files = AnalysisFileCandidates::default();
     let mut entry_count = 0_u64;
     for entry in entries {
         check_aborted(abort)?;
@@ -526,6 +535,20 @@ fn read_directory(
                 ScanPurpose::DuplicateFiles => logical_bytes,
                 _ => allocated_bytes,
             };
+            if policy.purpose == ScanPurpose::Analysis
+                && metadata.nlink() <= 1
+                && allocated_bytes > 0
+                && allocated_bytes < policy.large_file_minimum_bytes
+                && analysis_files.would_retain(allocated_bytes, &path)
+                && !should_skip(&path, ScanPurpose::LargeFiles, false)
+            {
+                analysis_files.push(FastAnalysisFile {
+                    path: path.clone(),
+                    allocated_bytes,
+                    logical_bytes,
+                    modified_at_ms: None,
+                });
+            }
             if candidate_bytes >= policy.large_file_minimum_bytes
                 && !should_skip(&path, candidate_purpose, false)
             {
@@ -541,6 +564,7 @@ fn read_directory(
         child_directories,
         candidates,
         hard_links,
+        analysis_files,
         entry_count,
     })
 }
@@ -802,7 +826,8 @@ mod tests {
                 &mut |record| match record {
                     FastAnalysisRecord::LargeFileCandidate(_) => Err("expected".to_string()),
                     FastAnalysisRecord::Directory { .. }
-                    | FastAnalysisRecord::HardLinkedFile { .. } => Ok(()),
+                    | FastAnalysisRecord::HardLinkedFile { .. }
+                    | FastAnalysisRecord::AnalysisFile(_) => Ok(()),
                 },
             );
             let _ = sender.send(result);

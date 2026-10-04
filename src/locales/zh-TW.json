@@ -1647,6 +1647,7 @@
     }
   },
   "common": {
+    "retry": "重試",
     "scrollbar": "垂直捲動軸",
     "decreaseValue": "減少{label}",
     "increaseValue": "增加{label}",
@@ -1947,16 +1948,21 @@
     }
   },
   "analysis": {
+    "totalSizeLabel": "總佔用",
+    "shareOfCurrentFolder": "佔目前目錄",
+    "shareOfParentFolder": "佔上層目錄",
     "title": "磁碟空間分析",
     "pathLabel": "目前位置",
+    "switchSiblingFolder": "切換同層目錄：{name}",
+    "collapseFileList": "收合檔案列表",
+    "expandFileList": "展開檔案列表",
     "start": "開始分析",
     "analyzing": "正在掃描資料夾…",
     "rescan": "重新分析",
     "result": "目前資料夾",
     "treemap": "樹狀圖",
-    "treemapRemainder": "較小項目 · {count} 項",
-    "treemapRemainderHint": "{count} 項較小內容共佔用 {size}；完整明細可在清單中查看",
-    "details": "清單",
+    "other": "其他",
+    "treemapRemainder": "其他 · {count} 項",
     "back": "上一頁",
     "forward": "下一頁",
     "home": "返回本次分析的起始位置",
@@ -1975,9 +1981,13 @@
     "emptyDescription": "分析所選位置中檔案和資料夾的空間佔用",
     "folderFileSummary": "{folders} 個資料夾 · {files} 個檔案",
     "folderSpaceSummary": "{folders} 個資料夾 · {size}",
-    "limitedEntries": "最多顯示佔用空間最大的 100 個項目",
+    "limitedEntries": "最多顯示佔用空間最大的 {count} 個項目",
     "exclusionHint": "此處只統計參與分析的內容；排除設定不會改變磁碟實際已用空間",
-    "deleting": "正在刪除…"
+    "deleting": "正在刪除…",
+    "sunburst": "旭日圖",
+    "sunburstDepth": "深度",
+    "sunburstLevels": "深度 {count} 層",
+    "sunburstRemainder": "檔案及其他項目"
   },
   "storageScanExclusions": {
     "title": "掃描排除",

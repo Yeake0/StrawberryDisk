@@ -1647,6 +1647,7 @@
     }
   },
   "common": {
+    "retry": "再試行",
     "scrollbar": "縦スクロールバー",
     "decreaseValue": "{label}を減らす",
     "increaseValue": "{label}を増やす",
@@ -1947,16 +1948,21 @@
     }
   },
   "analysis": {
+    "totalSizeLabel": "合計サイズ",
+    "shareOfCurrentFolder": "現在のフォルダーに占める割合",
+    "shareOfParentFolder": "親フォルダーに占める割合",
     "title": "ディスク容量分析",
     "pathLabel": "現在の場所",
+    "switchSiblingFolder": "同じ階層のフォルダーに切り替え：{name}",
+    "collapseFileList": "ファイル一覧を折りたたむ",
+    "expandFileList": "ファイル一覧を展開",
     "start": "分析を開始",
     "analyzing": "フォルダーをスキャン中…",
     "rescan": "再分析",
     "result": "現在のフォルダー",
     "treemap": "ツリーマップ",
-    "treemapRemainder": "小さい項目 · {count} 件",
-    "treemapRemainderHint": "小さい項目 {count} 件で合計 {size} を使用しています。詳しくはリストで確認できます",
-    "details": "リスト",
+    "other": "その他",
+    "treemapRemainder": "その他 · {count} 件",
     "back": "戻る",
     "forward": "進む",
     "home": "分析ルートに戻る",
@@ -1975,9 +1981,13 @@
     "emptyDescription": "選択した場所でファイルとフォルダーが使用している容量を分析します",
     "folderFileSummary": "{folders} フォルダー · {files} ファイル",
     "folderSpaceSummary": "{folders} フォルダー · {size}",
-    "limitedEntries": "使用容量の大きい項目を最大 100 件表示しています",
+    "limitedEntries": "使用容量の大きい項目を最大 {count} 件表示",
     "exclusionHint": "分析対象のみを集計します。除外してもディスクの実使用量は変わりません",
-    "deleting": "削除中…"
+    "deleting": "削除中…",
+    "sunburst": "サンバースト",
+    "sunburstDepth": "深さ",
+    "sunburstLevels": "深さ {count}",
+    "sunburstRemainder": "ファイルなど"
   },
   "storageScanExclusions": {
     "title": "スキャンの除外",

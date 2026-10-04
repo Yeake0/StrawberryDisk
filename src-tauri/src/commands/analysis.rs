@@ -1,4 +1,6 @@
-use mangodisk_core::{AnalysisResult, AnalysisService};
+use mangodisk_core::{
+    AnalysisRemainderPage, AnalysisRemainderRequest, AnalysisResult, AnalysisService,
+};
 use mangodisk_core::{ScanExclusionOptions, ScanNameExclusion};
 
 use crate::events;
@@ -32,4 +34,22 @@ pub async fn analyze_path(
 #[tauri::command]
 pub fn cancel_analysis() {
     AnalysisService::cancel();
+}
+
+#[tauri::command]
+pub async fn list_analysis_remainder(
+    request: AnalysisRemainderRequest,
+) -> CommandResult<AnalysisRemainderPage> {
+    run_blocking("list_analysis_remainder", move || {
+        AnalysisService::list_remainder(request)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn release_analysis_remainder(snapshot_id: u64) -> CommandResult<()> {
+    run_blocking("release_analysis_remainder", move || {
+        AnalysisService::release_remainder(snapshot_id)
+    })
+    .await
 }
