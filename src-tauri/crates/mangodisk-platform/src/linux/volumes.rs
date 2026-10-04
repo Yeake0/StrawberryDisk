@@ -154,23 +154,9 @@ fn select_mount<'a>(records: &'a [MountRecord], path: &Path) -> Option<&'a Mount
 }
 
 fn stat_volume(record: &MountRecord) -> PlatformResult<VolumeInfo> {
-    let mut stat: libc::statfs = unsafe { std::mem::zeroed() };
-    let c_path = CString::new(record.mount_point.as_os_str().as_bytes()).map_err(|error| {
-        PlatformError::operation_failed(format!("invalid mount point: {error}"))
-    })?;
-
-    let result = unsafe { libc::statfs(c_path.as_ptr(), &mut stat) };
-    if result != 0 {
-        return Err(PlatformError::io(
-            "statfs",
-            &std::io::Error::last_os_error(),
-        ));
-    }
-
-    let block_size = u64::try_from(stat.f_bsize)
-        .map_err(|_| PlatformError::operation_failed("filesystem block size is invalid"))?;
-    let total_bytes = stat.f_blocks.saturating_mul(block_size);
-    let available_bytes = stat.f_bavail.saturating_mul(block_size);
+    let capacity = capacity(&record.mount_point)?;
+    let total_bytes = capacity.total_bytes;
+    let available_bytes = capacity.available_bytes;
     let used_bytes = total_bytes.saturating_sub(available_bytes);
     let mount_point = record.mount_point.to_string_lossy().into_owned();
 
@@ -181,6 +167,33 @@ fn stat_volume(record: &MountRecord) -> PlatformResult<VolumeInfo> {
         available_bytes,
         used_bytes,
         scan_concurrency: scan_concurrency(record),
+    })
+}
+
+/// Share ordinary-user capacity across inventory and resident monitoring.
+/// Reserved filesystem blocks remain unavailable, even in privileged sessions.
+pub(crate) fn capacity(
+    path: &Path,
+) -> PlatformResult<crate::system_resources::disk::VolumeCapacity> {
+    let c_path = CString::new(path.as_os_str().as_bytes()).map_err(|error| {
+        PlatformError::operation_failed(format!("invalid mount point: {error}"))
+    })?;
+    let mut stat: libc::statvfs = unsafe { std::mem::zeroed() };
+    if unsafe { libc::statvfs(c_path.as_ptr(), &mut stat) } != 0 {
+        return Err(PlatformError::io(
+            "statvfs",
+            &std::io::Error::last_os_error(),
+        ));
+    }
+    let block_size = if stat.f_frsize == 0 {
+        stat.f_bsize
+    } else {
+        stat.f_frsize
+    };
+    let total_bytes = stat.f_blocks.saturating_mul(block_size);
+    Ok(crate::system_resources::disk::VolumeCapacity {
+        total_bytes,
+        available_bytes: stat.f_bavail.saturating_mul(block_size).min(total_bytes),
     })
 }
 

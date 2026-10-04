@@ -155,6 +155,33 @@ describe('cleanup workflow completion', () => {
     useStorageScanPreferencesStore().initialized = true;
   });
 
+  it.each(['periodic', 'forced'] as const)(
+    'does not replace a newer %s capacity with the disk sampled before a long scan',
+    async refresh => {
+      const snapshot = cleanupScan();
+      const fresh = { ...snapshot.disk, availableBytes: 750, usedBytes: 250 };
+      const appStore = useAppStore();
+      appStore.disk = snapshot.disk;
+      appStore.disks = [snapshot.disk];
+      vi.spyOn(DiskService, 'listDisks').mockResolvedValue([fresh]);
+      vi.spyOn(DiskService, 'getSystemDisk').mockResolvedValue(fresh);
+      let complete!: (snapshot: CleanupScanResult) => void;
+      const scan = vi
+        .spyOn(CleanupService, 'scanWithProgress')
+        .mockImplementation(() => new Promise(resolve => (complete = resolve)));
+      const store = useCleanupStore();
+      const pending = store.scanCandidates();
+      await vi.waitFor(() => expect(scan).toHaveBeenCalledOnce());
+      if (refresh === 'periodic') await appStore.refreshDisks();
+      else await appStore.refreshSystemDisk();
+      complete(snapshot);
+      await expect(pending).resolves.toBe(true);
+      expect(store.scan).toEqual(snapshot);
+      expect(appStore.disk).toEqual(fresh);
+      expect(appStore.disks).toEqual([fresh]);
+    }
+  );
+
   it('keeps the previous cleanup snapshot until a user-initiated rescan completes', async () => {
     const store = useCleanupStore();
     const previousScan = cleanupScan({ scannedAtMs: 1 });

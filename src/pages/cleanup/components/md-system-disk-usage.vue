@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type { DiskInfo } from '@/lib/models/disk';
 import { ICON_NAMES } from '@/lib/models/ui';
 import { ByteSizeService } from '@/lib/services/byte-size-service';
+import { OperatingSystemService } from '@/lib/services/operating-system-service';
 import * as FormatUtils from '@/lib/utils/format';
 
 const props = defineProps<{
@@ -14,6 +15,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n({ useScope: 'global' });
+const isMacOs = OperatingSystemService.isMacOs();
 const diskName = computed(() => props.disk.name || props.disk.mountPoint);
 const usagePercent = computed(() => FormatUtils.percent(props.disk.usedBytes, props.disk.totalBytes));
 const usedCapacity = computed(() => ByteSizeService.diskCapacity(props.disk.usedBytes));
@@ -53,7 +55,7 @@ const accessibleDetails = computed(() =>
       </div>
     </TooltipTrigger>
     <TooltipContent
-      class="system-disk-tooltip grid w-64 gap-2 px-3 py-2.5 text-left"
+      class="system-disk-tooltip grid w-64 gap-2 px-3 py-2.5 text-left text-wrap"
       side="bottom"
       align="start"
       :side-offset="8"
@@ -72,6 +74,9 @@ const accessibleDetails = computed(() =>
           <span class="text-background/70">{{ t('cleanup.diskUsageTotalLabel') }}</span>
           <strong>{{ totalCapacity }}</strong>
         </span>
+      </span>
+      <span v-if="isMacOs" class="border-t border-background/20 pt-2 text-xs text-background/70">
+        {{ t('systemStatus.diskCapacityHint') }}
       </span>
     </TooltipContent>
   </Tooltip>

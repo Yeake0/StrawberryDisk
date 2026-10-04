@@ -48,7 +48,11 @@ Find cleanable content scattered across the system, applications, developer tool
 
 Smart recommendations help you make safe choices quickly. You can also review items individually and see the estimated reclaimable space upfront, keeping every cleanup predictable and under your control.
 
+Disk capacity uses the same availability estimate across cleanup, volume selection, and resident monitoring. On macOS, available storage includes space the system can reclaim; it is not limited to currently free filesystem blocks. The macOS estimate is shared for up to five seconds and falls back to filesystem free space if the native query fails. Cleanup and deletion force a fresh estimate. Active main windows also refresh capacity every 15 seconds and when regaining focus. Capacity estimates do not change file-size measurement or verified cleanup accounting.
+
 Startup logs record the operating system's product version, kernel/build version, architecture, and WebView runtime separately to help diagnose platform-specific reports.
+
+Linux capacity excludes filesystem blocks reserved from ordinary users, matching GIO availability. Storage and network sizes use decimal units on macOS and Linux and binary units on Windows; memory remains binary on every platform. Linux inventory and resident monitoring share the same `statvfs` calculation.
 
 If a scan cannot read some locations, its details show up to 50 failed read operations with paths and native errors. The failure total counts read attempts, not unique folders. A read failure alone does not indicate missing Full Disk Access.
 

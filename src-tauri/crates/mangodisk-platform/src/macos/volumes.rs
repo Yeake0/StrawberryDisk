@@ -154,15 +154,6 @@ fn measure_scan_concurrency(path: &Path) -> ScanConcurrency {
 }
 
 fn disk_space(path: &Path) -> Result<(u64, u64), String> {
-    let c_path = CString::new(path.as_os_str().as_bytes()).map_err(|error| error.to_string())?;
-    let mut stats = MaybeUninit::<libc::statvfs>::uninit();
-    if unsafe { libc::statvfs(c_path.as_ptr(), stats.as_mut_ptr()) } != 0 {
-        return Err(std::io::Error::last_os_error().to_string());
-    }
-    let stats = unsafe { stats.assume_init() };
-    let block_size = stats.f_frsize;
-    Ok((
-        (stats.f_blocks as u64).saturating_mul(block_size),
-        (stats.f_bavail as u64).saturating_mul(block_size),
-    ))
+    let capacity = super::volume_capacity::read(path)?;
+    Ok((capacity.total_bytes, capacity.available_bytes))
 }

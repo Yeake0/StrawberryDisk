@@ -135,6 +135,10 @@ pub fn compact_rate(bytes: f64, base: f64) -> (String, &'static str) {
 }
 
 pub fn byte_text(bytes: f64, base: f64) -> String {
+    byte_text_with_precision(bytes, base, 1)
+}
+
+fn byte_text_with_precision(bytes: f64, base: f64, precision: usize) -> String {
     let mut value = bytes;
     let units = ["B", "KB", "MB", "GB", "TB"];
     let mut index = 0;
@@ -142,7 +146,7 @@ pub fn byte_text(bytes: f64, base: f64) -> String {
         value /= base;
         index += 1;
     }
-    format!("{value:.1} {}", units[index])
+    format!("{value:.precision$} {}", units[index])
 }
 
 /// Constant-width fields keep native status-bar layout stable across unit changes.
@@ -286,14 +290,19 @@ pub fn entries(
                         .as_ref()
                         .map(|value| {
                             format!(
-                                " · {} · {} / {}",
+                                " · {} · {} / {}{}",
                                 if value.volume.system {
                                     labels.text("systemDisk")
                                 } else {
                                     &value.volume.name
                                 },
-                                byte_text(value.used_bytes as f64, base),
-                                byte_text(value.total_bytes as f64, base)
+                                byte_text_with_precision(value.used_bytes as f64, base, 2),
+                                byte_text_with_precision(value.total_bytes as f64, base, 2),
+                                if cfg!(target_os = "macos") {
+                                    format!("\n{}", labels.text("diskCapacityHint"))
+                                } else {
+                                    String::new()
+                                }
                             )
                         })
                         .unwrap_or_default(),
@@ -405,6 +414,50 @@ mod tests {
                 prefs.enabled = false;
                 assert!(desired(&prefs).is_empty());
             }
+        }
+    }
+
+    #[test]
+    fn disk_tooltips_use_the_shared_capacity_basis_precision_and_localized_explanation() {
+        use mangodisk_core::system_resources::{disk, metrics::MetricReading};
+        use mangodisk_platform::system_resources::disk::{ResourceVolume, VolumeCapacity};
+        let value = disk::usage(
+            ResourceVolume {
+                id: "test".into(),
+                name: "Test".into(),
+                system: true,
+                mount_point: "/".into(),
+            },
+            VolumeCapacity {
+                total_bytes: 100_000_000_000,
+                available_bytes: 40_000_000_000,
+            },
+        )
+        .unwrap();
+        let readings = ResourceReadings {
+            disk: MetricReading::ready(value, 0),
+            ..Default::default()
+        };
+        let mut preferences = ResidentPreferences::default();
+        for metric in &mut preferences.metrics {
+            metric.enabled = metric.id == MetricId::Disk;
+        }
+        for locale in [
+            "en-US", "zh-CN", "zh-TW", "ja-JP", "ko-KR", "tr-TR", "pt-BR",
+        ] {
+            let labels = super::super::labels::Labels::for_locale(locale);
+            let entries = entries(&preferences, &readings, &labels, 1000.0);
+            let disk = entries
+                .iter()
+                .find(|entry| entry.id == DisplayId::Disk)
+                .unwrap();
+            assert_eq!(disk.usage_percent, Some(60));
+            assert!(disk.tooltip.contains("60.00 GB / 100.00 GB"));
+            assert_eq!(
+                disk.tooltip.contains(labels.text("diskCapacityHint")),
+                cfg!(target_os = "macos"),
+                "macOS reclaimable-space guidance must only appear on macOS"
+            );
         }
     }
 

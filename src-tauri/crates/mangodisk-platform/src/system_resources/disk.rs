@@ -25,7 +25,15 @@ pub struct ResourceVolume {
 #[derive(Debug, Clone, Copy)]
 pub struct VolumeCapacity {
     pub total_bytes: u64,
+    /// Display availability includes system-reclaimable storage on macOS.
+    /// This estimate is not a guarantee that an allocation will succeed.
     pub available_bytes: u64,
+}
+
+/// Completed filesystem mutations bypass the short macOS display cache.
+pub fn invalidate_capacity_cache() {
+    #[cfg(target_os = "macos")]
+    crate::macos::volume_capacity::invalidate();
 }
 
 #[cfg(any(target_os = "macos", windows, target_os = "linux"))]

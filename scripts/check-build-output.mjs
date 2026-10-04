@@ -5,9 +5,9 @@ import { gzipSync } from 'node:zlib';
 const assetDirectory = fileURLToPath(new URL('../dist/assets/', import.meta.url));
 const expectedLocaleIds = new Set(['en-us', 'ja-jp', 'ko-kr', 'pt-br', 'tr-tr', 'zh-cn', 'zh-tw']);
 const maximumApplicationChunkBytes = 300 * 1024;
-// Allow a small raw-size margin for localized scan and monitoring guidance while
+// Allow a small raw-size margin for localized scan, monitoring and disk-capacity guidance while
 // retaining the 60 KiB gzip limit on transferred locale assets.
-const maximumLocaleChunkBytes = 303 * 1024;
+const maximumLocaleChunkBytes = 304 * 1024;
 const maximumLocaleGzipBytes = 60 * 1024;
 
 function fail(message) {

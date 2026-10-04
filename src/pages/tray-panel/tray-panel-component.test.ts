@@ -1,5 +1,5 @@
 vi.mock('@/lib/services/operating-system-service', () => ({
-  OperatingSystemService: { isLinux: vi.fn(() => false), isWindows: () => false },
+  OperatingSystemService: { isLinux: vi.fn(() => false), isWindows: () => false, isMacOs: () => true },
 }));
 vi.mock('@/lib/services/memory-release-service', () => ({
   MemoryReleaseService: {

@@ -232,11 +232,7 @@ fn render(
         preferences,
         &reading.resources,
         &labels,
-        if cfg!(target_os = "macos") {
-            1000.0
-        } else {
-            1024.0
-        },
+        if cfg!(windows) { 1024.0 } else { 1000.0 },
     );
     state.apply_colors(
         &mut entries,

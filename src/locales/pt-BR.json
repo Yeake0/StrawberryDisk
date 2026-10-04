@@ -4007,6 +4007,7 @@
     "automatic": "Automático",
     "volume": "Volume",
     "systemDisk": "Disco do sistema",
+    "diskCapacityHint": "O espaço disponível é uma estimativa do sistema. No macOS, inclui espaço que o sistema pode liberar",
     "savedDisconnected": "Dispositivo salvo · desconectado",
     "saveFailed": "Não foi possível salvar. Tente novamente",
     "catalogueFailed": "Não foi possível listar os dispositivos",

@@ -15,6 +15,34 @@ import { useCustomCleanupStore } from '@/stores/custom-cleanup-store';
 import MdCleanupVolumeDialog from './md-cleanup-volume-dialog.vue';
 import MdCustomCleanupDialog from './md-custom-cleanup-dialog.vue';
 
+describe('volume capacity platform hint', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it.each(['macos', 'linux', 'windows'] as const)(
+    'shows the reclaimable-space explanation only on macOS: %s',
+    platform => {
+      vi.spyOn(OperatingSystemService, 'currentPlatform').mockReturnValue(platform);
+      const wrapper = mount(MdCleanupVolumeDialog, {
+        props: { modelValue: true, disks: [], initialMountPoints: [], systemDisk: null },
+        global: {
+          plugins: [i18n],
+          stubs: {
+            Dialog: { template: '<div><slot /></div>' },
+            DialogTitle: { template: '<h2><slot /></h2>' },
+            DialogDescription: { template: '<p><slot /></p>' },
+            MdDialogContent: { template: '<div><slot /></div>' },
+          },
+        },
+      });
+      const hint = i18n.global.t('systemStatus.diskCapacityHint');
+      if (platform === 'macos') expect(wrapper.text()).toContain(hint);
+      else expect(wrapper.text()).not.toContain(hint);
+      expect(wrapper.text()).toContain(i18n.global.t('cleanup.scanMode.volumeDialogDescription'));
+      wrapper.unmount();
+    }
+  );
+});
+
 describe.each(['volumes', 'custom'] as const)('%s cleanup dialog dismissal', kind => {
   beforeEach(() => {
     setActivePinia(createPinia());

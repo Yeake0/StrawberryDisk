@@ -4007,6 +4007,7 @@
     "automatic": "自动选择",
     "volume": "磁盘",
     "systemDisk": "系统磁盘",
+    "diskCapacityHint": "可用空间是系统估算值，macOS 会包含系统可按需回收的空间",
     "savedDisconnected": "已选设备 · 未连接",
     "saveFailed": "未能保存，请重试",
     "catalogueFailed": "无法获取设备列表",

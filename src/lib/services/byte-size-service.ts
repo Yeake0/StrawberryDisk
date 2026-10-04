@@ -12,7 +12,7 @@ interface ByteSizePresetOption {
 /**
  * Owns the operating system's byte-unit convention at the frontend boundary.
  *
- * Finder and macOS storage surfaces use decimal units. Windows Explorer uses
+ * Finder and Linux desktop storage surfaces use decimal units. Windows Explorer uses
  * a 1024 base while retaining the KB/MB/GB labels. Centralizing that difference
  * keeps measured sizes and configurable size presets internally consistent.
  *
@@ -33,7 +33,7 @@ export class ByteSizeService {
     return FormatUtils.bytes(bytes, this.currentUnitBase(), 2);
   }
 
-  /** RAM uses binary quantities on both platforms, matching installed memory capacity. */
+  /** RAM uses binary quantities on every platform, matching installed memory capacity. */
   static memory(bytes: number): string {
     return FormatUtils.bytes(bytes, BYTE_UNIT_BASES.binary);
   }
@@ -54,6 +54,6 @@ export class ByteSizeService {
   }
 
   static currentUnitBase(): ByteUnitBase {
-    return OperatingSystemService.isMacOs() ? BYTE_UNIT_BASES.decimal : BYTE_UNIT_BASES.binary;
+    return OperatingSystemService.isWindows() ? BYTE_UNIT_BASES.binary : BYTE_UNIT_BASES.decimal;
   }
 }

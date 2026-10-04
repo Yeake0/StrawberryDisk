@@ -14,6 +14,7 @@ mod project_markers;
 mod startup;
 mod system_maintenance;
 mod system_settings;
+pub(crate) mod volume_capacity;
 mod volumes;
 
 pub use startup::macos_enabled_login_item_paths;

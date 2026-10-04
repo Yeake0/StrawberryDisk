@@ -4007,6 +4007,7 @@
     "automatic": "自動選択",
     "volume": "ボリューム",
     "systemDisk": "システムディスク",
+    "diskCapacityHint": "空き容量はシステムによる推定値です。macOS では、必要に応じてシステムが解放できる容量も含まれます",
     "savedDisconnected": "選択済みデバイス · 未接続",
     "saveFailed": "保存できませんでした。再試行してください",
     "catalogueFailed": "デバイス一覧を取得できません",

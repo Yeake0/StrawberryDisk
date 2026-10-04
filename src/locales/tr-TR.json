@@ -4007,6 +4007,7 @@
     "automatic": "Otomatik",
     "volume": "Birim",
     "systemDisk": "Sistem diski",
+    "diskCapacityHint": "Kullanılabilir alan sistem tarafından tahmin edilir. macOS’ta sistemin gerektiğinde boşaltabileceği alan da buna dahildir",
     "savedDisconnected": "Kayıtlı cihaz · bağlı değil",
     "saveFailed": "Kaydedilemedi. Tekrar deneyin",
     "catalogueFailed": "Cihazlar okunamadı",

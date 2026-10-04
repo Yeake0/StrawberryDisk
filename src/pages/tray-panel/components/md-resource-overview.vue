@@ -12,6 +12,7 @@ import {
   type ResourceReadings,
 } from '@/lib/models/system-resources';
 import { ByteSizeService } from '@/lib/services/byte-size-service';
+import { OperatingSystemService } from '@/lib/services/operating-system-service';
 
 const props = withDefaults(
   defineProps<{ metric: MetricId; reading: ResourceReadings; active?: boolean; interactive?: boolean }>(),
@@ -22,6 +23,7 @@ const props = withDefaults(
 );
 defineEmits<{ cleanup: []; memory: []; cpu: [] }>();
 const { t } = useI18n({ useScope: 'global' });
+const isMacOs = OperatingSystemService.isMacOs();
 const current = computed(() => props.reading[props.metric]);
 const ready = computed(() => current.value.status === 'ready' && current.value.value !== null);
 const memory = computed(() => props.reading.memory.value?.memory);
@@ -145,10 +147,12 @@ const rates = computed(() =>
         <span v-else role="status">{{ t(METRIC_STATUS_KEYS[current.status]) }}</span>
       </template>
       <template v-else-if="metric === 'disk'">
-        <span v-if="ready && reading.disk.value">
-          {{ t('systemStatus.available') }} {{ ByteSizeService.bytes(reading.disk.value.availableBytes) }} /
-          {{ ByteSizeService.bytes(reading.disk.value.totalBytes) }}
-        </span>
+        <MdTooltip v-if="ready && reading.disk.value" :text="isMacOs ? t('systemStatus.diskCapacityHint') : null">
+          <span>
+            {{ t('systemStatus.available') }} {{ ByteSizeService.diskCapacity(reading.disk.value.availableBytes) }} /
+            {{ ByteSizeService.diskCapacity(reading.disk.value.totalBytes) }}
+          </span>
+        </MdTooltip>
         <span v-else role="status">{{ t(METRIC_STATUS_KEYS[current.status]) }}</span>
         <button type="button" class="cleanup-link" @click="$emit('cleanup')">
           {{ t('navigation.cleanup') }} <span aria-hidden="true">›</span>

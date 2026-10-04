@@ -12,8 +12,8 @@ describe('ByteSizeService', () => {
     platformMock.mockReset();
   });
 
-  it('uses decimal units for measured macOS sizes', () => {
-    platformMock.mockReturnValue('macos');
+  it.each(['macos', 'linux'])('uses decimal units for measured sizes on %s', platform => {
+    platformMock.mockReturnValue(platform);
 
     expect(ByteSizeService.bytes(10_842_048)).toBe('10.8 MB');
     expect(ByteSizeService.bytes(53_400_000_000)).toBe('53.4 GB');
@@ -30,14 +30,14 @@ describe('ByteSizeService', () => {
     expect(ByteSizeService.diskCapacity(241 * 1024 ** 3)).toBe('241.00 GB');
   });
 
-  it.each(['macos', 'windows'])('formats RAM capacity in binary units on %s', platform => {
+  it.each(['macos', 'windows', 'linux'])('formats RAM capacity in binary units on %s', platform => {
     platformMock.mockReturnValue(platform);
     expect(ByteSizeService.memory(64 * 1024 ** 3)).toBe('64.0 GB');
     expect(ByteSizeService.memory(512 * 1024 ** 2)).toBe('512 MB');
   });
 
-  it('resolves semantic presets to decimal raw bytes on macOS', () => {
-    platformMock.mockReturnValue('macos');
+  it.each(['macos', 'linux'])('resolves semantic presets to decimal raw bytes on %s', platform => {
+    platformMock.mockReturnValue(platform);
 
     expect(ByteSizeService.presetOptions(LARGE_FILE_MINIMUM_PRESETS)).toEqual([
       { bytes: 50_000_000, label: '50 MB' },

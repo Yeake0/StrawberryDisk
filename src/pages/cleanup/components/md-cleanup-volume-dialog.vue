@@ -13,6 +13,7 @@ import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import type { DiskInfo } from '@/lib/models/disk';
 import { ICON_NAMES } from '@/lib/models/ui';
 import { ByteSizeService } from '@/lib/services/byte-size-service';
+import { OperatingSystemService } from '@/lib/services/operating-system-service';
 import * as FormatUtils from '@/lib/utils/format';
 import * as PathUtils from '@/lib/utils/path';
 
@@ -28,6 +29,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n({ useScope: 'global' });
+const isMacOs = OperatingSystemService.isMacOs();
 const selectedMountPoints = ref<string[]>([]);
 const selectedKeys = computed(() => new Set(selectedMountPoints.value.map(PathUtils.comparisonKey)));
 
@@ -91,7 +93,10 @@ watch(
     <MdDialogContent class="flex min-h-0 flex-col" size="large" @pointer-down-outside.prevent>
       <MdDialogHeader class="flex-none">
         <DialogTitle>{{ t('cleanup.scanMode.volumeDialogTitle') }}</DialogTitle>
-        <DialogDescription>{{ t('cleanup.scanMode.volumeDialogDescription') }}</DialogDescription>
+        <DialogDescription>
+          {{ t('cleanup.scanMode.volumeDialogDescription') }}
+          <template v-if="isMacOs"> {{ t('systemStatus.diskCapacityHint') }}</template>
+        </DialogDescription>
       </MdDialogHeader>
 
       <div class="volume-list scrollbar-stable">
@@ -124,8 +129,8 @@ watch(
             <span class="volume-capacity">
               {{
                 t('cleanup.scanMode.volumeCapacity', {
-                  available: ByteSizeService.bytes(disk.availableBytes),
-                  total: ByteSizeService.bytes(disk.totalBytes),
+                  available: ByteSizeService.diskCapacity(disk.availableBytes),
+                  total: ByteSizeService.diskCapacity(disk.totalBytes),
                 })
               }}
             </span>

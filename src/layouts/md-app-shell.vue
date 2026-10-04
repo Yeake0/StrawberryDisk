@@ -23,6 +23,7 @@ import { ApplicationWindowService } from '@/lib/services/application-window-serv
 import type { ResidentDestination } from '@/lib/models/resident';
 import { ResidentService } from '@/lib/services/resident-service';
 import { BackgroundUpdateService } from '@/lib/services/background-update-service';
+import { DiskService } from '@/lib/services/disk-service';
 import { ApplicationMenuService } from '@/lib/services/application-menu-service';
 import { FileManagerService } from '@/lib/services/file-manager-service';
 import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
@@ -236,6 +237,7 @@ let unlistenResident: (() => void) | null = null;
 let unlistenOpenAbout: (() => void) | null = null;
 let shellMounted = true;
 let stopUpdateNotice: (() => void) | undefined;
+let stopDiskWatch: (() => void) | undefined;
 
 function initializeDisks(): Promise<void> {
   diskInitialization ??= store.initialize().then(() => storageScopeStore.initialize(store.disks));
@@ -263,7 +265,16 @@ function preloadFeaturePages() {
     // Disk inventory is useful to two feature pages but is not required to
     // render the startup cleanup page. Begin it only after the first frame is
     // interactive, while guarded navigation still waits if users arrive first.
-    void initializeDisks();
+    void initializeDisks()
+      .then(() => {
+        if (!shellMounted) return undefined;
+        return DiskService.watch(() => store.refreshDisks());
+      })
+      .then(stop => {
+        if (shellMounted) stopDiskWatch = stop;
+        else stop?.();
+      })
+      .catch(error => store.reportError(error));
   };
   const requestIdleCallback = (window as Window & { requestIdleCallback?: Window['requestIdleCallback'] })
     .requestIdleCallback;
@@ -352,6 +363,7 @@ onBeforeUnmount(() => {
   shellMounted = false;
   window.removeEventListener('resize', syncSidebarExpansion);
   stopUpdateNotice?.();
+  stopDiskWatch?.();
   unlistenOpenAbout?.();
   unlistenResident?.();
 });

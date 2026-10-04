@@ -121,6 +121,7 @@ export const useCleanupStore = defineStore('cleanup', {
     async scanCandidates(scanScope: CleanupScanScope = STANDARD_CLEANUP_SCAN_SCOPE): Promise<boolean> {
       if (this.loading || this.closingApplications) return false;
       const appStore = useAppStore();
+      const diskRevision = appStore.diskRevision;
       let completed = false;
       this.loading = true;
       this.operation = CLEANUP_OPERATION_IDS.scanning;
@@ -181,7 +182,8 @@ export const useCleanupStore = defineStore('cleanup', {
         } else {
           this.scanScope = STANDARD_CLEANUP_SCAN_SCOPE;
         }
-        appStore.updateSystemDisk(snapshot.disk);
+        // The scan captures capacity before traversal. Keep any newer live reading.
+        if (diskRevision === appStore.diskRevision) appStore.updateSystemDisk(snapshot.disk);
         this.selectedRuleIds = [];
         this.sourceSelections = [];
         this.setRulesSelected(CleanupRuleSelectionUtils.defaultSelectedRuleIds(snapshot.rules), true);

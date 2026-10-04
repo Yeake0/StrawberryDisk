@@ -8,6 +8,7 @@ pub struct VolumeInfo {
     pub name: String,
     pub mount_point: String,
     pub total_bytes: u64,
+    /// Display availability includes system-reclaimable storage on macOS.
     pub available_bytes: u64,
     pub used_bytes: u64,
     /// Scheduling metadata is Rust-only and is not part of the serialized disk

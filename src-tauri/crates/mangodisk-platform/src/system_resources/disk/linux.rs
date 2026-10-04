@@ -1,4 +1,4 @@
-use std::{ffi::CString, os::unix::fs::MetadataExt, path::Path};
+use std::{os::unix::fs::MetadataExt, path::Path};
 
 use super::{unavailable, ResourceVolume, VolumeCapacity};
 use crate::PlatformResult;
@@ -56,20 +56,7 @@ pub fn capacity(volume: &ResourceVolume) -> PlatformResult<VolumeCapacity> {
     if volume.id != identity(path)? {
         return Err(unavailable());
     }
-    let path = CString::new(volume.mount_point.as_bytes()).map_err(|_| unavailable())?;
-    let mut stat = unsafe { std::mem::zeroed::<libc::statvfs>() };
-    if unsafe { libc::statvfs(path.as_ptr(), &mut stat) } != 0 {
-        return Err(unavailable());
-    }
-    let block_size = if stat.f_frsize == 0 {
-        stat.f_bsize
-    } else {
-        stat.f_frsize
-    };
-    Ok(VolumeCapacity {
-        total_bytes: stat.f_blocks.saturating_mul(block_size),
-        available_bytes: stat.f_bavail.saturating_mul(block_size),
-    })
+    crate::linux::volumes::capacity(path)
 }
 
 #[cfg(test)]

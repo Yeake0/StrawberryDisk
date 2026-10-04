@@ -24,6 +24,8 @@ interface AppState {
   currentPage: PageId;
   disk: DiskInfo | null;
   disks: DiskInfo[];
+  diskRevision: number;
+  pendingSystemDiskRefreshes: number;
   settings: AppSettings;
   errorCode: CommandErrorCode | null;
   errorReason: CommandErrorReason | 'analysisRefreshFailedAfterDelete' | null;
@@ -34,6 +36,8 @@ export const useAppStore = defineStore('app', {
     currentPage: PAGE_IDS.cleanup,
     disk: null,
     disks: [],
+    diskRevision: 0,
+    pendingSystemDiskRefreshes: 0,
     // Application startup loads platform-aware settings before Vue mounts. The
     // deterministic binary placeholder keeps isolated Store tests independent
     // from Tauri's window-scoped OS plugin.
@@ -43,12 +47,15 @@ export const useAppStore = defineStore('app', {
   }),
   actions: {
     async initialize() {
+      const revision = this.diskRevision;
       try {
         const [disk, disks] = await Promise.all([DiskService.getSystemDisk(), DiskService.listDisks()]);
+        if (revision !== this.diskRevision || this.pendingSystemDiskRefreshes) return;
         this.disk = disk;
         this.disks = disks;
+        this.diskRevision += 1;
       } catch (error) {
-        this.reportError(error);
+        if (revision === this.diskRevision && !this.pendingSystemDiskRefreshes) this.reportError(error);
       }
     },
     navigate(page: PageId) {
@@ -65,13 +72,18 @@ export const useAppStore = defineStore('app', {
       });
     },
     updateSystemDisk(disk: DiskInfo) {
+      this.diskRevision += 1;
       this.disk = disk;
       const index = this.disks.findIndex(item => item.mountPoint === disk.mountPoint);
       if (index >= 0) this.disks[index] = disk;
     },
     async refreshSystemDisk(): Promise<boolean> {
+      const revision = ++this.diskRevision;
+      this.pendingSystemDiskRefreshes += 1;
       try {
-        this.updateSystemDisk(await DiskService.getSystemDisk());
+        const disk = await DiskService.getSystemDisk(true);
+        if (revision !== this.diskRevision) return false;
+        this.updateSystemDisk(disk);
         return true;
       } catch (error) {
         /*
@@ -79,6 +91,32 @@ export const useAppStore = defineStore('app', {
          * A refresh failure must not turn that completed operation into a user-
          * visible failure, but the typed error code is retained for diagnosis.
          */
+        LoggerService.warn(LOG_DOMAINS.applicationShell, LOG_EVENTS.diskRefreshFailed, {
+          code: parseCommandError(error)?.code ?? 'operationFailed',
+        });
+        return false;
+      } finally {
+        this.pendingSystemDiskRefreshes -= 1;
+      }
+    },
+    async refreshDisks(): Promise<boolean> {
+      if (this.pendingSystemDiskRefreshes) return false;
+      const revision = this.diskRevision;
+      try {
+        // Retry the authoritative system lookup only when startup left it unavailable.
+        // Volume ordering is not a system-disk contract (for example on Windows).
+        const [disks, systemDisk] = await Promise.all([
+          DiskService.listDisks(),
+          this.disk ? Promise.resolve(null) : DiskService.getSystemDisk(),
+        ]);
+        // A periodic response must not overwrite a post-cleanup forced refresh.
+        if (revision !== this.diskRevision || this.pendingSystemDiskRefreshes) return false;
+        this.disks = disks;
+        const disk = this.disk ?? systemDisk;
+        this.disk = disks.find(item => item.mountPoint === disk?.mountPoint) ?? disk;
+        this.diskRevision += 1;
+        return true;
+      } catch (error) {
         LoggerService.warn(LOG_DOMAINS.applicationShell, LOG_EVENTS.diskRefreshFailed, {
           code: parseCommandError(error)?.code ?? 'operationFailed',
         });

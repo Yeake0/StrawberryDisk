@@ -4007,6 +4007,7 @@
     "automatic": "Automatic",
     "volume": "Volume",
     "systemDisk": "System disk",
+    "diskCapacityHint": "Available space is a system estimate. On macOS, it includes space the system can reclaim",
     "savedDisconnected": "Saved device · disconnected",
     "saveFailed": "Could not save. Retry",
     "catalogueFailed": "Could not read devices",

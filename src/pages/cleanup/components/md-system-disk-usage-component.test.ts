@@ -22,8 +22,8 @@ const disk: DiskInfo = {
 describe('system disk usage tooltip', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('uses the shared tooltip with separate capacity rows instead of a native title', () => {
-    vi.spyOn(OperatingSystemService, 'isMacOs').mockReturnValue(true);
+  it.each(['macos', 'linux'] as const)('uses the shared decimal capacity tooltip on %s', platform => {
+    vi.spyOn(OperatingSystemService, 'currentPlatform').mockReturnValue(platform);
     const wrapper = mount(MdSystemDiskUsage, {
       props: { disk },
       global: {
@@ -45,5 +45,10 @@ describe('system disk usage tooltip', () => {
     expect(wrapper.get('.system-disk-tooltip').text()).toContain('Macintosh HD');
     expect(rows).toHaveLength(3);
     expect(rows.map(row => row.find('strong').text())).toEqual(['963.05 GB', '31.61 GB', '994.66 GB']);
+    const tooltip = wrapper.get('.system-disk-tooltip').text();
+    const hint = i18n.global.t('systemStatus.diskCapacityHint');
+    if (platform === 'macos') expect(tooltip).toContain(hint);
+    else expect(tooltip).not.toContain(hint);
+    wrapper.unmount();
   });
 });

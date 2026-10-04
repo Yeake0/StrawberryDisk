@@ -149,14 +149,7 @@ pub fn capacity(volume: &ResourceVolume) -> PlatformResult<VolumeCapacity> {
     {
         return Err(unavailable());
     }
-    Ok(VolumeCapacity {
-        total_bytes: stats
-            .f_blocks
-            .checked_mul(u64::from(stats.f_bsize))
-            .ok_or_else(unavailable)?,
-        available_bytes: stats
-            .f_bavail
-            .checked_mul(u64::from(stats.f_bsize))
-            .ok_or_else(unavailable)?,
-    })
+    crate::macos::volume_capacity::read(std::path::Path::new(&volume.mount_point)).map_err(
+        |error| crate::PlatformError::new(crate::PlatformErrorCode::OperationFailed, error),
+    )
 }
