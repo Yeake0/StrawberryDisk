@@ -125,6 +125,13 @@ impl LargeFileService {
                 }),
             }
         }
+        #[cfg(windows)]
+        crate::filesystem::permanent_delete_diagnostics::log_failed_volume_samples(
+            "large_files",
+            operation.id(),
+            scan_id,
+            &result.failed,
+        );
         synchronize_removed_paths(scan_id, &result.removed_paths)?;
         let history_record = file_cleanup_record(
             format!("large-file-cleanup-{}-{}", operation.id(), now_ms()),

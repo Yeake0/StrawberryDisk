@@ -743,6 +743,13 @@ impl DuplicateFileService {
                 }),
             }
         }
+        #[cfg(windows)]
+        crate::filesystem::permanent_delete_diagnostics::log_failed_volume_samples(
+            "duplicates",
+            operation.id(),
+            scan_id,
+            &result.failed,
+        );
         if !result.removed_paths.is_empty() {
             synchronize_result_session(scan_id, result.removed_paths.clone())?;
         }

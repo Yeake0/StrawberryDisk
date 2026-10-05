@@ -26,6 +26,7 @@ mod shortcut_overlay;
 mod startup;
 mod system_maintenance;
 mod system_settings;
+pub mod volume_filesystem;
 mod volumes;
 
 use std::{

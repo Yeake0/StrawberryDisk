@@ -59,7 +59,7 @@ mod vscode_history;
 mod windows;
 
 #[cfg(windows)]
-pub use windows::windows_file_attributes_are_link_like;
+pub use windows::{volume_filesystem, windows_file_attributes_are_link_like};
 
 #[cfg(windows)]
 pub use command::configure_background_process;
