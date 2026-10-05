@@ -411,20 +411,106 @@ pub(crate) fn analysis_result_from_snapshot(
     files: &HashMap<PathBuf, IndexedFile>,
     excluded_roots: &[PathBuf],
     excluded_names: &mangodisk_platform::NameExclusions,
+    workers: usize,
 ) -> Result<AnalysisResult, String> {
-    let children = read_analysis_children(root, excluded_roots, excluded_names)?;
+    let children = read_analysis_children_with_metadata(
+        root,
+        excluded_roots,
+        excluded_names,
+        AnalysisChildMetadata::ScanSnapshot,
+    )?;
+    #[cfg(any(windows, test))]
+    let measured = measure_snapshot_files(&children, files, workers);
+    #[cfg(not(any(windows, test)))]
+    let _ = workers;
     let mut result = build_analysis_result(
         root,
         root_aggregate,
         children,
         |path| directories.get(path).copied(),
-        |path| files.get(path).copied(),
+        |path| {
+            #[cfg(any(windows, test))]
+            if let Some(file) = measured.get(path) {
+                return Some(*file);
+            }
+            files.get(path).copied()
+        },
     );
     result.directory_hierarchy = build_directory_hierarchy(root, directories, files);
     result.requires_delete_rescan = files
         .iter()
         .any(|(path, file)| path.starts_with(root) && file.bytes == 0);
     Ok(result)
+}
+
+#[cfg(any(windows, test))]
+fn measure_snapshot_files(
+    children: &[(fs::DirEntry, PathBuf, fs::Metadata)],
+    indexed: &HashMap<PathBuf, IndexedFile>,
+    workers: usize,
+) -> HashMap<PathBuf, IndexedFile> {
+    let queries: Vec<_> = children
+        .iter()
+        .filter(|(_, path, metadata)| {
+            !metadata.is_dir()
+                && !indexed
+                    .get(path)
+                    .is_some_and(|file| file_snapshot_matches(file, metadata))
+        })
+        .collect();
+    if workers <= 1 || queries.len() < 256 {
+        return HashMap::new();
+    }
+    let root = children
+        .first()
+        .and_then(|(_, path, _)| path.parent())
+        .unwrap_or(Path::new(""));
+    let chunks: Vec<_> = queries
+        .chunks(queries.len().div_ceil(workers.clamp(1, 16)))
+        .collect();
+    std::thread::scope(|scope| {
+        let mut pending = Vec::new();
+        for (index, chunk) in chunks.into_iter().enumerate() {
+            match std::thread::Builder::new()
+                .name(format!("mangodisk-analysis-rows-{index}"))
+                .spawn_scoped(scope, move || {
+                    chunk
+                        .iter()
+                        .map(|(_, path, metadata)| {
+                            let usage = current_platform().file_space_usage(path, metadata);
+                            (
+                                path.clone(),
+                                IndexedFile {
+                                    bytes: usage.allocated_bytes,
+                                    logical_bytes: usage.logical_bytes,
+                                    modified_at_ms: modified_ms(metadata),
+                                },
+                            )
+                        })
+                        .collect::<Vec<_>>()
+                }) {
+                Ok(handle) => pending.push(handle),
+                Err(error) => {
+                    log::warn!("analysis_snapshot_worker_unavailable root={} stage=spawn error_code={:?} error={error} outcome=live_query_fallback", crate::filesystem::metadata::diagnostic_path(root), error.raw_os_error());
+                }
+            }
+        }
+        let mut measured = HashMap::with_capacity(queries.len());
+        for handle in pending {
+            match handle.join() {
+                Ok(rows) => measured.extend(rows),
+                Err(_) => log::warn!(
+                    "analysis_snapshot_worker_unavailable root={} stage=join reason=worker_panic outcome=live_query_fallback", crate::filesystem::metadata::diagnostic_path(root)
+                ),
+            }
+        }
+        measured
+    })
+}
+
+fn file_snapshot_matches(file: &IndexedFile, metadata: &fs::Metadata) -> bool {
+    file.bytes == 0
+        || (file.logical_bytes == metadata.len() && file.modified_at_ms == modified_ms(metadata))
 }
 
 fn build_directory_hierarchy(
@@ -596,6 +682,25 @@ fn read_analysis_children(
     excluded_roots: &[PathBuf],
     excluded_names: &mangodisk_platform::NameExclusions,
 ) -> Result<Vec<(fs::DirEntry, PathBuf, fs::Metadata)>, String> {
+    read_analysis_children_with_metadata(
+        root,
+        excluded_roots,
+        excluded_names,
+        AnalysisChildMetadata::LiveView,
+    )
+}
+
+enum AnalysisChildMetadata {
+    ScanSnapshot,
+    LiveView,
+}
+
+fn read_analysis_children_with_metadata(
+    root: &Path,
+    excluded_roots: &[PathBuf],
+    excluded_names: &mangodisk_platform::NameExclusions,
+    metadata_mode: AnalysisChildMetadata,
+) -> Result<Vec<(fs::DirEntry, PathBuf, fs::Metadata)>, String> {
     Ok(fs::read_dir(root)
         .map_err(|error| format!("failed to read the analysis root: {error}"))?
         .filter_map(Result::ok)
@@ -607,7 +712,15 @@ fn read_analysis_children(
             {
                 return None;
             }
-            let metadata = fs::symlink_metadata(&path).ok()?;
+            // Only initial result assembly can reuse enumeration facts. Reopened pages retain
+            // live queries, independently of the immutable directory aggregates in the cache.
+            let metadata = match metadata_mode {
+                AnalysisChildMetadata::ScanSnapshot => {
+                    crate::filesystem::metadata::scan_entry_metadata(&entry, &path)
+                }
+                AnalysisChildMetadata::LiveView => fs::symlink_metadata(&path),
+            }
+            .ok()?;
             // A directory omitted by the scan's system-safety policy has no aggregate.
             // Do not reintroduce it as a misleading zero-byte entry during result assembly.
             if metadata.is_dir()
@@ -662,11 +775,7 @@ fn build_analysis_entries(
                 let usage = indexed_file(&path)
                     // Reopened read-only lists must reflect changed ordinary files.
                     // Zero-charge aliases keep scan ownership until a shared-allocation rescan.
-                    .filter(|file| {
-                        file.bytes == 0
-                            || (file.logical_bytes == metadata.len()
-                                && file.modified_at_ms == modified_ms(&metadata))
-                    })
+                    .filter(|file| file_snapshot_matches(file, &metadata))
                     .map(|file| mangodisk_platform::FileSpaceUsage {
                         logical_bytes: file.logical_bytes,
                         allocated_bytes: file.bytes,
@@ -1240,6 +1349,75 @@ mod tests {
             assert_eq!(node.children.len(), 1);
             assert_eq!(node.children[0].name, "visible");
             assert_eq!(node.children[0].bytes, 1_000);
+        }
+    }
+
+    #[test]
+    fn parallel_initial_rows_preserve_native_usage_stale_files_and_zero_charge_aliases() {
+        let root = tempfile::tempdir().unwrap();
+        for index in 0..600 {
+            fs::write(
+                root.path().join(format!("file-{index:04}")),
+                vec![0_u8; index + 1],
+            )
+            .unwrap();
+        }
+        #[cfg(windows)]
+        {
+            let path = root.path().join("wof.bin");
+            fs::write(&path, vec![0_u8; 1024 * 1024]).unwrap();
+            let output = std::process::Command::new("compact.exe")
+                .args(["/C", "/F", "/EXE:XPRESS4K"])
+                .arg(&path)
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "WOF fixture compression must succeed"
+            );
+            let metadata = fs::symlink_metadata(&path).unwrap();
+            let usage = current_platform().file_space_usage(&path, &metadata);
+            assert!(
+                usage.allocated_bytes < usage.logical_bytes,
+                "WOF fixture must have native compressed usage before comparing scan results"
+            );
+        }
+        let files = HashMap::from([
+            (
+                root.path().join("file-0000"),
+                IndexedFile {
+                    bytes: 0,
+                    logical_bytes: 1,
+                    modified_at_ms: None,
+                },
+            ),
+            (
+                root.path().join("file-0001"),
+                IndexedFile {
+                    bytes: 9999,
+                    logical_bytes: 9999,
+                    modified_at_ms: None,
+                },
+            ),
+        ]);
+        let build = |workers| {
+            analysis_result_from_snapshot(
+                root.path(),
+                DirectoryAggregate {
+                    scanned_at_ms: 100,
+                    ..DirectoryAggregate::default()
+                },
+                &HashMap::new(),
+                &files,
+                &[],
+                &mangodisk_platform::NameExclusions::default(),
+                workers,
+            )
+            .unwrap()
+        };
+        let expected = serde_json::to_value(build(1)).unwrap();
+        for workers in [2, 4, 8] {
+            assert_eq!(serde_json::to_value(build(workers)).unwrap(), expected);
         }
     }
 

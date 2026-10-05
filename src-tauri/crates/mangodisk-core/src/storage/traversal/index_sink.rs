@@ -86,6 +86,23 @@ impl IndexRecordSink {
         }
     }
 
+    #[cfg(any(windows, test))]
+    pub(super) fn merge_directory_records(&mut self, partial: Self) -> Result<(), String> {
+        for (path, aggregate) in partial.directories {
+            self.push_directory(path, aggregate)?;
+        }
+        for (path, file) in partial.files {
+            self.push_large_file(path, file)?;
+        }
+        for (identity, links) in partial.hard_links {
+            self.hard_links.entry(identity).or_default().extend(links);
+        }
+        for file in partial.analysis_files.into_files() {
+            self.push_analysis_file(file);
+        }
+        Ok(())
+    }
+
     pub(super) fn push_analysis_file(&mut self, file: FastAnalysisFile) {
         self.analysis_files.push(file);
     }

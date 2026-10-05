@@ -17,6 +17,30 @@ pub(crate) struct MetadataFingerprintEntry {
     digest: [u8; 32],
 }
 
+/// Reads no-follow metadata for initial discovery, never for destructive preflight.
+/// Windows directory records already contain file facts. Directories retain a live query before
+/// descent so a directory replaced by a junction after enumeration is still rejected. Unix
+/// enumeration does not cache these facts, so it retains the existing live no-follow query.
+pub(crate) fn scan_entry_metadata(
+    entry: &fs::DirEntry,
+    path: &Path,
+) -> std::io::Result<fs::Metadata> {
+    #[cfg(windows)]
+    {
+        let metadata = entry.metadata()?;
+        if metadata.is_dir() {
+            fs::symlink_metadata(path)
+        } else {
+            Ok(metadata)
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = entry;
+        fs::symlink_metadata(path)
+    }
+}
+
 #[derive(Default)]
 #[cfg(target_os = "macos")]
 pub(crate) struct MetadataTreeSnapshot {
@@ -270,6 +294,74 @@ mod tests {
     use std::{fs, thread, time::Duration};
 
     use super::*;
+
+    #[test]
+    fn scan_entry_metadata_does_not_follow_directory_links() {
+        let root = tempfile::tempdir().expect("create metadata fixture");
+        let target = root.path().join("target");
+        let link = root.path().join("linked");
+        fs::create_dir(&target).expect("create physical target");
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&target, &link).expect("create directory link");
+        #[cfg(windows)]
+        {
+            let output = std::process::Command::new("cmd.exe")
+                .args(["/d", "/c", "mklink", "/J"])
+                .arg(&link)
+                .arg(&target)
+                .output()
+                .expect("create directory junction");
+            assert!(
+                output.status.success(),
+                "fixture junction creation must succeed"
+            );
+        }
+        let entry = fs::read_dir(root.path())
+            .expect("enumerate metadata fixture")
+            .map(Result::unwrap)
+            .find(|entry| entry.path() == link)
+            .expect("directory link must be enumerated");
+        let metadata = scan_entry_metadata(&entry, &link).expect("inspect directory entry");
+        assert!(
+            is_link_like(&metadata),
+            "discovery must retain the no-follow boundary"
+        );
+        #[cfg(windows)]
+        fs::remove_dir(&link).expect("remove fixture junction without following its target");
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn scan_revalidates_a_directory_replaced_by_a_junction_after_enumeration() {
+        let root = tempfile::tempdir().expect("create directory replacement fixture");
+        let directory = root.path().join("directory");
+        let target = root.path().join("target");
+        fs::create_dir(&directory).expect("create enumerated directory");
+        fs::create_dir(&target).expect("create junction target");
+        let entry = fs::read_dir(root.path())
+            .expect("enumerate fixture")
+            .map(Result::unwrap)
+            .find(|entry| entry.path() == directory)
+            .expect("physical directory must be enumerated");
+        fs::remove_dir(&directory).expect("remove physical directory");
+        let output = std::process::Command::new("cmd.exe")
+            .args(["/d", "/c", "mklink", "/J"])
+            .arg(&directory)
+            .arg(&target)
+            .output()
+            .expect("replace directory with a junction");
+        assert!(
+            output.status.success(),
+            "fixture junction creation must succeed"
+        );
+        let metadata =
+            scan_entry_metadata(&entry, &directory).expect("revalidate enumerated directory");
+        assert!(
+            is_link_like(&metadata),
+            "cached directory attributes must not authorize descent"
+        );
+        fs::remove_dir(&directory).expect("remove replacement junction");
+    }
 
     #[test]
     #[cfg(target_os = "windows")]

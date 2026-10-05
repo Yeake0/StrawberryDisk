@@ -501,6 +501,31 @@ fn saved_parent_exclusion_prunes_explicit_large_and_duplicate_scan_roots() {
 }
 
 #[test]
+fn cancellation_at_final_analysis_progress_does_not_publish_a_snapshot() {
+    let _operation_lock = crate::shared::operation::test_operation_lock();
+    cache::clear_all().unwrap();
+    let fixture = tempfile::tempdir().unwrap();
+    fs::write(fixture.path().join("sample.bin"), b"content").unwrap();
+    let root = current_platform()
+        .canonicalize_no_links(fixture.path())
+        .unwrap();
+    let displayed_root = current_platform().display_path(&root);
+    let callback_root = displayed_root.clone();
+    let error =
+        StorageTraversal::analyze_path_with_progress(Some(displayed_root), true, move |progress| {
+            if progress.current_path == callback_root && progress.items_scanned >= 1 {
+                OperationGuard::cancel(CoordinatedOperationKind::Analysis);
+            }
+        })
+        .expect_err("cancellation before publication must not complete the analysis");
+    assert_eq!(
+        error.code(),
+        crate::shared::CoreErrorCode::OperationCancelled
+    );
+    assert!(cache::analysis_result(&root).unwrap().is_none());
+}
+
+#[test]
 fn traversal_cancellation_preserves_the_typed_error_code() {
     let error = traversal_core_error(OPERATION_CANCELLED_ERROR.to_string());
 
@@ -1474,6 +1499,7 @@ fn hierarchy_projects_medium_files_below_large_file_floor_in_native_and_fallback
         &snapshot.files,
         &[],
         &mangodisk_platform::NameExclusions::default(),
+        1,
     )
     .unwrap();
     let fallback_node = fallback

@@ -19,7 +19,8 @@ pub struct VolumeInfo {
 }
 
 /// Root scans use the most conservative concurrency limit among involved
-/// volumes. The class is diagnostic only; `worker_limit` drives scheduling.
+/// volumes. `worker_limit` is the generic traversal limit; metadata-only analysis may
+/// select a separately validated limit from the device class. Unknown devices stay conservative.
 /// Detection failures must remain `Unknown` rather than assuming solid state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ScanConcurrency {

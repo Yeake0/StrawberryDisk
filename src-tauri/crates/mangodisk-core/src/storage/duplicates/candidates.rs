@@ -14,6 +14,7 @@ use mangodisk_platform::{
     current_platform, Platform, PlatformCancellation, PlatformErrorCode, ScanPurpose,
 };
 
+use crate::filesystem::metadata::scan_entry_metadata;
 use crate::shared::{
     operation::{OperationGuard, OPERATION_CANCELLED_ERROR},
     TraversalStage,
@@ -203,7 +204,7 @@ impl<'a> CandidateEnumeration<'a> {
                 *self.skipped_count += 1;
                 continue;
             }
-            let Ok(metadata) = fs::symlink_metadata(&child) else {
+            let Ok(metadata) = scan_entry_metadata(&entry, &child) else {
                 *self.skipped_count += 1;
                 continue;
             };
