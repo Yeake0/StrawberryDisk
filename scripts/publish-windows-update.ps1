@@ -77,15 +77,21 @@ $staging = Join-Path $repositoryRoot '.local'
 New-Item -ItemType Directory -Path $staging -Force | Out-Null
 $manifestPath = Join-Path $staging 'latest.json'
 $notesPath = Join-Path $staging 'release-notes.md'
+$sourceArchivePath = Join-Path $staging "MangoDisk-$version-source.zip"
+git archive --format=zip --output=$sourceArchivePath $localCommit
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $sourceArchivePath -PathType Leaf)) {
+    throw 'Could not archive the exact source commit for this release.'
+}
 $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 @"
 $ReleaseNotes
 
 Compilado a partir do commit $localCommit do código privado.
+O arquivo MangoDisk-$version-source.zip contém o código-fonte correspondente a este instalador.
 O instalador e a assinatura de atualização são publicados juntos. O instalador Windows não tem assinatura Authenticode.
 "@ | Set-Content -LiteralPath $notesPath -Encoding utf8
 
-gh release create $tag $installerPath $signaturePath $manifestPath --repo $updatesRepo --title "MangoDisk $version for Windows x64" --notes-file $notesPath --draft
+gh release create $tag $installerPath $signaturePath $manifestPath $sourceArchivePath --repo $updatesRepo --title "MangoDisk $version for Windows x64" --notes-file $notesPath --draft
 if ($LASTEXITCODE -ne 0) {
     throw 'Could not create the draft update release.'
 }
