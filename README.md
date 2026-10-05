@@ -339,6 +339,16 @@ mangodisk clean --help
 
 ## Compilar a partir do código-fonte
 
+### Atualizações desta versão pessoal
+
+O código desta versão permanece em um repositório privado. Os instaladores e os metadados de atualização para Windows x64 são publicados em [MangoDisk-updates](https://github.com/Yeake0/MangoDisk-updates). O botão de atualização consulta esse canal e instala somente versões assinadas com a chave desta versão pessoal. Ele não instala diretamente os executáveis do projeto original.
+
+Para incorporar uma atualização do criador, execute `scripts/prepare-upstream-update.ps1` em uma `main` limpa. O script cria uma branch de integração; revise os conflitos, execute as verificações obrigatórias e incorpore a branch antes de publicar um novo instalador. O monitor semanal abre uma issue quando encontra mudanças no projeto original.
+
+Antes de cada publicação, aumente a versão em `Cargo.toml`, `package.json` e `src-tauri/tauri.conf.json`. Gere o instalador com `createUpdaterArtifacts` habilitado e `TAURI_SIGNING_PRIVATE_KEY` apontando para a chave privada em `.local/updater.key`. Depois de enviar o commit correspondente ao repositório privado, execute `scripts/publish-windows-update.ps1`. O script publica o instalador, a assinatura e o `latest.json` no canal público. Faça uma cópia segura da chave privada; sem ela, os aplicativos já instalados não aceitarão novas atualizações desse canal.
+
+A versão 1.1.6 foi distribuída antes da criação desse canal e ainda confia na chave do projeto original. É necessário instalar manualmente uma vez a versão 1.1.7 desta versão pessoal; a partir dela, o botão poderá receber as versões seguintes. Alterar futuramente o nome exibido do aplicativo não exige mudar seu identificador interno. Mantê-lo preserva o caminho de atualização e os dados existentes.
+
 ### Pré-requisitos
 
 - Node.js 24 LTS

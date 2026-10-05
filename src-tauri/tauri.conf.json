@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "MangoDisk",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "identifier": "app.mangodisk.desktop",
   "mainBinaryName": "MangoDisk",
   "build": {
@@ -85,9 +85,9 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc5OUUxQkI2MTVFQTQ4MUEKUldRYVNPb1Z0aHVlZWZDM0VyMTU2NEN0SUpSOEhiQjJSaURDYjYvd2xqcGVLLytFZGdLTnVzdXQK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY4N0Y3RUEyMzgzMzAwMzkKUldRNUFETTRvbjUvK0V6VVFJRlgyRTFRSndCeGVyTnhTd3VKT2dQNTk0dUNzMDZFa3JNZ3RiMXUK",
       "endpoints": [
-        "https://mangodisk.app/api/updates/latest?target={{target}}&arch={{arch}}&current_version={{current_version}}&bundle_type={{bundle_type}}"
+        "https://github.com/Yeake0/MangoDisk-updates/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"
