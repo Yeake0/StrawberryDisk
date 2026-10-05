@@ -28,6 +28,8 @@ unsafe extern "C" {
     ) -> i32;
     fn IOIteratorNext(iterator: u32) -> u32;
     fn IOObjectRelease(object: u32) -> i32;
+    fn IOObjectConformsTo(object: u32, class_name: *const c_char) -> u32;
+    fn IORegistryEntryGetParentEntry(entry: u32, plane: *const c_char, parent: *mut u32) -> i32;
     fn IORegistryEntryGetPath(entry: u32, plane: *const c_char, path: *mut c_char) -> i32;
     fn IORegistryEntryCreateCFProperty(
         entry: u32,
@@ -77,6 +79,41 @@ fn property(object: u32, key: &CFString) -> Option<CFType> {
         IORegistryEntryCreateCFProperty(object, key.as_concrete_TypeRef(), ptr::null(), 0)
     };
     (!raw.is_null()).then(|| unsafe { CFType::wrap_under_create_rule(raw) })
+}
+
+fn model_name(value: &CFType) -> Option<String> {
+    value
+        .downcast::<CFString>()
+        .map(|value| value.to_string())
+        .or_else(|| {
+            let data = value.downcast::<CFData>()?;
+            std::str::from_utf8(data.bytes()).ok().map(str::to_owned)
+        })
+        .map(|value| value.trim_end_matches('\0').trim().to_owned())
+        .filter(|value| !value.is_empty())
+}
+
+fn adapter_model(object: u32, key: &CFString) -> Option<String> {
+    if let Some(name) = property(object, key).as_ref().and_then(model_name) {
+        return Some(name);
+    }
+    // Intel and AMD expose the model on the PCI device, sometimes behind a
+    // controller node. Restrict the fallback to the nearest PCI device instead
+    // of a recursive property search that could return the computer model.
+    let mut parent: Option<Object> = None;
+    for _ in 0..4 {
+        let current = parent.as_ref().map_or(object, |parent| parent.0);
+        let mut entry = 0;
+        if unsafe { IORegistryEntryGetParentEntry(current, c"IOService".as_ptr(), &mut entry) } != 0
+        {
+            return None;
+        }
+        parent = Some(Object(entry));
+        if unsafe { IOObjectConformsTo(entry, c"IOPCIDevice".as_ptr()) } != 0 {
+            return property(entry, key).as_ref().and_then(model_name);
+        }
+    }
+    None
 }
 
 fn activity(property: &CFType) -> Option<(f64, &'static str)> {
@@ -197,22 +234,8 @@ impl GpuReader {
             let id = unsafe { std::ffi::CStr::from_ptr(path.as_ptr()) }
                 .to_string_lossy()
                 .into_owned();
-            let model = property(object.0, &model_key);
-            let name = model
-                .as_ref()
-                .and_then(|value| {
-                    value
-                        .downcast::<CFString>()
-                        .map(|s| s.to_string())
-                        .or_else(|| {
-                            let data = value.downcast::<CFData>()?;
-                            std::str::from_utf8(data.bytes())
-                                .ok()
-                                .map(|s| s.trim_end_matches('\0').to_owned())
-                        })
-                })
-                .filter(|name| !name.is_empty())
-                .unwrap_or_else(|| format!("GPU {id}"));
+            let name = adapter_model(object.0, &model_key)
+                .unwrap_or_else(|| format!("GPU {}", adapters.len()));
             let unified = property(object.0, &CFString::new("IOClass"))
                 .and_then(|value| value.downcast::<CFString>())
                 .is_some_and(|value| value.to_string().to_ascii_lowercase().contains("agx"));
@@ -345,6 +368,24 @@ impl GpuReader {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn driver_models_accept_strings_and_pci_bytes_without_empty_or_invalid_labels() {
+        assert_eq!(
+            model_name(&CFData::from_buffer(b"Intel UHD Graphics 630\0").as_CFType()),
+            Some("Intel UHD Graphics 630".into())
+        );
+        assert_eq!(
+            model_name(&CFData::from_buffer(b"Radeon Pro 560X").as_CFType()),
+            Some("Radeon Pro 560X".into())
+        );
+        assert_eq!(
+            model_name(&CFString::new("Apple M3 Max").as_CFType()),
+            Some("Apple M3 Max".into())
+        );
+        assert!(model_name(&CFData::from_buffer(b"\xff").as_CFType()).is_none());
+        assert!(model_name(&CFString::new(" \0").as_CFType()).is_none());
+        assert!(model_name(&CFNumber::from(1).as_CFType()).is_none());
+    }
     #[test]
     fn demand_resets_preserve_cached_native_adapter_handles() {
         let mut reader = GpuReader::default();
