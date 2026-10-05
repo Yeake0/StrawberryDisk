@@ -222,6 +222,13 @@ pub(crate) fn is_remote_placeholder_attributes(attributes: u32) -> bool {
         != 0
 }
 
+/// Applies the metadata link policy to attributes returned by native handle queries.
+/// This avoids reopening or querying the same object again just to classify it.
+pub fn windows_file_attributes_are_link_like(attributes: u32) -> bool {
+    attributes & FILE_ATTRIBUTE_REPARSE_POINT_VALUE != 0
+        || is_remote_placeholder_attributes(attributes)
+}
+
 pub(crate) fn application_directories(identifier: &str) -> PlatformResult<ApplicationDirectories> {
     directories::application_directories(identifier)
 }
@@ -363,9 +370,7 @@ impl Platform for WindowsPlatform {
 
     fn is_link_like(&self, metadata: &fs::Metadata) -> bool {
         let attributes = metadata.file_attributes();
-        metadata.file_type().is_symlink()
-            || attributes & FILE_ATTRIBUTE_REPARSE_POINT_VALUE != 0
-            || is_remote_placeholder_attributes(attributes)
+        metadata.file_type().is_symlink() || windows_file_attributes_are_link_like(attributes)
     }
 
     fn file_space_usage(&self, path: &Path, metadata: &fs::Metadata) -> FileSpaceUsage {
@@ -767,8 +772,14 @@ mod tests {
             FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS_VALUE,
         ] {
             assert!(is_remote_placeholder_attributes(attributes));
+            assert!(windows_file_attributes_are_link_like(attributes));
         }
         assert!(!is_remote_placeholder_attributes(0));
+        assert!(!windows_file_attributes_are_link_like(0));
+        assert!(windows_file_attributes_are_link_like(
+            FILE_ATTRIBUTE_REPARSE_POINT_VALUE
+        ));
+        assert!(!windows_file_attributes_are_link_like(0x12));
         assert!(!is_remote_placeholder_attributes(
             FILE_ATTRIBUTE_REPARSE_POINT_VALUE
         ));

@@ -59,6 +59,9 @@ mod vscode_history;
 mod windows;
 
 #[cfg(windows)]
+pub use windows::windows_file_attributes_are_link_like;
+
+#[cfg(windows)]
 pub use command::configure_background_process;
 pub use command::{
     run_controlled_command, run_controlled_command_with_log_policy, ControlledCommandError,
