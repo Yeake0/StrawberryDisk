@@ -50,9 +50,9 @@ export function toggleSidebarLayout(state: SidebarLayoutState): SidebarLayoutSta
 
 export const PROJECT_LINKS = {
   website: 'https://mangodisk.app',
-  repository: 'https://github.com/harry0703/mangodisk',
+  repository: 'https://github.com/Yeake0/MangoDisk',
   issues: 'https://github.com/harry0703/mangodisk/issues',
-  license: 'https://github.com/harry0703/mangodisk/blob/main/LICENSE',
+  license: 'https://github.com/Yeake0/MangoDisk/blob/main/LICENSE',
 } as const;
 
 export const PAGE_IDS = {

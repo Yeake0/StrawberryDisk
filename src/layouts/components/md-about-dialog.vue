@@ -19,7 +19,6 @@ import {
   type AppUpdateStatus,
 } from '@/lib/models/app-update';
 import { PROJECT_LINKS } from '@/lib/models/application-shell';
-import { projectWebsiteUrl } from '@/lib/utils/project-website';
 import { ICON_NAMES } from '@/lib/models/ui';
 import * as AppUpdateProgressUtils from '@/lib/utils/app-update-progress';
 import { ByteSizeService } from '@/lib/services/byte-size-service';
@@ -46,7 +45,7 @@ const emit = defineEmits<{
   restart: [];
   openLink: [url: string];
 }>();
-const { locale, t } = useI18n({ useScope: 'global' });
+const { t } = useI18n({ useScope: 'global' });
 
 const checking = computed(() => props.status === APP_UPDATE_STATUS_IDS.checking);
 const downloading = computed(() => props.status === APP_UPDATE_STATUS_IDS.downloading);
@@ -77,7 +76,6 @@ const dialogDescription = computed(() =>
     ? t('updates.currentVersionDescription', { version: currentVersionLabel.value })
     : currentVersionLabel.value
 );
-const websiteUrl = computed(() => projectWebsiteUrl(locale.value));
 const downloadPercent = computed(() => AppUpdateProgressUtils.percent(props.downloadedBytes, props.totalBytes));
 const progressLabel = computed(() => {
   if (!props.totalBytes) return t('updates.downloading');
@@ -137,10 +135,7 @@ function downloadUpdate() {
       <div class="about-dialog-body">
         <p v-if="!updateFocused" class="product-description">{{ t('settings.aboutDescription') }}</p>
         <nav v-if="!updateFocused" class="project-links" :aria-label="t('settings.projectLinksLabel')">
-          <button type="button" @click="emit('openLink', websiteUrl)">
-            {{ t('settings.websiteAction') }}
-            <MdIcon :name="ICON_NAMES.external" :size="13" />
-          </button>
+          <span class="project-link-label">{{ t('settings.websiteAction') }}</span>
           <button type="button" @click="emit('openLink', PROJECT_LINKS.repository)">
             {{ t('settings.repositoryAction') }}
             <MdIcon :name="ICON_NAMES.external" :size="13" />
@@ -374,6 +369,11 @@ function downloadUpdate() {
   text-decoration-color: transparent;
   text-underline-offset: 4px;
   @apply text-primary transition-colors duration-200 hover:text-primary/75 hover:underline;
+}
+
+.project-link-label {
+  padding: 2px 4px;
+  @apply text-muted-foreground;
 }
 
 .update-state {
