@@ -488,9 +488,9 @@ mod tests {
             .applications
             .iter()
             .find(|row| {
-                row.application.icon_path.as_deref().is_some_and(|path| {
-                    std::path::Path::new(path) == std::env::current_exe().unwrap()
-                })
+                row.processes
+                    .iter()
+                    .any(|process| process.pid == std::process::id())
             })
             .expect("workload should be ranked");
         let busy_percent = own.used_percent;
