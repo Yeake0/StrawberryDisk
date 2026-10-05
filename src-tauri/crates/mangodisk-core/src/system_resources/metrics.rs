@@ -7,17 +7,24 @@ use std::collections::VecDeque;
 #[serde(rename_all = "camelCase")]
 pub enum MetricId {
     Cpu,
+    Gpu,
     Memory,
     Network,
     Disk,
 }
 
 impl MetricId {
-    pub const ALL: [Self; 4] = [Self::Cpu, Self::Memory, Self::Network, Self::Disk];
+    pub const ALL: [Self; 5] = [
+        Self::Cpu,
+        Self::Gpu,
+        Self::Memory,
+        Self::Network,
+        Self::Disk,
+    ];
 
     pub const fn interval_ms(self) -> u64 {
         match self {
-            Self::Cpu => 2_000,
+            Self::Cpu | Self::Gpu => 2_000,
             Self::Memory => 3_000,
             Self::Network => 1_000,
             Self::Disk => 30_000,
@@ -26,7 +33,7 @@ impl MetricId {
 
     pub const fn freshness_ms(self) -> u64 {
         match self {
-            Self::Cpu | Self::Network => 5_000,
+            Self::Cpu | Self::Gpu | Self::Network => 5_000,
             Self::Memory => 10_000,
             Self::Disk => 90_000,
         }

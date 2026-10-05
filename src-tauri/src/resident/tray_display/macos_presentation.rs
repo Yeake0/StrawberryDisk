@@ -66,6 +66,7 @@ pub fn columns(entries: &[DisplayEntry], compact: bool) -> Vec<Column> {
                 id => (
                     match id {
                         DisplayId::Cpu => "CPU",
+                        DisplayId::Gpu => "GPU",
                         DisplayId::Memory => "MEM",
                         _ => "DISK",
                     }
@@ -182,10 +183,11 @@ mod tests {
         assert!(columns(&entries, false)[0].top_unit.is_empty());
     }
     #[test]
-    fn all_metrics_and_logo_fit_in_220_points() {
+    fn all_metrics_and_logo_fit_in_262_points() {
         let columns = columns(
             &[
                 entry(DisplayId::Cpu, "100", "C"),
+                entry(DisplayId::Gpu, "100", "G"),
                 entry(DisplayId::Memory, "100", "M"),
                 entry(DisplayId::Upload, "999", "↑K"),
                 entry(DisplayId::Download, "999", "↓G"),
@@ -193,7 +195,7 @@ mod tests {
             ],
             false,
         );
-        assert_eq!(width(&columns, true, false), 220);
+        assert_eq!(width(&columns, true, false), 262);
         assert_eq!(width(&[], true, false), 18);
         assert_eq!(width(&[], false, false), 0);
         assert_eq!(HEIGHT, 22);

@@ -3,7 +3,7 @@ import { emptyReadings } from '@/lib/utils/system-resources';
 
 export function preferencesFixture(): ResidentPreferences {
   return {
-    schemaVersion: 8,
+    schemaVersion: 10,
     revision: 0,
     enabled: true,
     showIcon: true,
@@ -20,9 +20,11 @@ export function preferencesFixture(): ResidentPreferences {
       { id: 'memory', enabled: true },
       { id: 'network', enabled: false },
       { id: 'disk', enabled: false },
+      { id: 'gpu', enabled: false },
     ],
     networkInterface: null,
     diskVolume: null,
+    gpuAdapter: null,
   };
 }
 export function readingFixture(revision = 1): ResidentReading {

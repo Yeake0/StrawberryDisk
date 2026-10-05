@@ -3,6 +3,7 @@
 //! reading global CPU, for cost-per-query comparisons above Windows CPU timer granularity.
 use mangodisk_platform::system_resources::{
     cpu::CpuReader,
+    gpu::GpuReader,
     memory::{MemorySampler, MemorySource},
     network::NetworkReader,
     process_cpu::{ProcessCpuSampler, ProcessCpuSource},
@@ -18,7 +19,15 @@ fn main() {
     let seconds: u64 = args.get(2).map(|s| s.parse().unwrap()).unwrap_or(60);
     assert!(matches!(
         mode,
-        "overview" | "memory" | "cpu" | "cpu-background" | "cpu-memory" | "network"
+        "overview"
+            | "memory"
+            | "cpu"
+            | "cpu-background"
+            | "cpu-memory"
+            | "network"
+            | "gpu"
+            | "gpu-detail"
+            | "overview-gpu"
     ));
     assert!((10..=3600).contains(&seconds));
     let process_interval: u64 = args.get(3).map(|s| s.parse().unwrap()).unwrap_or(2);
@@ -27,12 +36,24 @@ fn main() {
     assert!(!burst || mode == "cpu-memory");
     let mut cpu: CpuReader = Default::default();
     let mut memory = MemorySampler::default();
+    let mut gpu = GpuReader::default();
     let mut network = NetworkReader::default();
     let mut processes = (mode.starts_with("cpu")).then(ProcessCpuSampler::default);
     let mut observer = System::new();
     let pid = Pid::from_u32(std::process::id());
     let refresh = |observer: &mut System| own_usage(observer, pid);
     let mut sample = |cpu: &mut CpuReader, memory: &mut MemorySampler, tick: u64| {
+        if matches!(mode, "gpu" | "gpu-detail" | "overview-gpu") && tick.is_multiple_of(2) {
+            if mode == "gpu-detail" {
+                gpu.read_detailed()
+            } else {
+                gpu.read()
+            }
+            .expect("GPU counters are readable");
+        }
+        if matches!(mode, "gpu" | "gpu-detail") {
+            return;
+        }
         if mode == "network" {
             network.read().expect("network counters are readable");
             return;
@@ -72,7 +93,11 @@ fn main() {
     for tick in 0..seconds {
         let at = Instant::now();
         sample(&mut cpu, &mut memory, tick);
-        durations.push(at.elapsed().as_micros() as u64);
+        // GPU-only modes have idle ticks between reads. Excluding them keeps
+        // latency percentiles representative of actual sensor calls.
+        if !matches!(mode, "gpu" | "gpu-detail") || tick.is_multiple_of(2) {
+            durations.push(at.elapsed().as_micros() as u64);
+        }
         let (_, rss) = refresh(&mut observer);
         rss_min = rss_min.min(rss);
         rss_max = rss_max.max(rss);
@@ -88,9 +113,11 @@ fn main() {
         serde_json::json!({
             "schemaVersion": 1, "mode": mode, "os": std::env::consts::OS,
             "arch": std::env::consts::ARCH, "samples": durations.len(),
+            "measurementTicks": seconds,
             "burst": burst, "cpuMilliseconds": after_cpu - before_cpu,
             "processIntervalSeconds": process_interval,
             "coldSampleMicros": cold_sample_micros,
+            "gpuIntervalSeconds": if matches!(mode, "gpu" | "gpu-detail" | "overview-gpu") { Some(2) } else { None },
             "networkIntervalSeconds": if mode == "network" { Some(1) } else { None },
             "processQueries": if mode.starts_with("cpu") { seconds.div_ceil(process_interval) } else { 0 },
             "elapsedSeconds": started.elapsed().as_secs_f64(),
@@ -101,6 +128,7 @@ fn main() {
             "rssMinBytes": rss_min, "rssMaxBytes": rss_max,
             "sampleP50Micros": durations[durations.len() / 2],
             "sampleP95Micros": durations[(durations.len() - 1) * 95 / 100],
+            "sampleMaxMicros": durations[durations.len() - 1],
         })
     );
 }

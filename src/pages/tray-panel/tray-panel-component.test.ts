@@ -347,7 +347,7 @@ describe('monitoring panel interactions', () => {
     vi.mocked(ResidentService.panelMetric).mockResolvedValue('network');
     const { wrapper } = render();
     await flushPromises();
-    expect(wrapper.findAllComponents(ResourceOverview)).toHaveLength(4);
+    expect(wrapper.findAllComponents(ResourceOverview)).toHaveLength(5);
     const visibility = vi.mocked(ResidentService.onPanelVisibility).mock.calls[0]![0];
     expect(wrapper.findAllComponents(ResourceOverview).every(card => card.props('active') === false)).toBe(true);
     visibility(true);
@@ -378,8 +378,8 @@ describe('monitoring panel interactions', () => {
     );
     expect(wrapper.get('[role="tabpanel"]').attributes('aria-labelledby')).toBe('metric-tab-memory');
     await wrapper.get('#metric-tab-memory').trigger('keydown', { key: 'ArrowRight' });
-    expect(wrapper.findAll('[role=tab]')).toHaveLength(3);
-    expect(wrapper.findAll('.resource-overview')).toHaveLength(4);
+    expect(wrapper.findAll('[role=tab]')).toHaveLength(4);
+    expect(wrapper.findAll('.resource-overview')).toHaveLength(5);
     expect(store.selectedMetric).toBe('network');
     expect(document.activeElement?.id).toBe('metric-tab-overview');
     expect(ResidentService.selectMetric).toHaveBeenCalledWith('network');

@@ -4,6 +4,7 @@ mod application_identity;
 pub mod cpu;
 pub mod disk;
 pub mod disk_io;
+pub mod gpu;
 mod memory;
 pub mod metrics;
 pub mod models;

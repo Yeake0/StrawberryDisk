@@ -8,6 +8,7 @@ use mangodisk_core::{
 use mangodisk_platform::system_resources::{
     cpu::{CpuReader, CpuSample},
     disk::{ResourceVolume, VolumeCapacity},
+    gpu::{GpuAdapter, GpuReader, GpuSample},
     network::{InterfaceSample, NetworkReader},
 };
 use std::{
@@ -20,6 +21,11 @@ use super::sampling_schedule::Demand;
 pub enum Observation {
     Unsupported,
     Cpu(CpuSample),
+    GpuCatalogue(Vec<GpuAdapter>),
+    Gpu {
+        sample: mangodisk_platform::PlatformResult<GpuSample>,
+        adapters: Vec<GpuAdapter>,
+    },
     Memory(SystemResourceSnapshot),
     Network(Vec<InterfaceSample>),
     Disk {
@@ -94,7 +100,7 @@ fn run_worker(
             create()
         });
         if generation.replace(requested_generation) != Some(requested_generation) {
-            sensor.reset_cpu();
+            sensor.reset_baselines();
         }
         let started = Instant::now();
         let timestamp_ms = timestamp_ms();
@@ -118,6 +124,7 @@ fn run_worker(
 
 enum Sensor {
     Cpu(CpuReader),
+    Gpu(Box<GpuReader>),
     Memory(Box<SystemResourceService>),
     Network(NetworkReader),
     Disk,
@@ -131,14 +138,18 @@ impl Sensor {
             MetricId::Cpu => Self::Cpu(CpuReader::default()),
             #[cfg(not(windows))]
             MetricId::Cpu => Self::Cpu(CpuReader),
+            MetricId::Gpu => Self::Gpu(Box::default()),
             MetricId::Memory => Self::Memory(Box::default()),
             MetricId::Network => Self::Network(NetworkReader::default()),
             MetricId::Disk => Self::Disk,
         }
     }
-    fn reset_cpu(&mut self) {
+    fn reset_baselines(&mut self) {
         if let Self::Cpu(reader) = self {
             // Re-enabling must prime a fresh interval, including short pauses.
+            reader.reset();
+        }
+        if let Self::Gpu(reader) = self {
             reader.reset();
         }
     }
@@ -154,6 +165,20 @@ impl Sensor {
                 }
                 Err(error) => return Err(error.into()),
             },
+            Self::Gpu(reader) if demand.catalogue_only => {
+                Observation::GpuCatalogue(reader.catalogue()?)
+            }
+            Self::Gpu(reader) => {
+                let sample = if demand.detailed {
+                    reader.read_detailed()
+                } else {
+                    reader.read()
+                };
+                Observation::Gpu {
+                    sample,
+                    adapters: reader.adapters(),
+                }
+            }
             Self::Memory(reader) => {
                 Observation::Memory(reader.sample(demand.detailed, timestamp_ms)?)
             }

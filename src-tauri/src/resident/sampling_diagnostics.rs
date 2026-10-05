@@ -5,6 +5,7 @@ use std::collections::VecDeque;
 #[derive(Debug, Clone, Copy)]
 pub enum Query {
     Cpu,
+    Gpu,
     Memory,
     Network,
     Disk,
@@ -15,6 +16,7 @@ impl From<MetricId> for Query {
     fn from(metric: MetricId) -> Self {
         match metric {
             MetricId::Cpu => Self::Cpu,
+            MetricId::Gpu => Self::Gpu,
             MetricId::Memory => Self::Memory,
             MetricId::Network => Self::Network,
             MetricId::Disk => Self::Disk,
@@ -28,7 +30,7 @@ struct Timings {
 }
 #[derive(Default)]
 pub struct SamplingDiagnostics {
-    queries: [Timings; 6],
+    queries: [Timings; 7],
 }
 impl SamplingDiagnostics {
     pub fn record(&mut self, query: Query, duration_ms: u64) {
@@ -47,6 +49,7 @@ impl SamplingDiagnostics {
     pub fn log_and_reset(&mut self, window_ms: u128) {
         for query in [
             Query::Cpu,
+            Query::Gpu,
             Query::Memory,
             Query::Network,
             Query::Disk,

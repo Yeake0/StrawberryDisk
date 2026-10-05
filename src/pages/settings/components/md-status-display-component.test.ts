@@ -69,6 +69,36 @@ describe('status display interactions', () => {
     wrappers.splice(0).forEach(wrapper => wrapper.unmount());
     vi.useRealTimers();
   });
+  it('persists a fixed GPU and retains a missing choice until automatic is selected', async () => {
+    const saved = preferencesFixture();
+    saved.metrics.find(row => row.id === 'gpu')!.enabled = true;
+    vi.mocked(ResidentService.preferences).mockResolvedValue(saved);
+    vi.mocked(ResidentService.catalogue).mockResolvedValue({
+      ...readingFixture(),
+      gpuAdapters: [
+        { id: 'gpu-a', name: 'GPU 0 · Intel' },
+        { id: 'gpu-b', name: 'GPU 1 · NVIDIA' },
+      ],
+    });
+    const wrapper = mount(Settings, { props: { isMacOs: false }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    const row = wrapper.get('[data-metric="gpu"]');
+    const selector = row.getComponent(Select);
+    expect(row.get('.selection-toggle').text()).toBe('systemStatus.automatic');
+    selector.vm.$emit('update:modelValue', 'gpu-b');
+    await flushPromises();
+    expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(expect.objectContaining({ gpuAdapter: 'gpu-b' }));
+    expect(row.get('.selection-toggle').text()).toBe('GPU 1 · NVIDIA');
+    const onReading = vi.mocked(ResidentService.onReading).mock.calls.at(-1)![0];
+    onReading({ ...readingFixture(99), gpuAdapters: [{ id: 'gpu-a', name: 'GPU 0 · Intel' }] });
+    await flushPromises();
+    expect(row.get('.selection-toggle').text()).toBe('systemStatus.savedDisconnected');
+    selector.vm.$emit('update:modelValue', 'automatic');
+    await flushPromises();
+    expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(expect.objectContaining({ gpuAdapter: null }));
+  });
   it('opens the native resource panel without changing resident preferences', async () => {
     const wrapper = mount(Settings, { props: { isMacOs: true }, global: global() });
     wrappers.push(wrapper);
@@ -305,7 +335,7 @@ describe('status display interactions', () => {
         metrics: preferencesFixture().metrics,
       })
     );
-    expect(wrapper.findAll('.drag-handle')).toHaveLength(4);
+    expect(wrapper.findAll('.drag-handle')).toHaveLength(5);
     await wrapper.get('input[name="taskbar-position"][value="left"]').setValue(true);
     await flushPromises();
     expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
@@ -318,7 +348,7 @@ describe('status display interactions', () => {
     await wrapper.get('input[name="taskbar-position"][value="auto"]').setValue(true);
     await flushPromises();
     expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
-      expect.objectContaining({ schemaVersion: 8, taskbarPosition: 'auto' })
+      expect.objectContaining({ schemaVersion: 10, taskbarPosition: 'auto' })
     );
     await wrapper.get('input[name="windows-display-mode"][value="tray"]').setValue(true);
     await flushPromises();

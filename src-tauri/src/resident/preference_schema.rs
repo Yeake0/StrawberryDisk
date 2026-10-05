@@ -44,10 +44,12 @@ pub struct ResidentPreferences {
     pub metrics: Vec<DisplayMetric>,
     pub network_interface: Option<String>,
     pub disk_volume: Option<String>,
+    pub gpu_adapter: Option<String>,
 }
 
-const DISPLAY_ORDER: [MetricId; 4] = [
+const DISPLAY_ORDER: [MetricId; 5] = [
     MetricId::Cpu,
+    MetricId::Gpu,
     MetricId::Memory,
     MetricId::Disk,
     MetricId::Network,
@@ -56,7 +58,7 @@ const DISPLAY_ORDER: [MetricId; 4] = [
 impl Default for ResidentPreferences {
     fn default() -> Self {
         Self {
-            schema_version: 8,
+            schema_version: 10,
             revision: 0,
             enabled: true,
             show_icon: true,
@@ -77,6 +79,7 @@ impl Default for ResidentPreferences {
                 .collect(),
             network_interface: None,
             disk_volume: None,
+            gpu_adapter: None,
         }
     }
 }
@@ -93,19 +96,23 @@ impl ResidentPreferences {
     }
 
     pub fn normalize(mut self) -> Result<Self, &'static str> {
-        if self.schema_version != 8 {
+        if self.schema_version != 10 {
             return Err("preferences_version");
         }
         if self.usage_warning_percent < 1
             || self.usage_warning_percent >= self.usage_critical_percent
             || self.usage_critical_percent > 100
             || self.metrics.len() > 64
-            || [&self.network_interface, &self.disk_volume]
-                .iter()
-                .any(|id| {
-                    id.as_ref()
-                        .is_some_and(|id| id.is_empty() || id.len() > 1024 || id.contains('\0'))
-                })
+            || [
+                &self.network_interface,
+                &self.disk_volume,
+                &self.gpu_adapter,
+            ]
+            .iter()
+            .any(|id| {
+                id.as_ref()
+                    .is_some_and(|id| id.is_empty() || id.len() > 1024 || id.contains('\0'))
+            })
         {
             return Err("preferences_invalid");
         }
@@ -128,6 +135,12 @@ impl ResidentPreferences {
 
 pub fn decode(mut value: serde_json::Value) -> Result<ResidentPreferences, &'static str> {
     let version = value.get("schemaVersion").and_then(|v| v.as_u64());
+    if matches!(version, Some(2..=9)) {
+        if value.get("gpuAdapter").is_some() {
+            return Err("preferences_invalid");
+        }
+        value["gpuAdapter"] = serde_json::Value::Null;
+    }
     if matches!(version, Some(2..=7)) {
         for field in [
             "menuBarCompact",
@@ -204,7 +217,7 @@ pub fn decode(mut value: serde_json::Value) -> Result<ResidentPreferences, &'sta
             {
                 return Err("preferences_invalid");
             }
-            value["schemaVersion"] = 8.into();
+            value["schemaVersion"] = 10.into();
             value["taskbarBackground"] = true.into();
             value["windowsDisplayMode"] = "tray".into();
             value["taskbarPosition"] = "right".into();
@@ -216,7 +229,7 @@ pub fn decode(mut value: serde_json::Value) -> Result<ResidentPreferences, &'sta
             if value.get("taskbarPosition").is_some() || value.get("taskbarBackground").is_some() {
                 return Err("preferences_invalid");
             }
-            value["schemaVersion"] = 8.into();
+            value["schemaVersion"] = 10.into();
             value["taskbarBackground"] = true.into();
             value["taskbarPosition"] = "right".into();
             serde_json::from_value::<ResidentPreferences>(value)
@@ -235,7 +248,7 @@ pub fn decode(mut value: serde_json::Value) -> Result<ResidentPreferences, &'sta
             }
             // Existing installations keep the opaque presentation until the
             // user explicitly selects transparency.
-            value["schemaVersion"] = 8.into();
+            value["schemaVersion"] = 10.into();
             value["taskbarBackground"] = true.into();
             serde_json::from_value::<ResidentPreferences>(value)
                 .map_err(|_| "preferences_invalid")?
@@ -250,19 +263,19 @@ pub fn decode(mut value: serde_json::Value) -> Result<ResidentPreferences, &'sta
             ) {
                 return Err("preferences_invalid");
             }
-            value["schemaVersion"] = 8.into();
+            value["schemaVersion"] = 10.into();
             serde_json::from_value::<ResidentPreferences>(value)
                 .map_err(|_| "preferences_invalid")?
                 .normalize()
         }
         Some(6) => {
-            value["schemaVersion"] = 8.into();
+            value["schemaVersion"] = 10.into();
             serde_json::from_value::<ResidentPreferences>(value)
                 .map_err(|_| "preferences_invalid")?
                 .normalize()
         }
-        Some(7 | 8) => {
-            value["schemaVersion"] = 8.into();
+        Some(7..=10) => {
+            value["schemaVersion"] = 10.into();
             serde_json::from_value::<ResidentPreferences>(value)
                 .map_err(|_| "preferences_invalid")?
                 .normalize()
@@ -277,7 +290,12 @@ mod tests {
 
     fn legacy_preferences() -> serde_json::Value {
         let mut value = serde_json::to_value(ResidentPreferences::default()).unwrap();
+        value.as_object_mut().unwrap().remove("gpuAdapter");
         value["schemaVersion"] = 7.into();
+        value["metrics"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|metric| metric["id"] != "gpu");
         for field in [
             "menuBarCompact",
             "usageColors",
@@ -287,6 +305,78 @@ mod tests {
             value.as_object_mut().unwrap().remove(field);
         }
         value
+    }
+
+    #[test]
+    fn version_nine_defaults_to_automatic_gpu_and_preserves_current_choices() {
+        let mut old = serde_json::to_value(ResidentPreferences::default()).unwrap();
+        old["schemaVersion"] = 9.into();
+        old["networkInterface"] = "wifi".into();
+        old.as_object_mut().unwrap().remove("gpuAdapter");
+        let migrated = decode(old.clone()).unwrap();
+        assert_eq!(migrated.schema_version, 10);
+        assert_eq!(migrated.network_interface.as_deref(), Some("wifi"));
+        assert!(migrated.gpu_adapter.is_none());
+        old["gpuAdapter"] = "unexpected".into();
+        assert!(decode(old).is_err());
+        let fixed = ResidentPreferences {
+            gpu_adapter: Some("pci:10de:2684:1:0:0:0".into()),
+            ..migrated
+        };
+        assert_eq!(
+            decode(serde_json::to_value(&fixed).unwrap()).unwrap(),
+            fixed
+        );
+        assert!(ResidentPreferences {
+            gpu_adapter: Some("".into()),
+            ..fixed
+        }
+        .normalize()
+        .is_err());
+    }
+    #[test]
+    fn version_eight_appends_disabled_gpu_without_changing_saved_choices() {
+        let mut old = serde_json::to_value(ResidentPreferences::default()).unwrap();
+        old["schemaVersion"] = 8.into();
+        old.as_object_mut().unwrap().remove("gpuAdapter");
+        old["revision"] = 42.into();
+        old["metrics"] = serde_json::json!([
+            {"id":"memory", "enabled":true}, {"id":"cpu", "enabled":false},
+            {"id":"network", "enabled":true}, {"id":"disk", "enabled":false}
+        ]);
+        let migrated = decode(old).unwrap();
+        assert_eq!(migrated.schema_version, 10);
+        assert_eq!(migrated.revision, 42);
+        assert_eq!(
+            migrated
+                .metrics
+                .iter()
+                .map(|metric| metric.id)
+                .collect::<Vec<_>>(),
+            vec![
+                MetricId::Memory,
+                MetricId::Cpu,
+                MetricId::Network,
+                MetricId::Disk,
+                MetricId::Gpu
+            ]
+        );
+        assert!(!migrated.shows(MetricId::Gpu));
+        assert!(migrated.shows(MetricId::Network));
+        let mut selected = migrated;
+        selected
+            .metrics
+            .iter_mut()
+            .find(|metric| metric.id == MetricId::Gpu)
+            .unwrap()
+            .enabled = true;
+        assert_eq!(
+            decode(serde_json::to_value(&selected).unwrap()).unwrap(),
+            selected
+        );
+        let mut future = serde_json::to_value(selected).unwrap();
+        future["schemaVersion"] = 11.into();
+        assert!(decode(future).is_err());
     }
 
     #[test]
@@ -313,9 +403,13 @@ mod tests {
     fn version_seven_preserves_order_and_adds_display_options() {
         let mut old = legacy_preferences();
         old["metrics"].as_array_mut().unwrap().reverse();
-        let order = old["metrics"].clone();
+        let mut order = old["metrics"].clone();
+        order
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({"id":"gpu", "enabled":false}));
         let migrated = decode(old).unwrap();
-        assert_eq!(migrated.schema_version, 8);
+        assert_eq!(migrated.schema_version, 10);
         assert!(!migrated.menu_bar_compact);
         assert!(migrated.usage_colors);
         assert_eq!(serde_json::to_value(migrated).unwrap()["metrics"], order);
@@ -339,7 +433,13 @@ mod tests {
         let migrated = decode(old).unwrap();
         assert_eq!(
             migrated.metrics.iter().map(|m| m.id).collect::<Vec<_>>(),
-            DISPLAY_ORDER
+            [
+                MetricId::Cpu,
+                MetricId::Memory,
+                MetricId::Disk,
+                MetricId::Network,
+                MetricId::Gpu
+            ]
         );
         assert!(migrated.shows(MetricId::Network));
         assert!(!migrated.shows(MetricId::Disk));
@@ -376,10 +476,11 @@ mod tests {
         for position in ["left", "right"] {
             let mut old = legacy_preferences();
             old["schemaVersion"] = 5.into();
+            old.as_object_mut().unwrap().remove("gpuAdapter");
             old.as_object_mut().unwrap().remove("taskbarCompact");
             old["taskbarPosition"] = position.into();
             let migrated = decode(old).unwrap();
-            assert_eq!(migrated.schema_version, 8);
+            assert_eq!(migrated.schema_version, 10);
             assert_eq!(
                 serde_json::to_value(migrated).unwrap()["taskbarPosition"],
                 position
@@ -396,6 +497,7 @@ mod tests {
     fn version_six_preserves_automatic_position_and_defaults_to_standard_density() {
         let mut old = legacy_preferences();
         old["schemaVersion"] = 6.into();
+        old.as_object_mut().unwrap().remove("gpuAdapter");
         old.as_object_mut().unwrap().remove("taskbarCompact");
         let migrated = decode(old).unwrap();
         assert_eq!(migrated.taskbar_position, TaskbarPosition::Auto);
@@ -462,7 +564,7 @@ mod tests {
                 assert_eq!(migrated.shows(MetricId::Memory), memory);
                 assert!(migrated.show_icon);
                 assert!(!migrated.shows(MetricId::Cpu));
-                assert_eq!(migrated.schema_version, 8);
+                assert_eq!(migrated.schema_version, 10);
             }
         }
     }
@@ -471,6 +573,7 @@ mod tests {
     fn version_two_migrates_to_tray_without_changing_choices() {
         let mut old = legacy_preferences();
         old["schemaVersion"] = 2.into();
+        old.as_object_mut().unwrap().remove("gpuAdapter");
         old.as_object_mut().unwrap().remove("taskbarCompact");
         old.as_object_mut().unwrap().remove("taskbarBackground");
         old["revision"] = 17.into();
@@ -491,6 +594,7 @@ mod tests {
     fn version_three_preserves_taskbar_mode_and_defaults_to_right() {
         let mut old = legacy_preferences();
         old["schemaVersion"] = 3.into();
+        old.as_object_mut().unwrap().remove("gpuAdapter");
         old.as_object_mut().unwrap().remove("taskbarCompact");
         old.as_object_mut().unwrap().remove("taskbarBackground");
         old["windowsDisplayMode"] = "taskbar".into();
@@ -514,6 +618,7 @@ mod tests {
     fn version_four_keeps_background_and_current_preserves_transparency() {
         let mut old = legacy_preferences();
         old["schemaVersion"] = 4.into();
+        old.as_object_mut().unwrap().remove("gpuAdapter");
         old.as_object_mut().unwrap().remove("taskbarCompact");
         old["taskbarPosition"] = "left".into();
         old["windowsDisplayMode"] = "taskbar".into();
@@ -548,7 +653,7 @@ mod tests {
         }
         .normalize()
         .unwrap();
-        assert_eq!(preferences.metrics.len(), 4);
+        assert_eq!(preferences.metrics.len(), 5);
         assert_eq!(preferences.metrics[0].id, MetricId::Network);
         assert!(preferences.shows(MetricId::Network));
         assert!(!preferences.shows(MetricId::Memory));
@@ -564,13 +669,14 @@ mod tests {
             assert!(decode(value).is_err());
         }
         let mut value = serde_json::to_value(ResidentPreferences::default()).unwrap();
-        value["metrics"][0]["id"] = "gpu".into();
+        value.as_object_mut().unwrap().remove("gpuAdapter");
+        value["metrics"][0]["id"] = "npu".into();
         assert!(decode(value).is_err());
     }
 
     #[test]
     fn every_display_combination_retains_an_entry() {
-        for bits in 0..16 {
+        for bits in 0..(1 << DISPLAY_ORDER.len()) {
             for show_icon in [false, true] {
                 let mut preferences = ResidentPreferences {
                     show_icon,

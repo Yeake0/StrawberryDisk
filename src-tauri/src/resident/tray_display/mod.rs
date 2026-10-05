@@ -137,6 +137,7 @@ fn ensure(app: &tauri::AppHandle, id: DisplayId, labels: &labels::Labels) -> tau
     let icon = if let Some(metric) = id.metric() {
         let marker = match metric {
             mangodisk_core::system_resources::metrics::MetricId::Cpu => "C",
+            mangodisk_core::system_resources::metrics::MetricId::Gpu => "G",
             mangodisk_core::system_resources::metrics::MetricId::Memory => "M",
             mangodisk_core::system_resources::metrics::MetricId::Disk => "D",
             _ => {

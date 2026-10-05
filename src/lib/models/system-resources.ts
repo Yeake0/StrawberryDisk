@@ -1,8 +1,11 @@
-export const METRIC_IDS = ['cpu', 'memory', 'network', 'disk'] as const;
+import type { GpuDetails } from '@/lib/models/gpu-details';
+
+export const METRIC_IDS = ['cpu', 'gpu', 'memory', 'network', 'disk'] as const;
 export type MetricId = (typeof METRIC_IDS)[number];
 export type MetricStatus = 'loading' | 'ready' | 'stale' | 'disconnected' | 'unsupported' | 'failed';
 export const METRIC_LABEL_KEYS: Record<MetricId, string> = {
   cpu: 'systemStatus.cpu',
+  gpu: 'systemStatus.gpu',
   memory: 'systemStatus.memory',
   network: 'systemStatus.network',
   disk: 'systemStatus.disk',
@@ -66,6 +69,12 @@ export interface SystemResourceSnapshot {
 export interface CpuUsage {
   usedPercent: number;
 }
+export interface GpuUsage {
+  usedPercent: number;
+  adapterId: string;
+  adapterName: string;
+  details: GpuDetails | null;
+}
 export interface NetworkInterface {
   id: string;
   name: string;
@@ -102,9 +111,15 @@ export interface DiskIoRate {
   writtenBytesPerSecond: number;
 }
 export interface ResourceReadings {
-  schemaVersion: 7;
+  schemaVersion: 11;
   observedAtMs: number;
   cpu: MetricReading<CpuUsage>;
+  gpu: MetricReading<GpuUsage>;
+  gpuDetails: MetricReading<GpuUsage>;
+  gpuDetailHistory: TrendPoint[];
+  gpuDetailAdapterId: string | null;
+  gpuRendererHistory: TrendPoint[];
+  gpuTilerHistory: TrendPoint[];
   cpuProcesses: MetricReading<ProcessCpuSummary>;
   memoryProcesses: MetricReading<ProcessMemorySummary>;
   memory: MetricReading<SystemResourceSnapshot>;
@@ -113,7 +128,9 @@ export interface ResourceReadings {
   diskIo: MetricReading<DiskIoRate>;
   interfaces: NetworkInterface[];
   volumes: ResourceVolume[];
+  gpuAdapters: { id: string; name: string }[];
   cpuHistory: TrendPoint[];
+  gpuHistory: TrendPoint[];
   networkHistory: TrendPoint[];
   memoryHistory: TrendPoint[];
   diskIoHistory: TrendPoint[];

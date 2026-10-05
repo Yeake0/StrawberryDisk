@@ -9,6 +9,9 @@ import zh from '@/locales/zh-CN.json';
 import tw from '@/locales/zh-TW.json';
 import ja from '@/locales/ja-JP.json';
 import ko from '@/locales/ko-KR.json';
+import pt from '@/locales/pt-BR.json';
+import ru from '@/locales/ru-RU.json';
+import tr from '@/locales/tr-TR.json';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import { OperatingSystemService } from '@/lib/services/operating-system-service';
 vi.mock('@/lib/services/byte-size-service', () => ({
@@ -22,6 +25,45 @@ vi.mock('@/lib/services/byte-size-service', () => ({
 describe('resource details', () => {
   beforeEach(() => vi.spyOn(OperatingSystemService, 'currentPlatform').mockReturnValue('macos'));
   afterEach(() => vi.restoreAllMocks());
+
+  it.each([en, zh, tw, ja, ko, pt, ru, tr])('shows real GPU activity and device identity in each locale', messages => {
+    const reading = emptyReadings();
+    reading.observedAtMs = 1000;
+    reading.gpu = {
+      status: 'ready',
+      sampledAtMs: 1000,
+      value: { usedPercent: 0, adapterId: 'gpu-1', adapterName: 'NVIDIA GeForce RTX 4090', details: null },
+    };
+    reading.gpuHistory = [{ sampledAtMs: 1000, primary: 0, secondary: null }];
+    const wrapper = mount(Overview, {
+      props: { metric: 'gpu', reading },
+      global: { plugins: [createI18n({ legacy: false, locale: 'test', messages: { test: messages } })] },
+    });
+    expect(wrapper.get('.resource-value').text()).toBe('0%');
+    expect(wrapper.get('.gpu-source').text()).toBe('NVIDIA GeForce RTX 4090');
+    expect(wrapper.getComponent(MdTooltip).props('text')).toBe(messages.systemStatus.gpuUsageHint);
+    expect(wrapper.find('.resource-trend.gpu').exists()).toBe(true);
+    wrapper.unmount();
+  });
+
+  it.each(['loading', 'unsupported', 'failed', 'stale'] as const)(
+    'never presents %s GPU data as a valid zero',
+    status => {
+      const reading = emptyReadings();
+      reading.gpu = {
+        status,
+        sampledAtMs: 1000,
+        value: { usedPercent: 0, adapterId: 'a', adapterName: 'GPU A', details: null },
+      };
+      const wrapper = mount(Overview, {
+        props: { metric: 'gpu', reading },
+        global: { plugins: [createI18n({ legacy: false, locale: 'en', messages: { en } })] },
+      });
+      expect(wrapper.get('.resource-value').text()).toBe('—');
+      expect(wrapper.find('[role="status"]').exists()).toBe(true);
+      wrapper.unmount();
+    }
+  );
 
   it.each(['macos', 'linux', 'windows'] as const)('limits the reclaimable-space hint to macOS on %s', platform => {
     vi.spyOn(OperatingSystemService, 'currentPlatform').mockReturnValue(platform);
@@ -48,18 +90,21 @@ describe('resource details', () => {
     wrapper.unmount();
   });
 
-  it.each(['cpu', 'memory'] as const)('opens %s details from the whole card only when interactive', async metric => {
-    const wrapper = mount(Overview, {
-      props: { metric, reading: emptyReadings(), interactive: true },
-      global: { plugins: [createI18n({ legacy: false, locale: 'en', messages: { en } })] },
-    });
-    await wrapper.get('.card-navigation').trigger('click');
-    expect(wrapper.emitted(metric)).toHaveLength(1);
-    expect(wrapper.emitted(metric === 'cpu' ? 'memory' : 'cpu')).toBeUndefined();
-    await wrapper.setProps({ interactive: false });
-    expect(wrapper.find('.card-navigation').exists()).toBe(false);
-    wrapper.unmount();
-  });
+  it.each(['cpu', 'gpu', 'memory'] as const)(
+    'opens %s details from the whole card only when interactive',
+    async metric => {
+      const wrapper = mount(Overview, {
+        props: { metric, reading: emptyReadings(), interactive: true },
+        global: { plugins: [createI18n({ legacy: false, locale: 'en', messages: { en } })] },
+      });
+      await wrapper.get('.card-navigation').trigger('click');
+      expect(wrapper.emitted(metric)).toHaveLength(1);
+      expect(wrapper.emitted(metric === 'cpu' ? 'memory' : 'cpu')).toBeUndefined();
+      await wrapper.setProps({ interactive: false });
+      expect(wrapper.find('.card-navigation').exists()).toBe(false);
+      wrapper.unmount();
+    }
+  );
 
   it('leaves the disconnected interval blank instead of moving old samples to now', () => {
     const reading = emptyReadings();

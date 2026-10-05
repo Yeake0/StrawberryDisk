@@ -11,7 +11,12 @@ const maximumLocaleChunkBytes = 304 * 1024;
 const maximumLocaleGzipBytes = 60 * 1024;
 // Cyrillic uses two UTF-8 bytes per letter. Keep a measured, locale-specific
 // allowance instead of weakening the budget for every locale chunk.
-const localeChunkLimitOverrides = new Map([['ru-ru', { bytes: 380 * 1024, gzipBytes: 66 * 1024 }]]);
+// GPU detail guidance adds about 1 KiB of compiled Japanese text; retain the
+// shared 60 KiB transfer limit and give only this locale a 2 KiB raw margin.
+const localeChunkLimitOverrides = new Map([
+  ['ja-jp', { bytes: 306 * 1024, gzipBytes: 60 * 1024 }],
+  ['ru-ru', { bytes: 380 * 1024, gzipBytes: 66 * 1024 }],
+]);
 
 function fail(message) {
   console.error(`[build-output] ${message}`);

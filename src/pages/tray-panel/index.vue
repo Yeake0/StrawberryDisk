@@ -10,6 +10,7 @@ import MdMainShortcut from './components/md-main-shortcut.vue';
 import { OperatingSystemService } from '@/lib/services/operating-system-service';
 import { type MetricId } from '@/lib/models/system-resources';
 import MdResourceOverview from './components/md-resource-overview.vue';
+import MdGpuDetails from './components/md-gpu-details.vue';
 import MdMemoryOverview from './components/md-memory-overview.vue';
 import MdApplicationResourceList from './components/md-application-resource-list.vue';
 import { ICON_NAMES } from '@/lib/models/ui';
@@ -51,13 +52,23 @@ const panel = ref<HTMLElement | null>(null);
 // Native visibility controls rendering: Windows can reveal an unfocused popup,
 // and hiding it does not consistently update document.hidden in WebView2.
 const panelVisible = ref(false);
-// Native CPU/memory entries open their detail lists; other metrics share the overview.
+// Native metric entries select the same detail tabs as the overview cards.
 const selectedTab = computed(() =>
-  store.selectedMetric === 'memory' ? 'memory' : store.selectedMetric === 'cpu' ? 'cpu' : 'overview'
+  store.selectedMetric === 'memory'
+    ? 'memory'
+    : store.selectedMetric === 'cpu'
+      ? 'cpu'
+      : store.selectedMetric === 'gpu' && !OperatingSystemService.isLinux()
+        ? 'gpu'
+        : 'overview'
 );
-const tabs = ['overview', 'cpu', 'memory'] as const;
+const tabs: readonly ('overview' | 'cpu' | 'gpu' | 'memory')[] = OperatingSystemService.isLinux()
+  ? ['overview', 'cpu', 'memory']
+  : ['overview', 'cpu', 'gpu', 'memory'];
 // Group activity trends before capacity readings without changing native display order.
-const overviewMetrics = ['cpu', 'memory', 'disk', 'network'] as const;
+const overviewMetrics = OperatingSystemService.isLinux()
+  ? (['cpu', 'memory', 'disk', 'network'] as const)
+  : (['cpu', 'gpu', 'memory', 'disk', 'network'] as const);
 // Feedback belongs to this panel's presentation lifecycle. Start its timeout only
 // after loading ends; retrying or unmounting cancels the previous result's timer.
 watch(
@@ -230,7 +241,9 @@ onBeforeUnmount(() => {
                   ? 'systemStatus.overview'
                   : tab === 'cpu'
                     ? 'systemStatus.cpu'
-                    : 'systemStatus.memoryManagement'
+                    : tab === 'gpu'
+                      ? 'systemStatus.gpu'
+                      : 'systemStatus.memoryManagement'
               )
             }}
           </button>
@@ -249,12 +262,22 @@ onBeforeUnmount(() => {
           class="detail-summary"
           :active="panelVisible"
           :metric="metric"
-          :interactive="metric === 'cpu' || metric === 'memory'"
+          :interactive="metric === 'cpu' || metric === 'gpu' || metric === 'memory'"
           :reading="store.reading"
           @cleanup="navigate('cleanup')"
           @memory="selectTab('memory')"
           @cpu="selectTab('cpu')"
+          @gpu="selectTab('gpu')"
         />
+      </section>
+      <section
+        v-if="selectedTab === 'gpu'"
+        id="metric-details"
+        class="resource-details"
+        role="tabpanel"
+        aria-labelledby="metric-tab-gpu"
+      >
+        <MdGpuDetails :reading="store.reading" :active="panelVisible" />
       </section>
       <div v-if="store.error" class="monitor-notice" role="alert">
         {{ t('monitoring.unavailable') }} <button @click="refresh()">{{ t('monitoring.refresh') }}</button>
@@ -357,8 +380,9 @@ onBeforeUnmount(() => {
 <style scoped>
 @reference "@assets/main.css";
 .resource-cards {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: 104px 104px minmax(104px, 1fr) minmax(104px, 1fr);
   gap: 8px;
   min-height: 0;
   flex: 1;
@@ -463,7 +487,7 @@ button:disabled {
   flex: 1;
 }
 .monitor-panel .detail-summary {
-  /* Share the first card's geometry across overview, CPU, and memory tabs. */
+  /* Keep summary geometry consistent across overview and detail tabs. */
   height: 104px;
   box-sizing: border-box;
   display: flex;
@@ -471,11 +495,15 @@ button:disabled {
   justify-content: space-between;
   padding: 10px 12px;
 }
-.resource-cards > .detail-summary:is([data-metric='disk'], [data-metric='network']) {
-  /* Keep CPU and memory aligned with their detail cards; split the remaining space equally. */
+.resource-cards > .detail-summary:is([data-metric='memory'], [data-metric='disk'], [data-metric='network']) {
+  grid-column: 1 / -1;
+  /* CPU and GPU share a row; full-width capacity and activity cards retain their geometry. */
   height: auto;
   min-height: 104px;
   flex: 1;
+}
+.resource-cards:not(:has([data-metric='gpu'])) > [data-metric='cpu'] {
+  grid-column: 1 / -1;
 }
 .detail-summary :deep(.resource-trend) {
   height: 28px;

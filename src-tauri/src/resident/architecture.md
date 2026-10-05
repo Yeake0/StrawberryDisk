@@ -36,7 +36,10 @@ returns that reserved slot directly, so centered buttons do not send the monitor
 to an unrelated outer gap. Unknown environments prefer right,
 and collision checks still apply. These defaults do not replace saved choices.
 
-Resident preferences use schema version 8; resource snapshots use version 7.
+Resident preferences use schema version 10; resource snapshots use version 9.
+Versions 1–8 preferences preserve every saved selection and order, appending GPU
+display disabled. New installations also leave GPU display unselected. Resource
+version 9 adds the GPU catalogue. Version 9 preferences migrate GPU selection to automatic; version 10 persists fixed selection. Frontends reject mismatched envelopes.
 Version 1 preferences retain background and memory-display choices. Version 2
 preferences retain all selections and default to the original Windows tray mode.
 Version 3 retains that mode and defaults the new position preference to right.
@@ -52,16 +55,17 @@ versions are rejected for writes. Memory snapshots use version 3; release result
 
 CPU overview samples every 2 seconds on both platforms, whether visible or hidden. Memory samples every
 3 seconds, network every 1 and disk every 30.
-Their freshness limits are respectively 5, 10, 5 and 90 seconds. All base metrics
-remain active while resident display is enabled, regardless of the selected native
-entries or panel visibility. Disabling resident mode stops periodic collection;
+Their freshness limits are respectively 5, 10, 5 and 90 seconds. CPU, memory, network and disk remain active while resident display is enabled,
+regardless of native selections or panel visibility. GPU acquires its reader only
+while selected for native display or while the panel is open; unselected hidden
+GPU monitoring has no native sampling cost. Disabling resident mode stops periodic collection;
 explicit device-catalogue requests may still read network and disk metadata.
 Each overview worker creates its native reader only when demanded and drops it on
 the same worker after demand stops and any in-flight query finishes. This releases
 memory-process metadata, Windows network-change subscriptions, and CPU counters.
-Re-enabling reacquires readers; hiding the panel preserves active readers and cached
-rankings. Resource acquisition/release logs record transitions rather than samples.
-The panel has an overview of all four base readings and separate CPU and memory pages.
+Re-enabling reacquires readers; hiding the panel preserves demanded readers and cached
+rankings, releasing GPU resources when its native display is unselected. Resource acquisition/release logs record transitions rather than samples.
+The panel has an overview of all five base readings on macOS/Windows (four on Linux) and separate CPU and memory pages.
 Memory process details are requested only by its selected page or startup icon
 warming. CPU application counters stay warm while resident mode is enabled, every 4 seconds in the background and every 2 seconds on the CPU page. Opening or explicitly refreshing that page requests a sample immediately while reusing any in-flight query and displaying cached rows. Baseline-only results receive at most two 250 ms retries. Reopening preserves the last
 selected tab within the application session; a new process defaults to CPU.
@@ -98,7 +102,7 @@ Each native trend retains at most 96 points over 80 seconds for the 60-second vi
 axis even when the latest valid sample is older than the current snapshot.
 
 Application rankings are immutable shared snapshots in Rust. Cloning a reading
-shares their allocations without changing the version 7 JSON contract. Unchanged
+shares their allocations without changing the version 10 JSON contract. Unchanged
 coordinator ticks only check freshness; they do not rebuild histories or lists.
 Query logs separate each sensor's bounded timing samples and discarded generations.
 
@@ -380,7 +384,7 @@ shared tray text and tooltips keep their existing precision.
 
 ### Overview history and disk activity
 
-Resource readings use schema version 7; frontend adapters reject mismatched versions. Memory history records occupancy from the existing three-second sampler. CPU and memory use a fixed 0–100% scale. Network and disk activity share a symmetric scale: upload/write above zero, download/read below it. Gaps remain blank. The frontend buffers one sampling interval plus 250 ms before revealing each completed segment from the right; numeric readings remain live. Core retains up to 80 seconds / 96 samples so a reopened chart can reconstruct the buffered minute and offscreen endpoints. The frontend retains two additional intervals at the left edge. During a brief delivery delay, the playhead waits for completed data and catches up at no more than 1.1× speed; genuinely expired data still scrolls out. Pausing demand preserves existing readings and history with their original timestamps, while source changes clear the corresponding history. Rate scales hold their range for 30 seconds before a substantial reduction, and range changes ease over 600 ms using a shared SVG group. Continuous SVG updates are capped at 30 frames per second regardless of display refresh rate, without changing sample cadence or live numeric updates. Horizontal scrolling uses that group’s native transform instead of a composited CSS bitmap, preserving vector strokes at fractional positions. Reduced-motion mode applies scale changes immediately and disables continuous scrolling; hidden or fully expired charts stop their frame loop.
+Resource readings use schema version 11; frontend adapters reject mismatched versions. Memory history records occupancy from the existing three-second sampler. CPU, GPU and memory use a fixed 0–100% scale. Network and disk activity share a symmetric scale: upload/write above zero, download/read below it. Gaps remain blank. The frontend buffers one sampling interval plus 250 ms before revealing each completed segment from the right; numeric readings remain live. Core retains up to 80 seconds / 96 samples so a reopened chart can reconstruct the buffered minute and offscreen endpoints. The frontend retains two additional intervals at the left edge. During a brief delivery delay, the playhead waits for completed data and catches up at no more than 1.1× speed; genuinely expired data still scrolls out. Pausing demand preserves existing readings and history with their original timestamps, while source changes clear the corresponding history. Rate scales hold their range for 30 seconds before a substantial reduction, and range changes ease over 600 ms using a shared SVG group. Continuous SVG updates are capped at 30 frames per second regardless of display refresh rate, without changing sample cadence or live numeric updates. Horizontal scrolling uses that group’s native transform instead of a composited CSS bitmap, preserving vector strokes at fractional positions. Reduced-motion mode applies scale changes immediately and disables continuous scrolling; hidden or fully expired charts stop their frame loop.
 
 Disk capacity belongs to the selected volume. Disk activity is explicitly system-wide block-device I/O, sampled independently every two seconds while resident mode is enabled. macOS reads IOKit block-storage driver counters once per driver; Windows reads localized-independent PDH PhysicalDisk counters once per instance, excluding `_Total`. These counters describe block storage, not per-volume or application file traffic. Missing counters show unavailable rather than zero. Device-set changes, counter rollback, and sleep invalidate the monotonic rate baseline.
 
@@ -468,20 +472,45 @@ is distinct from network discovery. Polls and unchanged notice reads do not log.
 State remains process-local and is rediscovered after restart, without a new
 persisted settings schema or forced WebView creation.
 
-### Process CPU ranking
+### GPU activity
 
-Resident monitoring samples cumulative process CPU time every four seconds in the
-background and every two seconds while the CPU tab is visible on both platforms.
-Reopening the CPU tab requests a sample immediately and reads the cached ranking without resetting
-its baseline. Baseline-only samples and transient failures retain the last successful
-rows and their original timestamp. Expired/failed rows remain visible with a history
-notice; only a new valid sample refreshes their timestamp. Disabling monitoring
-explicitly clears both sampled and published caches, discards in-flight generations,
-and drops process maps. Hidden panels receive only the initial history seed and do not request icons.
-CPU and memory detail cards share fixed summary geometry.
+GPU activity samples every two seconds with a five-second freshness limit. Its
+independent worker acquires native resources lazily and releases them after
+GPU demand stops and in-flight work completes. Windows baseline recovery uses
+at most two 250 ms retries for a quick first value. Hidden panels stop chart animation;
+GPU history is retained with the same bounded window as CPU. The overview places
+CPU and GPU side by side; GPU entries share the existing panel navigation. Native GPU percentages
+reuse the existing compact layout, rounded usage colors and unavailable dash.
 
-`platform::system_resources::process_cpu` reads native counters with minimal query
-access. On macOS, CPU and memory enumerate `proc_listallpids` and read fresh
+Core selects the busiest readable GPU by default, with stable identity-based ties.
+A fixed selection never falls back to another adapter; a missing selection is
+reported as disconnected. Selection changes clear history and re-prime native
+intervals. Automatic history represents the system-wide maximum even when the
+leading GPU changes. Settings list hardware adapters even when their counters
+are unavailable. Catalogue-only demand refreshes metadata without acquiring the
+PDH query; opening configuration with GPU display disabled does not start
+utilization sampling. Windows identities use PCI vendor/device and bus/device/function
+plus physical-adapter index; macOS uses the IOService registry path. Neither
+persists an ephemeral LUID or registry entry ID. Session adapters with invalid
+PCI addresses are excluded instead of sharing a persisted identity. The card and native tooltip
+identify the sampled device. Invalid observations never become idle zeros.
+
+Windows keeps one language-neutral `\\GPU Engine(*)\\Utilization Percentage` PDH
+query and reuses a bounded, aligned native buffer. Instances are grouped by
+adapter LUID, physical GPU and engine; process activity is summed per engine.
+DXGI and public D3DKMT adapter queries cache hardware identities and standard
+WDDM engine types for 30 seconds. The aggregate takes the busiest standard
+engine, excluding driver-defined `DXGK_ENGINE_TYPE_OTHER` nodes. This matches
+the tested Windows 10 summary where a driver-defined Graphics_1 curve can be
+much higher than the overall percentage. It is a summary compatibility policy,
+not an assertion that OTHER engines are idle: compute workloads exposed only
+through custom engines are outside this reading. Do not infer engine roles from
+names or use the current four visible charts to classify engines. Software
+adapters are excluded. Missing metadata fails closed instead of reverting to an
+incomparable all-engine maximum. Driver/build differences require hardware
+validation; exact instantaneous equality is not guaranteed across sample windows.
+
+On macOS, CPU and memory enumerate `proc_listallpids` and read fresh
 `proc_pid_rusage(RUSAGE_INFO_V2)` counters through one minimal native reader. They
 share executable metadata keyed by PID, creation time, and executable-image UUID.
 Exited identities are evicted; failed identity queries are not cached by PID alone.
@@ -534,8 +563,8 @@ instantaneous values.
 
 CPU and memory share icon identity, disclosure, and file-manager navigation. CPU is
 view-only: normal app-wide quit and memory exclusions remain in the memory list.
-Version 7 replaces the ephemeral IPC protocol; readers reject other versions and
-no persisted preferences are migrated.
+Resource version 9 replaces the ephemeral IPC protocol; readers reject other
+versions. Resident preferences migrate independently to version 10.
 
 Linux process rows request path-specific icons rather than sharing an extensionless
 file-type icon. The GUI enables the platform's `linux-desktop-icons` feature;
@@ -562,6 +591,11 @@ the ignored `.local/` directory.
 For repeatable sensor-cost measurements, build `resource_sampling_probe` in
 `mangodisk-platform` with `--release`, then run `overview`, `memory`, `cpu`,
 `cpu-background`, or `cpu-memory` with a duration in seconds (60 by default).
+`gpu` isolates two-second GPU sampling, and `overview-gpu` adds it to the
+CPU/memory baseline. `gpu_usage_probe <seconds> --lifecycle` prints native
+GPU observations and exercises baseline reset and reader reacquisition.
+`gpu_usage_probe <seconds> --catalogue` measures metadata-only discovery without
+acquiring utilization counters.
 `cpu-memory` measures both detail sources in one process with shared metadata.
 The optional third argument selects a two- or four-second process CPU interval.
 Each run warms up for eight seconds and emits
@@ -573,7 +607,7 @@ own observation overhead and excludes UI, icon I/O, and application aggregation.
 Keep raw machine output in the ignored `.local/` directory. Measure the packaged
 application separately with its windows hidden and each detail panel open.
 
-Memory process rankings have a separate `memoryProcesses` reading and timestamp in resource protocol version 7. Overview-only samples preserve these rows without extending their freshness. Real empty detail samples clear the list; failed/stale detail results retain previous rows with a notice. The source memory snapshot is version 3; resident publication moves its optional detail payload into the dedicated cache to avoid duplicate IPC data. Frontends reject earlier resource versions.
+Memory process rankings have a separate `memoryProcesses` reading and timestamp in resource protocol version 8. Overview-only samples preserve these rows without extending their freshness. Real empty detail samples clear the list; failed/stale detail results retain previous rows with a notice. The source memory snapshot is version 3; resident publication moves its optional detail payload into the dedicated cache to avoid duplicate IPC data. Frontends reject earlier resource versions.
 
 Windows image lookups retain typed available/denied/exited/unavailable outcomes. Only transient unavailable results retry, at 30-second intervals and at most three total attempts per PID/creation identity. Successful paths and denials do not poll again; exited identities are evicted. Path failures never remove readable CPU counters. The UI explains access restrictions without requesting elevation.
 
@@ -623,7 +657,91 @@ private-working-set label. macOS system/root processes can remain unreadable at 
 privilege: Activity Monitor has system access which this app does not request. High-cost
 `top`/memory-map traversal and privilege elevation are not part of periodic monitoring.
 
-Source snapshot schema 3 and resident schema 7 replace the former resident-byte field;
+Source snapshot schema 3 and resident schema 8 replace the former resident-byte field;
 frontends reject earlier envelopes. `application_memory_probe` captures native PID
 measurements and grouped Core publication from the same sample for reproducible
 system-tool comparisons without collecting command lines or environments.
+
+## GPU detail observations
+
+The version 11 reading contract adds device-bound GPU histories and optional
+telemetry to `gpuDetails`. `gpuDetailAdapterId` identifies the source of
+`gpuDetailHistory`, `gpuRendererHistory` and `gpuTilerHistory`.
+`gpu` retains a summary with no embedded details. An incompatible frontend
+rejects the snapshot rather than presenting partial measurements. Preferences
+remain version 10; the existing stable device selection is shared by both views.
+
+Only a visible GPU tab requests detail observations. Windows temporarily adds
+adapter-wide Dedicated Usage and Shared Usage counters to its persistent PDH
+query, removes them when detail demand ends, and maps them by LUID and physical
+adapter index. DXGI reports dedicated capacity for a single physical adapter;
+linked-adapter capacity and shared capacity remain unavailable. Driver-defined
+engines are visible separately and do not change the standard-engine summary.
+Memory failures have independent backoff and cannot disable activity readings.
+Windows probes temperature through public WDDM `KMTQAITYPE_ADAPTERPERFDATA`
+queries during detail demand only. The metadata cache retains its adapter handle;
+physical adapter indices keep linked GPUs separate. Temperature is converted from
+deci-Celsius, and unsupported or invalid readings are omitted with 30-second backoff.
+The panel displays dedicated usage only; shared usage is withheld because its
+equivalence to Task Manager has not been validated across drivers.
+macOS probes Renderer and Tiler percentages and optional temperature, clocks and
+fan percentage from the same IOAccelerator snapshot, including background samples.
+This requires no additional native property queries. Core count is discovered
+from `gpu-core-count` with the adapter, outside the sampling hot path.
+Apple AGX adapters report unified memory architecture; driver allocation fields
+are not treated as physical VRAM capacity. Unsupported optional facts are omitted.
+
+Core records every real summary sample in the selected-device trend, including
+background samples when details pause. This prevents artificial holes caused by
+tab changes without bridging real outages or mixing devices. Renderer and Tiler
+histories include every actual engine observation, so macOS tab changes preserve
+their continuity. Actual sampling outages remain blank. All three selected-device
+histories clear when the adapter changes. The overview retains its history of the
+automatic maximum. Both views
+use bounded histories and original sample timestamps; failures and expiration do
+not become idle values. Native GPU entries and the GPU overview card navigate to
+the GPU tab. The detail selector persists through the same optimistic settings
+store, including rollback and retained disconnected selections.
+
+Reopening the panel displays the retained sample while native detail collection
+resumes. Stale or failed samples keep their original status and are marked as
+cached. A warm summary can fill the card before the first detail sample arrives.
+Details and histories are displayed only for their matching summary adapter; preference
+refreshes run in the background, and a changed fixed selection hides mismatched
+measurements immediately. Disconnected or unsupported GPUs do not reuse values.
+
+The panel omits unified-memory placeholder sections and explanatory memory text.
+Optional driver telemetry is shown only when supported; absent fields never
+become plausible zero measurements. Minute average and peak use valid actual
+selected-device observations within the last 60 seconds, excluding missing or
+future samples. Neither ANE percentages estimated from nominal power nor display
+swap rates are presented as GPU compute utilization or application FPS.
+
+GPU engine presentation uses a stable functional order: 3D, Copy, Video Decode,
+Video Encode, Video Processing, then other standard nodes. Only observed types
+are shown; zero utilization does not hide an observed engine. Custom engines
+use natural native-name order with numeric chunks and stable identity tie-breaks,
+independent of locale and live utilization. macOS retains Renderer before Tiler.
+
+GPU discovery logs hardware identities, names and available metadata, plus Windows
+node ordinals, native engine types and inclusion in the peak-standard-engine summary.
+Topology is logged on discovery/change only, with at most 64 node records per
+adapter and an explicit omitted count. Native names are escaped and bounded.
+Observation diagnostics record the actual utilization source, optional capabilities,
+memory availability and missing/invalid data stages, without per-sample values.
+Capability records have a 30-second minimum interval per device; transient changes
+retain a count and their latest unavailable stage until the next summary. Device
+removal and reader release flush pending transitions before discarding their state;
+these lifecycle summaries can precede the periodic deadline. Already emitted changes
+are never repeated on release. macOS instantaneous readings need no interval reset:
+tab/demand changes preserve the 30-second native catalogue cache until discovery
+refreshes it or the owning worker releases the reader. A missing
+capability snapshot means details were not collected, not that the hardware lacks
+them. The engine mask uses Graphics=1, Copy=2, Decode=4, Encode=8, Processing=16,
+Other=32, Renderer=64 and Tiler=128. Diagnostic entries are pruned as devices leave.
+Windows temperature query failures retain their native stage/code at Info level,
+with unsupported retries and diagnostic state preserved across metadata refreshes.
+`gpu_usage_probe <seconds> --details --diagnostics` enables the same diagnostics
+on stderr without mixing them into its JSON observation protocol. Combining
+`--lifecycle --details --diagnostics` also exercises detail demand transitions
+before a reader release, without injecting hardware failures.

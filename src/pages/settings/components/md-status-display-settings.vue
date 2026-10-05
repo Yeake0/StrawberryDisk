@@ -44,6 +44,7 @@ async function openPanel() {
 }
 const interfaces = ref<NetworkInterface[]>([]);
 const volumes = ref<ResourceVolume[]>([]);
+const gpuAdapters = ref<{ id: string; name: string }[]>([]);
 const catalogueError = ref(false);
 const dragging = ref<MetricId | null>(null);
 const pointerDragging = ref(false);
@@ -64,7 +65,7 @@ function enableIcon(enabled: boolean) {
   void settings.change({ showIcon: enabled });
 }
 const settingsOpen = ref(false);
-const expandedSelection = ref<'network' | 'disk' | null>(null);
+const expandedSelection = ref<'network' | 'disk' | 'gpu' | null>(null);
 // Keep the native switch and collapsed content on the committed state. Failed
 // writes must not hide the user's controls or leave a misleading enabled state.
 const displayEnabled = computed(() => settings.preferences?.enabled ?? false);
@@ -101,7 +102,7 @@ function restoreConfigurationFocus(event: Event) {
   document.getElementById(displayEnabled.value ? 'resident-configure' : 'resident-enabled')?.focus();
 }
 function setSelectionOpen(id: MetricId, open: boolean) {
-  if (id !== 'network' && id !== 'disk') return;
+  if (id !== 'network' && id !== 'disk' && id !== 'gpu') return;
   if (open) expandedSelection.value = id;
   else if (expandedSelection.value === id) expandedSelection.value = null;
 }
@@ -116,6 +117,14 @@ const missingInterface = computed(
 const missingVolume = computed(
   () => settings.draft?.diskVolume && !volumes.value.some(item => item.id === settings.draft?.diskVolume)
 );
+const missingGpu = computed(
+  () => settings.draft?.gpuAdapter && !gpuAdapters.value.some(item => item.id === settings.draft?.gpuAdapter)
+);
+const selectedGpuLabel = computed(() => {
+  const id = settings.draft?.gpuAdapter;
+  if (!id) return t('systemStatus.automatic');
+  return gpuAdapters.value.find(item => item.id === id)?.name ?? t('systemStatus.savedDisconnected');
+});
 // Select's inferred item text can outlive a locale or catalogue update while
 // its popup is closed. Keep the displayed selection reactive without reopening it.
 const selectedInterfaceLabel = computed(() => {
@@ -134,10 +143,11 @@ let disposed = false;
 let unlisten: (() => void) | null = null;
 let revision = -1;
 function accept(value: ResidentReading) {
-  if (disposed || value.schemaVersion !== 7 || value.revision < revision) return;
+  if (disposed || value.schemaVersion !== 11 || value.revision < revision) return;
   revision = value.revision;
   interfaces.value = value.interfaces;
   volumes.value = value.volumes;
+  gpuAdapters.value = value.gpuAdapters;
 }
 function enable(id: MetricId, enabled: boolean) {
   if (!enabled && selectionLocked(rows.value.some(row => row.id === id && row.enabled))) return;
@@ -487,34 +497,51 @@ onBeforeUnmount(() => {
                         }}
                       </label>
                       <Select
-                        v-if="row.id === 'network' || row.id === 'disk'"
+                        v-if="row.id === 'network' || row.id === 'disk' || row.id === 'gpu'"
                         :disabled="!row.enabled"
                         :open="expandedSelection === row.id"
                         :model-value="
                           row.id === 'network'
                             ? (settings.draft?.networkInterface ?? 'automatic')
-                            : (settings.draft?.diskVolume ?? 'system')
+                            : row.id === 'gpu'
+                              ? (settings.draft?.gpuAdapter ?? 'automatic')
+                              : (settings.draft?.diskVolume ?? 'system')
                         "
                         @update:open="setSelectionOpen(row.id, $event)"
                         @update:model-value="
                           row.id === 'network'
                             ? settings.change({ networkInterface: $event === 'automatic' ? null : String($event) })
-                            : settings.change({ diskVolume: $event === 'system' ? null : String($event) })
+                            : row.id === 'gpu'
+                              ? settings.change({ gpuAdapter: $event === 'automatic' ? null : String($event) })
+                              : settings.change({ diskVolume: $event === 'system' ? null : String($event) })
                         "
                       >
                         <SelectTrigger as-child>
-                          <MdTooltip :text="row.id === 'network' ? selectedInterfaceLabel : selectedVolumeLabel"
+                          <MdTooltip
+                            :text="
+                              row.id === 'network'
+                                ? selectedInterfaceLabel
+                                : row.id === 'gpu'
+                                  ? selectedGpuLabel
+                                  : selectedVolumeLabel
+                            "
                             ><button
                               type="button"
                               class="selection-toggle"
                               :aria-label="
                                 row.id === 'network'
                                   ? `${t('systemStatus.interface')}: ${selectedInterfaceLabel}`
-                                  : `${t('systemStatus.volume')}: ${selectedVolumeLabel}`
+                                  : row.id === 'gpu'
+                                    ? `${t('systemStatus.gpu')}: ${selectedGpuLabel}`
+                                    : `${t('systemStatus.volume')}: ${selectedVolumeLabel}`
                               "
                             >
                               <span class="truncate">{{
-                                row.id === 'network' ? selectedInterfaceLabel : selectedVolumeLabel
+                                row.id === 'network'
+                                  ? selectedInterfaceLabel
+                                  : row.id === 'gpu'
+                                    ? selectedGpuLabel
+                                    : selectedVolumeLabel
                               }}</span>
                               <MdIcon
                                 :name="expandedSelection === row.id ? ICON_NAMES.chevronUp : ICON_NAMES.chevronDown"
@@ -523,13 +550,22 @@ onBeforeUnmount(() => {
                               /></button
                           ></MdTooltip>
                         </SelectTrigger>
-                        <SelectContent align="end" class="max-w-[min(20rem,calc(100vw-2rem))]">
+                        <SelectContent align="end" class="z-60 max-w-[min(20rem,calc(100vw-2rem))]">
                           <template v-if="row.id === 'network'">
                             <SelectItem value="automatic">{{ t('systemStatus.automatic') }}</SelectItem>
                             <SelectItem v-for="item in interfaces" :key="item.id" :value="item.id" class="break-all">
                               {{ item.name }}{{ item.connected ? '' : ` · ${t('systemStatus.disconnected')}` }}
                             </SelectItem>
                             <SelectItem v-if="missingInterface" :value="settings.draft!.networkInterface!">{{
+                              t('systemStatus.savedDisconnected')
+                            }}</SelectItem>
+                          </template>
+                          <template v-else-if="row.id === 'gpu'">
+                            <SelectItem value="automatic">{{ t('systemStatus.automatic') }}</SelectItem>
+                            <SelectItem v-for="item in gpuAdapters" :key="item.id" :value="item.id" class="break-all">{{
+                              item.name
+                            }}</SelectItem>
+                            <SelectItem v-if="missingGpu" :value="settings.draft!.gpuAdapter!">{{
                               t('systemStatus.savedDisconnected')
                             }}</SelectItem>
                           </template>

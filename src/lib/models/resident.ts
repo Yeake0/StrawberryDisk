@@ -4,7 +4,7 @@ export interface ResidentReading extends ResourceReadings {
   revision: number;
 }
 export interface ResidentPreferences {
-  schemaVersion: 8;
+  schemaVersion: 10;
   revision: number;
   enabled: boolean;
   showIcon: boolean;
@@ -19,6 +19,7 @@ export interface ResidentPreferences {
   metrics: { id: MetricId; enabled: boolean }[];
   networkInterface: string | null;
   diskVolume: string | null;
+  gpuAdapter: string | null;
 }
 
 export type ResidentDestination = 'main' | 'cleanup' | 'applications' | 'settings' | 'about';

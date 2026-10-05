@@ -31,6 +31,7 @@ impl Labels {
     pub fn metric(&self, metric: MetricId) -> &str {
         self.text(match metric {
             MetricId::Cpu => "cpu",
+            MetricId::Gpu => "gpu",
             MetricId::Memory => "memory",
             MetricId::Network => "network",
             MetricId::Disk => "disk",

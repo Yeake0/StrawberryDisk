@@ -28,7 +28,7 @@ pub fn load(app: &tauri::AppHandle) -> ResidentPreferences {
 }
 
 fn save(app: &tauri::AppHandle, preferences: &ResidentPreferences) -> Result<(), Failure> {
-    if preferences.schema_version != 8 {
+    if preferences.schema_version != 10 {
         return Err(Failure::state("preferences_version"));
     }
     let store = app

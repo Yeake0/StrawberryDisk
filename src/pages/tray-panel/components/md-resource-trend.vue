@@ -7,7 +7,7 @@ import { ResourceTrendScale } from './resource-trend-scale';
 
 const props = withDefaults(
   defineProps<{
-    metric: 'cpu' | 'memory' | 'network' | 'disk';
+    metric: 'cpu' | 'gpu' | 'memory' | 'network' | 'disk';
     history: TrendPoint[];
     observedAtMs: number;
     label: string;

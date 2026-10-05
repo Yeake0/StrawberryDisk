@@ -12,6 +12,7 @@ use crate::resident::preferences::ResidentPreferences;
 pub enum DisplayId {
     App,
     Cpu,
+    Gpu,
     Memory,
     Upload,
     Download,
@@ -19,9 +20,10 @@ pub enum DisplayId {
 }
 
 impl DisplayId {
-    pub const ALL: [Self; 6] = [
+    pub const ALL: [Self; 7] = [
         Self::App,
         Self::Cpu,
+        Self::Gpu,
         Self::Memory,
         Self::Upload,
         Self::Download,
@@ -31,6 +33,7 @@ impl DisplayId {
         match self {
             Self::App => "resident",
             Self::Cpu => "resident-cpu",
+            Self::Gpu => "resident-gpu",
             Self::Memory => "resident-memory",
             Self::Upload => "resident-upload",
             Self::Download => "resident-download",
@@ -41,6 +44,7 @@ impl DisplayId {
         match self {
             Self::App => None,
             Self::Cpu => Some(MetricId::Cpu),
+            Self::Gpu => Some(MetricId::Gpu),
             Self::Memory => Some(MetricId::Memory),
             Self::Upload | Self::Download => Some(MetricId::Network),
             Self::Disk => Some(MetricId::Disk),
@@ -69,7 +73,7 @@ pub fn indicator_title(entries: &[DisplayEntry], compact: bool) -> Option<String
         .filter_map(|entry| {
             let text = if compact {
                 match entry.id {
-                    DisplayId::Cpu | DisplayId::Memory | DisplayId::Disk => {
+                    DisplayId::Cpu | DisplayId::Gpu | DisplayId::Memory | DisplayId::Disk => {
                         format!("{}{}%", entry.marker, entry.digits)
                     }
                     DisplayId::Upload | DisplayId::Download => {
@@ -174,6 +178,7 @@ pub fn entries(
         }
         let (ids, status) = match metric.id {
             MetricId::Cpu => (vec![DisplayId::Cpu], values.cpu.status),
+            MetricId::Gpu => (vec![DisplayId::Gpu], values.gpu.status),
             MetricId::Memory => (vec![DisplayId::Memory], values.memory.status),
             MetricId::Network => (
                 vec![DisplayId::Upload, DisplayId::Download],
@@ -186,6 +191,10 @@ pub fn entries(
                 DisplayId::Cpu => (
                     "C",
                     values.cpu.value.as_ref().map(|value| value.used_percent),
+                ),
+                DisplayId::Gpu => (
+                    "G",
+                    values.gpu.value.as_ref().map(|value| value.used_percent),
                 ),
                 DisplayId::Memory => (
                     "M",
@@ -239,6 +248,7 @@ pub fn entries(
                         "{} —",
                         match id {
                             DisplayId::Cpu => "CPU",
+                            DisplayId::Gpu => "GPU",
                             DisplayId::Memory => "MEM",
                             DisplayId::Disk => "DISK",
                             _ => marker,
@@ -272,6 +282,17 @@ pub fn entries(
                 let percent = value.clamp(0.0, 100.0).round() as u8;
                 let digits = percent.to_string();
                 let details = match metric.id {
+                    MetricId::Gpu => values
+                        .gpu
+                        .value
+                        .as_ref()
+                        .map(|value| {
+                            format!(
+                                " · {}",
+                                mangodisk_platform::diagnostics::text(&value.adapter_name)
+                            )
+                        })
+                        .unwrap_or_default(),
                     MetricId::Memory => values
                         .memory
                         .value
@@ -310,6 +331,7 @@ pub fn entries(
                 };
                 let short = match metric.id {
                     MetricId::Cpu => "CPU",
+                    MetricId::Gpu => "GPU",
                     MetricId::Memory => "MEM",
                     _ => "DISK",
                 };
@@ -385,8 +407,8 @@ mod tests {
     }
 
     #[test]
-    fn all_thirty_two_combinations_have_unique_entries_and_paired_network_directions() {
-        for bits in 0..16 {
+    fn all_sixty_four_combinations_have_unique_entries_and_paired_network_directions() {
+        for bits in 0..(1 << MetricId::ALL.len()) {
             for show_icon in [false, true] {
                 let mut prefs = ResidentPreferences {
                     show_icon,
@@ -401,7 +423,7 @@ mod tests {
                     ids.len()
                 );
                 assert!(!ids.is_empty());
-                assert!(ids.len() <= 6);
+                assert!(ids.len() <= 7);
                 assert_eq!(
                     ids.contains(&DisplayId::Upload),
                     prefs.shows(MetricId::Network)
@@ -463,7 +485,7 @@ mod tests {
 
     #[test]
     fn taskbar_fallback_restores_all_metrics_and_never_loses_the_last_entry() {
-        for bits in 0..16 {
+        for bits in 0..(1 << MetricId::ALL.len()) {
             for show_icon in [false, true] {
                 let mut prefs = ResidentPreferences {
                     show_icon,

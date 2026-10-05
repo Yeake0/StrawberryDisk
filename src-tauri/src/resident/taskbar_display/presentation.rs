@@ -67,6 +67,7 @@ pub fn columns(
                 } else {
                     match entry.id {
                         DisplayId::Cpu => "CPU",
+                        DisplayId::Gpu => "GPU",
                         DisplayId::Memory => "MEM",
                         _ => "DISK",
                     }

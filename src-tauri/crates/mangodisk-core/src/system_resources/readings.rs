@@ -11,6 +11,7 @@ use super::{
     cpu::{CpuBaselineReason, CpuDelta},
     disk::{self, DiskUsage},
     disk_io::{DiskIoDelta, DiskIoRate},
+    gpu::{self, GpuUsage},
     metrics::{CpuUsage, MetricId, MetricReading, MetricStatus, Trend, TrendPoint},
     models::{ProcessCpuSummary, SystemResourceSnapshot},
     network::{self, NetworkDelta, NetworkRate, NetworkSelectionReason},
@@ -22,6 +23,12 @@ pub struct ResourceReadings {
     pub schema_version: u32,
     pub observed_at_ms: u64,
     pub cpu: MetricReading<CpuUsage>,
+    pub gpu: MetricReading<GpuUsage>,
+    pub gpu_details: MetricReading<GpuUsage>,
+    pub gpu_detail_history: Vec<TrendPoint>,
+    pub gpu_detail_adapter_id: Option<String>,
+    pub gpu_renderer_history: Vec<TrendPoint>,
+    pub gpu_tiler_history: Vec<TrendPoint>,
     pub cpu_processes: MetricReading<Arc<ProcessCpuSummary>>,
     pub memory_processes: MetricReading<Arc<super::models::ProcessMemorySummary>>,
     pub memory: MetricReading<SystemResourceSnapshot>,
@@ -30,7 +37,9 @@ pub struct ResourceReadings {
     pub disk_io: MetricReading<DiskIoRate>,
     pub interfaces: Vec<NetworkInterface>,
     pub volumes: Vec<ResourceVolume>,
+    pub gpu_adapters: Vec<mangodisk_platform::system_resources::gpu::GpuAdapter>,
     pub cpu_history: Vec<TrendPoint>,
+    pub gpu_history: Vec<TrendPoint>,
     pub network_history: Vec<TrendPoint>,
     pub memory_history: Vec<TrendPoint>,
     pub disk_io_history: Vec<TrendPoint>,
@@ -39,9 +48,15 @@ pub struct ResourceReadings {
 impl Default for ResourceReadings {
     fn default() -> Self {
         Self {
-            schema_version: 7,
+            schema_version: 11,
             observed_at_ms: 0,
             cpu: MetricReading::default(),
+            gpu: MetricReading::default(),
+            gpu_details: MetricReading::default(),
+            gpu_detail_history: Vec::new(),
+            gpu_detail_adapter_id: None,
+            gpu_renderer_history: Vec::new(),
+            gpu_tiler_history: Vec::new(),
             cpu_processes: MetricReading::default(),
             memory_processes: MetricReading::default(),
             memory: MetricReading::default(),
@@ -50,7 +65,9 @@ impl Default for ResourceReadings {
             disk_io: MetricReading::default(),
             interfaces: Vec::new(),
             volumes: Vec::new(),
+            gpu_adapters: Vec::new(),
             cpu_history: Vec::new(),
+            gpu_history: Vec::new(),
             network_history: Vec::new(),
             memory_history: Vec::new(),
             disk_io_history: Vec::new(),
@@ -65,6 +82,11 @@ pub struct ResourceCache {
     network_delta: NetworkDelta,
     disk_io_delta: DiskIoDelta,
     cpu_history: Trend,
+    gpu_history: Trend,
+    gpu_detail_history: Trend,
+    gpu_detail_device: Option<String>,
+    gpu_renderer_history: Trend,
+    gpu_tiler_history: Trend,
     network_history: Trend,
     memory_history: Trend,
     disk_io_history: Trend,
@@ -98,6 +120,93 @@ impl ResourceCache {
                 Some(reason)
             }
         }
+    }
+
+    pub fn gpu(
+        &mut self,
+        sample: mangodisk_platform::system_resources::gpu::GpuSample,
+        selected: Option<&str>,
+        timestamp_ms: u64,
+    ) {
+        match sample {
+            mangodisk_platform::system_resources::gpu::GpuSample::Baseline => {
+                self.readings
+                    .gpu
+                    .expire(timestamp_ms, MetricId::Gpu.freshness_ms());
+            }
+            mangodisk_platform::system_resources::gpu::GpuSample::Usage(adapters) => {
+                if let Some(mut value) = gpu::select(adapters, selected) {
+                    if self.gpu_detail_device.as_deref() != Some(&value.adapter_id) {
+                        self.gpu_detail_history.clear();
+                        self.gpu_renderer_history.clear();
+                        self.gpu_tiler_history.clear();
+                        self.readings.gpu_details = MetricReading::default();
+                        self.gpu_detail_device = Some(value.adapter_id.clone());
+                    }
+                    // The panel summary uses every real sample for this device,
+                    // including lightweight background observations while details pause.
+                    self.gpu_detail_history.push(TrendPoint {
+                        sampled_at_ms: timestamp_ms,
+                        primary: value.used_percent,
+                        secondary: None,
+                    });
+                    if let Some(details) = &value.details {
+                        use mangodisk_platform::system_resources::gpu::details::GpuActivityKind;
+                        for (kind, history) in [
+                            (GpuActivityKind::Renderer, &mut self.gpu_renderer_history),
+                            (GpuActivityKind::Tiler, &mut self.gpu_tiler_history),
+                        ] {
+                            let maximum = details
+                                .activities
+                                .iter()
+                                .filter(|activity| activity.kind == kind)
+                                .map(|activity| activity.used_percent)
+                                .filter(|value| value.is_finite() && (0.0..=100.0).contains(value))
+                                .max_by(f64::total_cmp);
+                            if let Some(primary) = maximum {
+                                history.push(TrendPoint {
+                                    sampled_at_ms: timestamp_ms,
+                                    primary,
+                                    secondary: None,
+                                });
+                            }
+                        }
+                        self.readings.gpu_details =
+                            MetricReading::ready(value.clone(), timestamp_ms);
+                    }
+                    // Details belong to a selected device, not to the system maximum's history.
+                    value.details = None;
+                    self.gpu_history.push(TrendPoint {
+                        sampled_at_ms: timestamp_ms,
+                        primary: value.used_percent,
+                        secondary: None,
+                    });
+                    self.readings.gpu = MetricReading::ready(value, timestamp_ms);
+                } else {
+                    self.fail(
+                        MetricId::Gpu,
+                        if selected.is_some_and(|id| {
+                            !self
+                                .readings
+                                .gpu_adapters
+                                .iter()
+                                .any(|adapter| adapter.id == id)
+                        }) {
+                            MetricStatus::Disconnected
+                        } else {
+                            MetricStatus::Failed
+                        },
+                    );
+                }
+            }
+        }
+    }
+
+    pub fn gpu_adapters(
+        &mut self,
+        adapters: Vec<mangodisk_platform::system_resources::gpu::GpuAdapter>,
+    ) {
+        self.readings.gpu_adapters = adapters;
     }
 
     pub fn memory(&mut self, mut snapshot: SystemResourceSnapshot) {
@@ -229,6 +338,10 @@ impl ResourceCache {
                 self.readings.network.status = status;
                 self.network_delta.reset();
             }
+            MetricId::Gpu => {
+                self.readings.gpu.status = status;
+                self.readings.gpu_details.status = status;
+            }
             MetricId::Disk => self.readings.disk.status = status,
         }
     }
@@ -240,7 +353,7 @@ impl ResourceCache {
             MetricId::Cpu => self.cpu_delta.reset(),
             MetricId::Network => self.network_delta.reset(),
             MetricId::Memory => self.readings.memory_processes = MetricReading::default(),
-            MetricId::Disk => {}
+            MetricId::Gpu | MetricId::Disk => {}
         }
     }
 
@@ -260,6 +373,15 @@ impl ResourceCache {
                 self.network_delta.reset();
                 self.network_history.clear();
                 self.readings.network = MetricReading::default();
+            }
+            MetricId::Gpu => {
+                self.gpu_history.clear();
+                self.gpu_detail_history.clear();
+                self.gpu_renderer_history.clear();
+                self.gpu_tiler_history.clear();
+                self.gpu_detail_device = None;
+                self.readings.gpu_details = MetricReading::default();
+                self.readings.gpu = MetricReading::default();
             }
             MetricId::Disk => self.readings.disk = MetricReading::default(),
         }
@@ -281,6 +403,9 @@ impl ResourceCache {
         self.readings
             .disk
             .expire(now_ms, MetricId::Disk.freshness_ms());
+        self.readings
+            .gpu
+            .expire(now_ms, MetricId::Gpu.freshness_ms());
         self.readings.disk_io.expire(now_ms, 5000);
         self.readings
             .memory_processes
@@ -288,12 +413,17 @@ impl ResourceCache {
         self.readings
             .cpu_processes
             .expire(now_ms, MetricId::Cpu.freshness_ms());
+        self.readings
+            .gpu_details
+            .expire(now_ms, MetricId::Gpu.freshness_ms());
         before != self.statuses()
     }
 
-    fn statuses(&self) -> [MetricStatus; 7] {
+    fn statuses(&self) -> [MetricStatus; 9] {
         [
             self.readings.cpu.status,
+            self.readings.gpu.status,
+            self.readings.gpu_details.status,
             self.readings.memory.status,
             self.readings.network.status,
             self.readings.disk.status,
@@ -308,6 +438,13 @@ impl ResourceCache {
         self.readings.memory_history = self.memory_history.snapshot(now_ms);
         self.readings.disk_io_history = self.disk_io_history.snapshot(now_ms);
         self.readings.cpu_history = self.cpu_history.snapshot(now_ms);
+        self.readings.gpu_history = self.gpu_history.snapshot(now_ms);
+        self.readings.gpu_detail_history = self.gpu_detail_history.snapshot(now_ms);
+        self.readings
+            .gpu_detail_adapter_id
+            .clone_from(&self.gpu_detail_device);
+        self.readings.gpu_renderer_history = self.gpu_renderer_history.snapshot(now_ms);
+        self.readings.gpu_tiler_history = self.gpu_tiler_history.snapshot(now_ms);
         self.readings.network_history = self.network_history.snapshot(now_ms);
         self.readings.clone()
     }
@@ -317,6 +454,162 @@ impl ResourceCache {
 mod tests {
     use super::*;
     use mangodisk_platform::system_resources::cpu::CpuCounters;
+
+    #[test]
+    fn disconnected_gpu_selection_preserves_catalogue_without_an_idle_sample() {
+        use mangodisk_platform::system_resources::gpu::{GpuAdapter, GpuAdapterUsage, GpuSample};
+        let mut cache = ResourceCache::default();
+        cache.gpu_adapters(vec![GpuAdapter {
+            id: "b".into(),
+            name: "GPU B".into(),
+        }]);
+        cache.gpu(
+            GpuSample::Usage(vec![GpuAdapterUsage {
+                id: "b".into(),
+                name: "GPU B".into(),
+                used_percent: 56.0,
+                details: None,
+            }]),
+            Some("a"),
+            1000,
+        );
+        let result = cache.snapshot(1000);
+        assert_eq!(result.gpu.status, MetricStatus::Disconnected);
+        assert!(result.gpu.value.is_none());
+        assert!(result.gpu_history.is_empty());
+        assert_eq!(result.gpu_adapters.len(), 1);
+    }
+    #[test]
+    fn gpu_baselines_and_failures_preserve_only_real_history_and_original_freshness() {
+        use mangodisk_platform::system_resources::gpu::{GpuAdapterUsage, GpuSample};
+        let mut cache = ResourceCache::default();
+        cache.gpu(GpuSample::Baseline, None, 1000);
+        assert!(cache.snapshot(1000).gpu.value.is_none());
+        cache.gpu(
+            GpuSample::Usage(vec![GpuAdapterUsage {
+                id: "gpu-1".into(),
+                name: "GPU 1".into(),
+                used_percent: 0.0,
+                details: None,
+            }]),
+            None,
+            2000,
+        );
+        cache.gpu(GpuSample::Baseline, None, 3000);
+        let valid = cache.snapshot(3000);
+        assert_eq!(valid.gpu.sampled_at_ms, Some(2000));
+        assert_eq!(valid.gpu_history.len(), 1);
+        assert_eq!(valid.gpu.status, MetricStatus::Ready);
+        assert_eq!(cache.snapshot(7001).gpu.status, MetricStatus::Stale);
+        cache.fail(MetricId::Gpu, MetricStatus::Unsupported);
+        assert_eq!(cache.snapshot(8000).gpu.status, MetricStatus::Unsupported);
+        assert_eq!(cache.snapshot(8000).gpu_history.len(), 1);
+        cache.reset(MetricId::Gpu);
+        assert!(cache.snapshot(8000).gpu.value.is_none());
+        assert!(cache.snapshot(8000).gpu_history.is_empty());
+    }
+
+    #[test]
+    fn detail_history_isolated_when_automatic_selection_changes_devices() {
+        use mangodisk_platform::system_resources::gpu::{details::*, GpuAdapterUsage, GpuSample};
+        let sample = |a: f64, b: f64, detailed: bool| {
+            GpuSample::Usage(
+                [("a", a), ("b", b)]
+                    .into_iter()
+                    .map(|(id, used_percent)| GpuAdapterUsage {
+                        id: id.into(),
+                        name: id.into(),
+                        used_percent,
+                        details: detailed.then_some(GpuDetails {
+                            activities: vec![],
+                            telemetry: GpuTelemetry::default(),
+                            memory_architecture: GpuMemoryArchitecture::Unified,
+                            memory_status: GpuMemoryStatus::Unsupported,
+                            memory: None,
+                        }),
+                    })
+                    .collect(),
+            )
+        };
+        let mut cache = ResourceCache::default();
+        cache.gpu(sample(30.0, 5.0, true), None, 1000);
+        cache.gpu(sample(35.0, 5.0, true), None, 3000);
+        assert_eq!(cache.snapshot(3000).gpu_detail_history.len(), 2);
+        cache.gpu(sample(3.0, 56.0, true), None, 5000);
+        let switched = cache.snapshot(5000);
+        assert_eq!(switched.gpu_history.len(), 3);
+        assert_eq!(switched.gpu_detail_history.len(), 1);
+        assert_eq!(switched.gpu_details.value.as_ref().unwrap().adapter_id, "b");
+        assert!(switched.gpu.value.as_ref().unwrap().details.is_none());
+        cache.gpu(sample(5.0, 60.0, false), None, 7000);
+        assert_eq!(cache.snapshot(7000).gpu_details.sampled_at_ms, Some(5000));
+        assert_eq!(
+            cache.snapshot(10001).gpu_details.status,
+            MetricStatus::Stale
+        );
+        cache.fail(MetricId::Gpu, MetricStatus::Disconnected);
+        assert_eq!(
+            cache.snapshot(11000).gpu_details.status,
+            MetricStatus::Disconnected
+        );
+        cache.reset(MetricId::Gpu);
+        assert!(cache.snapshot(11000).gpu_detail_history.is_empty());
+        assert!(cache.snapshot(11000).gpu_details.value.is_none());
+    }
+
+    #[test]
+    fn gpu_background_samples_keep_the_device_curve_continuous_without_fabricating_engines() {
+        use mangodisk_platform::system_resources::gpu::{details::*, GpuAdapterUsage, GpuSample};
+        let sample = |id: &str, detailed: bool| {
+            GpuSample::Usage(vec![GpuAdapterUsage {
+                id: id.into(),
+                name: id.into(),
+                used_percent: 20.0,
+                details: detailed.then_some(GpuDetails {
+                    activities: vec![GpuActivity {
+                        id: "renderer".into(),
+                        kind: GpuActivityKind::Renderer,
+                        name: None,
+                        used_percent: 12.0,
+                        included_in_summary: false,
+                    }],
+                    telemetry: GpuTelemetry::default(),
+                    memory_architecture: GpuMemoryArchitecture::Unified,
+                    memory_status: GpuMemoryStatus::Unsupported,
+                    memory: None,
+                }),
+            }])
+        };
+        let mut cache = ResourceCache::default();
+        for time in (1000..=11000).step_by(2000) {
+            cache.gpu(sample("a", time == 1000 || time == 11000), None, time);
+        }
+        let reopened = cache.snapshot(11000);
+        assert_eq!(reopened.gpu_detail_adapter_id.as_deref(), Some("a"));
+        assert_eq!(reopened.gpu_detail_history.len(), 6);
+        assert!(reopened
+            .gpu_detail_history
+            .windows(2)
+            .all(|pair| pair[1].sampled_at_ms - pair[0].sampled_at_ms == 2000));
+        assert_eq!(reopened.gpu_renderer_history.len(), 2);
+        assert!(reopened.gpu_tiler_history.is_empty());
+        for time in (13000..=201000).step_by(2000) {
+            cache.gpu(sample("a", true), None, time);
+        }
+        let retained = cache.snapshot(201000);
+        assert!(retained.gpu_renderer_history.len() <= 96);
+        assert!(retained
+            .gpu_renderer_history
+            .iter()
+            .all(|point| point.sampled_at_ms >= 121000));
+        cache.gpu(sample("b", false), None, 203000);
+        let switched = cache.snapshot(203000);
+        assert_eq!(switched.gpu_detail_adapter_id.as_deref(), Some("b"));
+        assert_eq!(switched.gpu_detail_history.len(), 1);
+        assert!(switched.gpu_renderer_history.is_empty());
+        cache.reset(MetricId::Gpu);
+        assert!(cache.snapshot(203000).gpu_detail_adapter_id.is_none());
+    }
 
     #[test]
     fn snapshots_share_immutable_rankings_and_keep_the_wire_shape() {
@@ -338,7 +631,7 @@ mod tests {
             second.cpu_processes.value.as_ref().unwrap()
         ));
         let wire = serde_json::to_value(&second).unwrap();
-        assert_eq!(wire["schemaVersion"], 7);
+        assert_eq!(wire["schemaVersion"], 11);
         assert_eq!(wire["cpuProcesses"]["value"]["readableProcessCount"], 12);
         assert!(!cache.expire(2000));
         assert!(cache.expire(6001));
@@ -459,7 +752,7 @@ mod tests {
             },
             1000,
         ));
-        assert_eq!(cache.snapshot(1000).schema_version, 7);
+        assert_eq!(cache.snapshot(1000).schema_version, 11);
         assert_eq!(
             cache.snapshot(6001).cpu_processes.status,
             MetricStatus::Stale

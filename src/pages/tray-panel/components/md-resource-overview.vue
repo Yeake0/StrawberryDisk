@@ -21,7 +21,7 @@ const props = withDefaults(
     interactive: false,
   }
 );
-defineEmits<{ cleanup: []; memory: []; cpu: [] }>();
+defineEmits<{ cleanup: []; memory: []; cpu: []; gpu: [] }>();
 const { t } = useI18n({ useScope: 'global' });
 const isMacOs = OperatingSystemService.isMacOs();
 const current = computed(() => props.reading[props.metric]);
@@ -32,6 +32,8 @@ const percentage = computed(() => {
   switch (props.metric) {
     case 'cpu':
       return props.reading.cpu.value?.usedPercent ?? null;
+    case 'gpu':
+      return props.reading.gpu.value?.usedPercent ?? null;
     case 'memory':
       return memory.value?.usedPercent ?? null;
     case 'disk':
@@ -43,7 +45,13 @@ const percentage = computed(() => {
 const activityReady = computed(() =>
   props.metric === 'disk' ? props.reading.diskIo.status === 'ready' && props.reading.diskIo.value !== null : ready.value
 );
-const history = computed(() => (props.metric === 'cpu' ? props.reading.cpuHistory : props.reading.networkHistory));
+const history = computed(() =>
+  props.metric === 'cpu'
+    ? props.reading.cpuHistory
+    : props.metric === 'gpu'
+      ? props.reading.gpuHistory
+      : props.reading.networkHistory
+);
 const source = computed(() =>
   props.metric === 'network'
     ? props.reading.network.value?.interface.name
@@ -85,11 +93,13 @@ const rates = computed(() =>
 <template>
   <section class="resource-overview" :data-metric="metric" :aria-label="t(METRIC_LABEL_KEYS[metric])">
     <button
-      v-if="interactive && (metric === 'cpu' || metric === 'memory')"
+      v-if="interactive && (metric === 'cpu' || metric === 'gpu' || metric === 'memory')"
       type="button"
       class="card-navigation"
-      :aria-label="t(metric === 'cpu' ? 'systemStatus.cpu' : 'systemStatus.memoryDetails')"
-      @click="metric === 'cpu' ? $emit('cpu') : $emit('memory')"
+      :aria-label="
+        t(metric === 'cpu' ? 'systemStatus.cpu' : metric === 'gpu' ? 'systemStatus.gpu' : 'systemStatus.memoryDetails')
+      "
+      @click="metric === 'cpu' ? $emit('cpu') : metric === 'gpu' ? $emit('gpu') : $emit('memory')"
     />
     <header>
       <span class="resource-label">
@@ -136,8 +146,11 @@ const rates = computed(() =>
     />
 
     <div class="resource-meta">
-      <template v-if="metric === 'cpu'">
+      <template v-if="metric === 'cpu' || metric === 'gpu'">
         <span v-if="!ready" role="status">{{ t(METRIC_STATUS_KEYS[current.status]) }}</span>
+        <MdTooltip v-else-if="metric === 'gpu'" :text="t('systemStatus.gpuUsageHint')">
+          <span class="gpu-source">{{ reading.gpu.value?.adapterName }}</span>
+        </MdTooltip>
         <span v-else>{{ t('systemStatus.lastMinute') }}</span>
       </template>
       <template v-else-if="metric === 'memory'">
@@ -258,6 +271,12 @@ small {
 .resource-meta button:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+.gpu-source {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .network-values {
   display: flex;
