@@ -203,9 +203,11 @@ values. Each header value is limited to 1,024 bytes after variable expansion;
 the configuration document allows 32 KiB to accommodate JSON escaping for all
 eight headers. Header and temperature guidance appears in hover tooltips.
 
-The supported stream contains `choices[0].delta.content`, a `stop` finish reason,
-and `[DONE]`. Truncated, oversized, empty, and unsuccessful responses are errors,
-not cacheable answers. The optional disabled-reasoning mode sends provider-specific
+Custom-provider streams contain `choices[0].delta.content` and a `stop` finish reason;
+`[DONE]` is optional when the final event is complete. The official service still
+requires `[DONE]` before accepting an answer or feedback target. Truncated,
+oversized, empty, and unsuccessful responses are errors, not cacheable answers.
+The optional disabled-reasoning mode sends provider-specific
 extensions; use the default mode if a provider rejects them. Cancellation aborts
 the local request but cannot guarantee that a provider stops billing immediately.
 New configurations default to provider-managed reasoning for compatibility.
@@ -226,9 +228,11 @@ from malformed or unbounded streams; they are not generation token budgets.
 Streaming IPC separates `text` and `reasoning` deltas. Readable strings from
 `delta.reasoning_content`, or the `delta.reasoning` alias, appear in a muted,
 height-bounded, selectable section above the answer. Structured or encrypted
-reasoning details are not rendered, and thinking is never inferred from answer
-markup. The section collapses when the answer starts unless the user has taken
-control by expanding, scrolling, or selecting text. Copy copies only the answer.
+reasoning details are not rendered. Inline `<think>...</think>` content is
+discarded from the answer, including tags split across stream chunks; it is
+not promoted into the reasoning section. The section collapses when the answer
+starts unless the user has taken control by expanding, scrolling, or selecting
+text. Copy copies only the answer.
 Reasoning stays in the bounded, memory-only result cache with its answer; it is
 never logged, persisted, or sent back to the provider. Reasoning without a final
 answer is still an empty-response error and is not cached as success.

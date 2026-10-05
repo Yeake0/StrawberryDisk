@@ -251,7 +251,7 @@ describe('analysis other details', () => {
         await wrapper.get('.other-status button').trigger('click');
         await flushPromises();
       }
-      expect(wrapper.text()).toContain('2,000');
+      expect(wrapper.text()).toContain(new Intl.NumberFormat().format(2000));
       expect(wrapper.findAll('.other-entry').length).toBeLessThanOrEqual(60);
       const viewport = wrapper.get('.other-body');
       for (const index of [1980, 0, 1000, 300]) {

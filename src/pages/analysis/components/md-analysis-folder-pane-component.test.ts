@@ -35,7 +35,7 @@ describe('analysis folder pane', () => {
     expect(wrapper.find('.md-help-action').exists()).toBe(false);
     await wrapper.setProps({ truncated: true });
     const header = wrapper.get('header');
-    expect(header.get('p').text()).toBe('100 folders · 4,997 files');
+    expect(header.get('p').text()).toBe(`100 folders · ${new Intl.NumberFormat().format(4997)} files`);
     expect(header.get('.md-help-action').attributes('aria-label')).toBe('Showing up to 100 largest items');
     expect(header.element.children[1]?.contains(header.get('.md-help-action').element)).toBe(true);
   });

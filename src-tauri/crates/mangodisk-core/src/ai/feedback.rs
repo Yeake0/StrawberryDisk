@@ -187,7 +187,7 @@ mod tests {
     #[tokio::test]
     async fn only_complete_official_streams_carry_feedback_targets() {
         use std::io::{Read, Write};
-        for (official, complete) in [(false, true), (true, true), (true, false)] {
+        for (official, complete) in [(false, true), (false, false), (true, true), (true, false)] {
             let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
             let address = listener.local_addr().unwrap();
             let server = std::thread::spawn(move || {
@@ -216,7 +216,7 @@ mod tests {
             )
             .await;
             server.join().unwrap();
-            if complete {
+            if complete || !official {
                 assert_eq!(result.unwrap().feedback.is_some(), official);
             } else {
                 assert!(matches!(result, Err(AiError::IncompleteStream)));

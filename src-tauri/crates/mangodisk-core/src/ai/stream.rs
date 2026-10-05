@@ -7,6 +7,8 @@ use super::{AiDelta, AiError, AiUsage};
 pub(super) struct AiStream {
     pending: Vec<u8>,
     data: String,
+    answer_pending: String,
+    inside_think: bool,
     pub text_bytes: usize,
     pub done: bool,
     stopped: bool,
@@ -67,7 +69,7 @@ impl AiStream {
         if let Some(choice) = event["choices"].as_array().and_then(|v| v.first()) {
             // Only explicit, readable provider fields are displayable. Prefer the
             // canonical field to avoid duplicating gateways that expose both aliases.
-            // Encrypted reasoning_details and inferred <think> tags are not decoded.
+            // Encrypted reasoning_details are not decoded.
             if let Some(reasoning) = choice["delta"]["reasoning_content"]
                 .as_str()
                 .filter(|value| !value.is_empty())
@@ -89,24 +91,77 @@ impl AiStream {
                 .as_str()
                 .filter(|v| !v.is_empty())
             {
-                self.text_bytes += text.len();
-                if self.text_bytes > 32768 {
-                    return Err(AiError::ResponseTooLarge);
-                }
-                if !emit(AiDelta::Text(text.to_owned())) {
-                    return Err(AiError::Cancelled);
-                }
+                self.feed_answer(text, emit)?;
             }
             if let Some(reason) = choice["finish_reason"].as_str() {
                 if reason == "length" {
                     // Keep consuming usage and [DONE] for useful diagnostics.
                     self.output_limited = true;
                 } else if reason == "stop" {
+                    if self.inside_think {
+                        return Err(AiError::IncompleteStream);
+                    }
+                    let trailing = std::mem::take(&mut self.answer_pending);
+                    self.emit_answer(trailing, emit)?;
                     self.stopped = true;
                 } else {
                     return Err(AiError::IncompleteStream);
                 }
             }
+        }
+        Ok(())
+    }
+
+    fn feed_answer(
+        &mut self,
+        text: &str,
+        emit: &mut impl FnMut(AiDelta) -> bool,
+    ) -> Result<(), AiError> {
+        const OPEN: &str = "<think>";
+        const CLOSE: &str = "</think>";
+        self.answer_pending.push_str(text);
+        loop {
+            if self.inside_think {
+                if let Some(end) = self.answer_pending.find(CLOSE) {
+                    self.answer_pending.drain(..end + CLOSE.len());
+                    self.inside_think = false;
+                } else {
+                    let keep = partial_tag_suffix(&self.answer_pending, CLOSE);
+                    self.answer_pending
+                        .drain(..self.answer_pending.len() - keep);
+                    return Ok(());
+                }
+            } else if let Some(start) = self.answer_pending.find(OPEN) {
+                let visible = self.answer_pending.drain(..start).collect();
+                self.answer_pending.drain(..OPEN.len());
+                self.emit_answer(visible, emit)?;
+                self.inside_think = true;
+            } else {
+                let keep = partial_tag_suffix(&self.answer_pending, OPEN);
+                let visible = self
+                    .answer_pending
+                    .drain(..self.answer_pending.len() - keep)
+                    .collect();
+                self.emit_answer(visible, emit)?;
+                return Ok(());
+            }
+        }
+    }
+
+    fn emit_answer(
+        &mut self,
+        text: String,
+        emit: &mut impl FnMut(AiDelta) -> bool,
+    ) -> Result<(), AiError> {
+        if text.is_empty() {
+            return Ok(());
+        }
+        self.text_bytes += text.len();
+        if self.text_bytes > 32768 {
+            return Err(AiError::ResponseTooLarge);
+        }
+        if !emit(AiDelta::Text(text)) {
+            return Err(AiError::Cancelled);
         }
         Ok(())
     }
@@ -122,9 +177,10 @@ impl AiStream {
     }
 
     pub fn finish(&self) -> Result<AiUsage, AiError> {
+        // A complete stop event can end the response without a [DONE] marker.
         if self.output_limited {
             Err(AiError::OutputLimit)
-        } else if !self.done || !self.stopped {
+        } else if !self.stopped || !self.pending.is_empty() || !self.data.is_empty() {
             Err(AiError::IncompleteStream)
         } else if self.text_bytes == 0 {
             Err(AiError::EmptyResponse)
@@ -132,6 +188,13 @@ impl AiStream {
             Ok(self.usage.clone())
         }
     }
+}
+
+fn partial_tag_suffix(text: &str, tag: &str) -> usize {
+    (1..tag.len())
+        .rev()
+        .find(|&len| text.ends_with(&tag[..len]))
+        .unwrap_or(0)
 }
 
 #[cfg(test)]
@@ -183,6 +246,47 @@ mod tests {
     }
 
     #[test]
+    fn removes_inline_thinking_across_stream_fragments() {
+        let data = b"data: {\"choices\":[{\"delta\":{\"content\":\"<thi\"}}]}\n\ndata: {\"choices\":[{\"delta\":{\"content\":\"nk>English reasoning</thi\"}}]}\n\ndata: {\"choices\":[{\"delta\":{\"content\":\"nk>Resposta em portugu\\u00eas.\"}}]}\n\ndata: {\"choices\":[{\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n";
+        let mut stream = AiStream::default();
+        let mut answer = String::new();
+        for byte in data {
+            stream
+                .feed(&[*byte], &mut |delta| {
+                    if let AiDelta::Text(text) = delta {
+                        answer.push_str(&text);
+                    }
+                    true
+                })
+                .unwrap();
+        }
+        assert_eq!(answer, "Resposta em português.");
+        assert_eq!(stream.text_bytes, answer.len());
+        assert!(stream.finish().is_ok());
+    }
+
+    #[test]
+    fn unfinished_or_thinking_only_answers_cannot_succeed() {
+        let mut unfinished = AiStream::default();
+        assert_eq!(
+            unfinished.feed(
+                b"data: {\"choices\":[{\"delta\":{\"content\":\"<think>private\"},\"finish_reason\":\"stop\"}]}\n\n",
+                &mut |_| true,
+            ),
+            Err(AiError::IncompleteStream)
+        );
+
+        let mut thinking_only = AiStream::default();
+        thinking_only
+            .feed(
+                b"data: {\"choices\":[{\"delta\":{\"content\":\"<think>private</think>\"},\"finish_reason\":\"stop\"}]}\n\n",
+                &mut |_| true,
+            )
+            .unwrap();
+        assert_eq!(thinking_only.finish().unwrap_err(), AiError::EmptyResponse);
+    }
+
+    #[test]
     fn reasoning_is_cancellable_bounded_and_never_a_complete_answer() {
         let frame = b"data: {\"choices\":[{\"delta\":{\"reasoning_content\":\"thinking\"}}]}\n\n";
         assert_eq!(
@@ -224,6 +328,22 @@ mod tests {
             AiStream::default().feed(&vec![b'x'; 65537], &mut |_| true),
             Err(AiError::ResponseTooLarge)
         );
+    }
+
+    #[test]
+    fn accepts_complete_stopped_stream_without_done_marker() {
+        let mut stream = AiStream::default();
+        stream
+            .feed(
+                b"data: {\"choices\":[{\"delta\":{\"content\":\"OK\"}}]}\n\ndata: {\"choices\":[{\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n",
+                &mut |_| true,
+            )
+            .unwrap();
+        assert!(!stream.done);
+        assert!(stream.finish().is_ok());
+
+        stream.feed(b"data: {\"choices\":", &mut |_| true).unwrap();
+        assert_eq!(stream.finish().unwrap_err(), AiError::IncompleteStream);
     }
 
     #[test]

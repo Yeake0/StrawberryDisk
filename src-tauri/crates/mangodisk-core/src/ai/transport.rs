@@ -280,6 +280,11 @@ pub(super) async fn stream_request(
         }
         .await;
         result?;
+        // The official protocol requires [DONE] before its feedback target can be trusted.
+        // Custom OpenAI-compatible providers may terminate cleanly after finish_reason=stop.
+        if official && !stream.done {
+            return Err(AiError::IncompleteStream);
+        }
         let mut usage = stream.finish()?;
         usage.feedback = feedback;
         Ok(usage)
