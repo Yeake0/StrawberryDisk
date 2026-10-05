@@ -3,12 +3,13 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
 import { EVENT_NAMES } from '@/lib/models/telemetry';
-import { ANALYSIS_REMAINDER_SCHEMA_VERSION } from '@/lib/models/analysis';
+import { ANALYSIS_REMAINDER_SCHEMA_VERSION, ANALYSIS_SCAN_MODES } from '@/lib/models/analysis';
 import type {
   AnalysisDeleteResult,
   AnalysisRemainderPage,
   AnalysisRemainderSelection,
   AnalysisResult,
+  AnalysisScanMode,
 } from '@/lib/models/analysis';
 import type { TraversalProgress } from '@/lib/models/progress';
 
@@ -44,11 +45,13 @@ export class AnalysisService {
     path: string | undefined,
     refresh: boolean,
     excludedFolders: string[],
-    excludedNames: ScanNameExclusion[] = []
+    excludedNames: ScanNameExclusion[] = [],
+    scanMode: AnalysisScanMode = ANALYSIS_SCAN_MODES.standard
   ): Promise<AnalysisResult> {
     return invoke<AnalysisResult>('analyze_path', {
       path: path?.trim() || null,
       refresh,
+      scanMode,
       excludedPaths: excludedFolders,
       excludedNames,
     });

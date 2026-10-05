@@ -1948,7 +1948,6 @@
     }
   },
   "analysis": {
-    "totalSizeLabel": "Общий размер",
     "shareOfCurrentFolder": "От текущей папки",
     "shareOfParentFolder": "От родительской папки",
     "title": "Анализ дискового пространства",
@@ -1987,7 +1986,17 @@
     "sunburst": "Кольцевая диаграмма",
     "sunburstDepth": "Глубина",
     "sunburstLevels": "Глубина {count}",
-    "sunburstRemainder": "Файлы и другие элементы"
+    "sunburstRemainder": "Файлы и другие элементы",
+    "scanMode": {
+      "label": "Режим сканирования",
+      "standard": "Стандартное сканирование",
+      "standardDescription": "Подсчёт места на диске",
+      "fast": "Быстрое сканирование",
+      "fastDescription": "Подсчёт размера файлов, быстрее",
+      "fastHint": "Размер сжатых и разреженных файлов может отличаться от места на диске"
+    },
+    "diskUsage": "Место на диске",
+    "fileSize": "Размер файлов"
   },
   "storageScanExclusions": {
     "title": "Исключения из сканирования",

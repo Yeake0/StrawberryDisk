@@ -10,7 +10,7 @@ use mangodisk_platform::{
     FilesystemChangeToken, Platform, ScanPurpose, SkipReason,
 };
 
-use crate::storage::analysis::ANALYSIS_VISIBLE_ENTRY_LIMIT;
+use crate::storage::analysis::{AnalysisScanMode, ANALYSIS_VISIBLE_ENTRY_LIMIT};
 
 use crate::{
     filesystem::metadata::{display_fingerprint, display_path, is_link_like, modified_ms},
@@ -31,7 +31,8 @@ static ANALYSIS_CACHE: OnceLock<Mutex<AnalysisCache>> = OnceLock::new();
 
 #[derive(Clone, Copy, Default)]
 pub(crate) struct DirectoryAggregate {
-    /// Bytes charged to the containing volume and shown in storage views.
+    pub(crate) scan_mode: AnalysisScanMode,
+    /// Bytes in this snapshot's declared metric; logical scans never claim allocation.
     pub(crate) bytes: u64,
     /// Content length retained for immutable snapshot and delete preflight checks.
     pub(crate) logical_bytes: u64,
@@ -156,8 +157,9 @@ impl ChangeValidation {
 
 /// Reuse is intentionally limited to the current process. A completed scan has one authoritative
 /// result in memory, avoiding duplicate storage and write backpressure on the traversal path.
-pub(crate) fn reuse_analysis_decision(
+pub(crate) fn reuse_analysis_mode_decision(
     root: &Path,
+    scan_mode: AnalysisScanMode,
     configuration_fingerprint: [u8; 32],
     is_cancelled: &(dyn Fn() -> bool + Sync),
 ) -> Result<CacheReuseDecision, String> {
@@ -210,6 +212,21 @@ pub(crate) fn reuse_analysis_decision(
         return Ok(CacheReuseDecision::Miss);
     };
     if cached_purpose != ScanPurpose::Analysis {
+        evict_memory_root(&scan_root)?;
+        return Ok(CacheReuseDecision::Miss);
+    }
+    let cached_mode = cache()
+        .lock()
+        .map_err(|_| ANALYSIS_CACHE_UNAVAILABLE_ERROR.to_string())?
+        .directories
+        .get(root)
+        .map(|aggregate| aggregate.scan_mode);
+    if cached_mode != Some(scan_mode) {
+        log::info!(
+            "analysis_cache_invalidated root={} reason=scan_mode_changed requested_mode={}",
+            crate::filesystem::metadata::diagnostic_path(&scan_root),
+            scan_mode.as_str()
+        );
         evict_memory_root(&scan_root)?;
         return Ok(CacheReuseDecision::Miss);
     }
@@ -361,8 +378,16 @@ pub(crate) fn analysis_remainder_entries(
                 metadata.is_file()
             }
         });
+        if cache
+            .directories
+            .get(root)
+            .is_some_and(|aggregate| aggregate.scan_mode != parent.scan_mode)
+        {
+            return Err("the analysis index mode changed; scan again".to_string());
+        }
         build_analysis_entries(
             children,
+            parent.scan_mode,
             |path| cache.directories.get(path).copied(),
             |path| cache.files.get(path).copied(),
         )
@@ -420,7 +445,7 @@ pub(crate) fn analysis_result_from_snapshot(
         AnalysisChildMetadata::ScanSnapshot,
     )?;
     #[cfg(any(windows, test))]
-    let measured = measure_snapshot_files(&children, files, workers);
+    let measured = measure_snapshot_files(&children, files, workers, root_aggregate.scan_mode);
     #[cfg(not(any(windows, test)))]
     let _ = workers;
     let mut result = build_analysis_result(
@@ -448,6 +473,7 @@ fn measure_snapshot_files(
     children: &[(fs::DirEntry, PathBuf, fs::Metadata)],
     indexed: &HashMap<PathBuf, IndexedFile>,
     workers: usize,
+    scan_mode: AnalysisScanMode,
 ) -> HashMap<PathBuf, IndexedFile> {
     let queries: Vec<_> = children
         .iter()
@@ -477,7 +503,7 @@ fn measure_snapshot_files(
                     chunk
                         .iter()
                         .map(|(_, path, metadata)| {
-                            let usage = current_platform().file_space_usage(path, metadata);
+                            let usage = scan_mode.file_usage(path, metadata);
                             (
                                 path.clone(),
                                 IndexedFile {
@@ -742,12 +768,18 @@ fn build_analysis_result(
     directory_aggregate: impl FnMut(&Path) -> Option<DirectoryAggregate>,
     indexed_file: impl FnMut(&Path) -> Option<IndexedFile>,
 ) -> AnalysisResult {
-    let mut entries = build_analysis_entries(children, directory_aggregate, indexed_file);
+    let mut entries = build_analysis_entries(
+        children,
+        root_aggregate.scan_mode,
+        directory_aggregate,
+        indexed_file,
+    );
     let total_entry_count = entries.iter().filter(|entry| entry.bytes > 0).count();
     let truncated = entries.len() > ANALYSIS_VISIBLE_ENTRY_LIMIT;
     rank_visible_analysis_entries(&mut entries);
 
     AnalysisResult {
+        scan_mode: root_aggregate.scan_mode,
         scan_id: 0,
         root: display_path(root),
         scanned_at_ms: root_aggregate.scanned_at_ms,
@@ -763,6 +795,7 @@ fn build_analysis_result(
 
 fn build_analysis_entries(
     children: Vec<(fs::DirEntry, PathBuf, fs::Metadata)>,
+    scan_mode: AnalysisScanMode,
     mut directory_aggregate: impl FnMut(&Path) -> Option<DirectoryAggregate>,
     mut indexed_file: impl FnMut(&Path) -> Option<IndexedFile>,
 ) -> Vec<DirectoryEntryInfo> {
@@ -780,7 +813,7 @@ fn build_analysis_entries(
                         logical_bytes: file.logical_bytes,
                         allocated_bytes: file.bytes,
                     })
-                    .unwrap_or_else(|| current_platform().file_space_usage(&path, &metadata));
+                    .unwrap_or_else(|| scan_mode.file_usage(&path, &metadata));
                 DirectoryAggregate {
                     bytes: usage.allocated_bytes,
                     logical_bytes: usage.logical_bytes,
@@ -843,6 +876,24 @@ pub(crate) fn store_memory_only(
             return Ok(false);
         }
         let mut removed_monitors = Vec::new();
+        // Flattened maps must never patch an ancestor with a different byte metric.
+        let incompatible_roots: Vec<_> = cache
+            .scan_roots
+            .keys()
+            .filter(|cached_root| {
+                root.starts_with(cached_root.as_path()) || cached_root.starts_with(root)
+            })
+            .filter(|cached_root| {
+                cache
+                    .directories
+                    .get(*cached_root)
+                    .is_some_and(|aggregate| aggregate.scan_mode != root_aggregate.scan_mode)
+            })
+            .cloned()
+            .collect();
+        for cached_root in incompatible_roots {
+            removed_monitors.extend(evict_cached_root(&mut cache, &cached_root));
+        }
         // Allocation ownership is scoped to a full scan. Refreshing only a child cannot patch
         // an ancestor with shared allocation: a surviving link in a sibling may own the bytes.
         let shared_roots: Vec<_> = cache
@@ -975,12 +1026,46 @@ pub(crate) fn remove_entry(
     file_count: u64,
     is_directory: bool,
 ) {
+    remove_entry_in_mode(
+        target,
+        removed_usage,
+        file_count,
+        is_directory,
+        AnalysisScanMode::Standard,
+    );
+}
+
+pub(crate) fn remove_entry_in_mode(
+    target: &Path,
+    removed_usage: FileSpaceUsage,
+    file_count: u64,
+    is_directory: bool,
+    scan_mode: AnalysisScanMode,
+) {
     let removed_monitors = {
         let Ok(mut cache) = cache().lock() else {
             log::warn!("analysis_cache_update_failed reason=poisoned_lock");
             return;
         };
         cache.mutation_revision = cache.mutation_revision.saturating_add(1);
+        // Deletion may originate from an older result or another storage module.
+        // Its byte metric cannot repair an incompatible index; rebuild that root instead.
+        let mut incompatible_monitors = Vec::new();
+        let incompatible_roots: Vec<_> = cache
+            .scan_roots
+            .keys()
+            .filter(|root| target.starts_with(root.as_path()))
+            .filter(|root| {
+                cache
+                    .directories
+                    .get(*root)
+                    .is_some_and(|aggregate| aggregate.scan_mode != scan_mode)
+            })
+            .cloned()
+            .collect();
+        for root in incompatible_roots {
+            incompatible_monitors.extend(evict_cached_root(&mut cache, &root));
+        }
         let shared_roots: Vec<_> = cache
             .scan_roots
             .keys()
@@ -988,7 +1073,7 @@ pub(crate) fn remove_entry(
             .filter(|root| has_shared_allocation(&cache, root))
             .cloned()
             .collect();
-        let mut shared_monitors = Vec::new();
+        let mut shared_monitors = incompatible_monitors;
         for root in shared_roots {
             shared_monitors.extend(evict_cached_root(&mut cache, &root));
         }
@@ -1035,14 +1120,14 @@ pub(crate) fn remove_entry(
             if target.starts_with(directory) {
                 aggregate.bytes = aggregate
                     .bytes
-                    .saturating_sub(removed_usage.allocated_bytes);
+                    .saturating_sub(aggregate.scan_mode.displayed_bytes(removed_usage));
                 aggregate.logical_bytes = aggregate
                     .logical_bytes
                     .saturating_sub(removed_usage.logical_bytes);
                 aggregate.file_count = aggregate.file_count.saturating_sub(file_count);
                 if !is_directory
                     && target.parent() == Some(directory.as_path())
-                    && removed_usage.allocated_bytes > 0
+                    && aggregate.scan_mode.displayed_bytes(removed_usage) > 0
                 {
                     aggregate.direct_file_count = aggregate.direct_file_count.saturating_sub(1);
                 }
@@ -1557,6 +1642,7 @@ mod tests {
         )
         .unwrap();
         let parent = AnalysisRemainderParent {
+            scan_mode: AnalysisScanMode::Standard,
             path: display_path(&root),
             bytes: aggregate.bytes,
             exclusions: Default::default(),

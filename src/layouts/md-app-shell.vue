@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { AnalysisScanMode } from '@/lib/models/analysis';
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
@@ -420,12 +421,12 @@ async function clearHistoryData() {
   await historyStore.clear();
 }
 
-function analyze(path?: string, refresh = false, setHome = false) {
+function analyze(path?: string, refresh = false, setHome = false, scanMode?: AnalysisScanMode) {
   // A rapid second navigation can arrive before Vue propagates the Store's
   // pending state back into the page props. Ignore that same-domain request
   // instead of submitting duplicate work to Core.
   if (analysisStore.pending || analysisStore.deleting) return;
-  return analysisStore.analyze(path, refresh, setHome);
+  return analysisStore.analyze(path, refresh, setHome, scanMode);
 }
 
 function deleteAnalysisEntryPermanently(entry: DirectoryEntryInfo) {

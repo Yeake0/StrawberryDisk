@@ -1948,7 +1948,6 @@
     }
   },
   "analysis": {
-    "totalSizeLabel": "合計サイズ",
     "shareOfCurrentFolder": "現在のフォルダーに占める割合",
     "shareOfParentFolder": "親フォルダーに占める割合",
     "title": "ディスク容量分析",
@@ -1987,7 +1986,17 @@
     "sunburst": "サンバースト",
     "sunburstDepth": "深さ",
     "sunburstLevels": "深さ {count}",
-    "sunburstRemainder": "ファイルなど"
+    "sunburstRemainder": "ファイルなど",
+    "scanMode": {
+      "label": "スキャン方式",
+      "standard": "標準スキャン",
+      "standardDescription": "ディスク使用量を集計",
+      "fast": "高速スキャン",
+      "fastDescription": "ファイルサイズを集計し、高速にスキャン",
+      "fastHint": "圧縮・スパースファイルのサイズはディスク使用量と異なる場合があります"
+    },
+    "diskUsage": "ディスク使用量",
+    "fileSize": "ファイルサイズ"
   },
   "storageScanExclusions": {
     "title": "スキャンの除外",

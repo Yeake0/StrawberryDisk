@@ -17,6 +17,7 @@ describe('AnalysisService', () => {
     await AnalysisService.analyze('/fixture', false, ['/fixture/cache']);
 
     expect(invokeMock).toHaveBeenCalledWith('analyze_path', {
+      scanMode: 'standard',
       path: '/fixture',
       refresh: false,
       excludedNames: [],
@@ -28,6 +29,7 @@ describe('AnalysisService', () => {
     await AnalysisService.analyze(undefined, true, []);
 
     expect(invokeMock).toHaveBeenCalledWith('analyze_path', {
+      scanMode: 'standard',
       path: null,
       refresh: true,
       excludedNames: [],

@@ -1948,7 +1948,6 @@
     }
   },
   "analysis": {
-    "totalSizeLabel": "Total size",
     "shareOfCurrentFolder": "Of current folder",
     "shareOfParentFolder": "Of parent folder",
     "title": "Disk Space Analysis",
@@ -1987,7 +1986,17 @@
     "sunburst": "Sunburst",
     "sunburstDepth": "Depth",
     "sunburstLevels": "Depth {count}",
-    "sunburstRemainder": "Files and other items"
+    "sunburstRemainder": "Files and other items",
+    "scanMode": {
+      "label": "Scan mode",
+      "standard": "Standard scan",
+      "standardDescription": "Measure disk usage",
+      "fast": "Fast scan",
+      "fastDescription": "Measure file size, scan faster",
+      "fastHint": "Compressed and sparse file sizes may differ from disk usage"
+    },
+    "diskUsage": "Disk usage",
+    "fileSize": "File size"
   },
   "storageScanExclusions": {
     "title": "Scan exclusions",

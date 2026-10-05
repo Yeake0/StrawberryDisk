@@ -77,6 +77,7 @@ pub(super) fn resolve_entry_candidate(
         .find(|entry| entry.path == selected_path)
         .ok_or_else(|| "the selected item is not part of the current disk analysis".to_string())?;
     Ok(AnalysisEntryCandidate {
+        scan_mode: result.result.scan_mode,
         requires_rescan: result.result.requires_delete_rescan
             || sessions.iter().any(|session| {
                 session.result.requires_delete_rescan
@@ -89,7 +90,7 @@ pub(super) fn resolve_entry_candidate(
         root: result.result.root.clone(),
         path: entry.path.clone(),
         expected_logical_bytes: entry.logical_bytes,
-        expected_allocated_bytes: entry.bytes,
+        expected_displayed_bytes: entry.bytes,
         expected_file_count: entry.file_count,
         is_directory: entry.is_directory,
     })
@@ -175,6 +176,7 @@ pub(super) fn resolve_remainder_parent(
             })?
     };
     Ok(AnalysisRemainderParent {
+        scan_mode: result.scan_mode,
         path,
         bytes,
         exclusions: session.exclusions.clone(),
@@ -256,6 +258,7 @@ mod tests {
 
     fn result(path: &str) -> AnalysisResult {
         AnalysisResult {
+            scan_mode: Default::default(),
             scan_id: 0,
             root: "/fixture".to_string(),
             scanned_at_ms: 1,
@@ -287,7 +290,7 @@ mod tests {
         let candidate = resolve_entry_candidate(result.scan_id, "/fixture/sample.bin")
             .expect("resolve the published entry");
         assert_eq!(candidate.expected_logical_bytes, 12);
-        assert_eq!(candidate.expected_allocated_bytes, 4);
+        assert_eq!(candidate.expected_displayed_bytes, 4);
         assert!(
             resolve_entry_candidate(result.scan_id, "/fixture/not-scanned.bin").is_err(),
             "a fabricated path must not cross the analysis-result boundary"

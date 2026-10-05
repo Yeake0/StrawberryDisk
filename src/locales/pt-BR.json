@@ -1948,7 +1948,6 @@
     }
   },
   "analysis": {
-    "totalSizeLabel": "Tamanho total",
     "shareOfCurrentFolder": "Da pasta atual",
     "shareOfParentFolder": "Da pasta superior",
     "title": "Análise de Espaço em Disco",
@@ -1987,7 +1986,17 @@
     "sunburst": "Sunburst",
     "sunburstDepth": "Profundidade",
     "sunburstLevels": "Profundidade {count}",
-    "sunburstRemainder": "Arquivos e outros itens"
+    "sunburstRemainder": "Arquivos e outros itens",
+    "scanMode": {
+      "label": "Modo de varredura",
+      "standard": "Varredura padrão",
+      "standardDescription": "Calcula o uso do disco",
+      "fast": "Varredura rápida",
+      "fastDescription": "Calcula o tamanho dos arquivos, mais rápido",
+      "fastHint": "Arquivos compactados e esparsos podem ter tamanho diferente do uso do disco"
+    },
+    "diskUsage": "Uso do disco",
+    "fileSize": "Tamanho dos arquivos"
   },
   "storageScanExclusions": {
     "title": "Exclusões da verificação",

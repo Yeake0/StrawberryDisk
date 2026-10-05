@@ -101,6 +101,7 @@ pub(super) fn measure(
     let scan_root = traversal.scan_root;
     let root_metadata = &traversal.root_metadata;
     let purpose = traversal.purpose;
+    let scan_mode = traversal.scan_mode;
     let progress = traversal.progress;
     let scanned_at_ms = traversal.scanned_at_ms;
     let exclusions = traversal.scan_exclusions;
@@ -139,6 +140,7 @@ pub(super) fn measure(
                             scan_root,
                             root_metadata: root_metadata.clone(),
                             purpose,
+                            scan_mode,
                             progress,
                             scanned_at_ms,
                             sink: &mut partial,
@@ -353,6 +355,7 @@ mod tests {
             scan_root: root,
             root_metadata: fs::symlink_metadata(root).unwrap(),
             purpose: ScanPurpose::Analysis,
+            scan_mode: AnalysisScanMode::Standard,
             progress: &progress,
             scanned_at_ms: 123,
             sink: &mut sink,
@@ -496,6 +499,7 @@ mod tests {
             scan_root: root.path(),
             root_metadata: fs::symlink_metadata(root.path()).unwrap(),
             purpose: ScanPurpose::Analysis,
+            scan_mode: AnalysisScanMode::Standard,
             progress: &progress,
             scanned_at_ms: 0,
             sink: &mut sink,
@@ -540,6 +544,7 @@ mod tests {
             scan_root: root.path(),
             root_metadata: fs::symlink_metadata(root.path()).unwrap(),
             purpose: ScanPurpose::Analysis,
+            scan_mode: AnalysisScanMode::Standard,
             progress: &progress,
             scanned_at_ms: 0,
             sink: &mut sink,
@@ -581,6 +586,7 @@ mod tests {
             scan_root: root.path(),
             root_metadata,
             purpose: ScanPurpose::Analysis,
+            scan_mode: AnalysisScanMode::Standard,
             progress: &progress,
             scanned_at_ms: 0,
             sink: &mut sink,

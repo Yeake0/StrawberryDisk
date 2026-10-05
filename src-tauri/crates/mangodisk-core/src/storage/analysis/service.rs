@@ -13,6 +13,7 @@ use crate::{
     storage::{
         analysis::{
             AnalysisDeleteResult, AnalysisRemainderPage, AnalysisRemainderRequest, AnalysisResult,
+            AnalysisScanMode,
         },
         index::cache,
     },
@@ -64,11 +65,28 @@ impl AnalysisService {
         excluded_paths: impl Into<ScanExclusionOptions>,
         callback: impl ProgressSink,
     ) -> CoreResult<AnalysisResult> {
-        let excluded_paths = excluded_paths.into();
-        let snapshot = StorageTraversal::analyze_path_with_exclusions_snapshot(
+        Self::analyze_with_mode_progress(
             path,
             refresh,
             excluded_paths,
+            AnalysisScanMode::Standard,
+            callback,
+        )
+    }
+
+    pub fn analyze_with_mode_progress(
+        path: Option<String>,
+        refresh: bool,
+        excluded_paths: impl Into<ScanExclusionOptions>,
+        scan_mode: AnalysisScanMode,
+        callback: impl ProgressSink,
+    ) -> CoreResult<AnalysisResult> {
+        let excluded_paths = excluded_paths.into();
+        let snapshot = StorageTraversal::analyze_path_with_mode_snapshot(
+            path,
+            refresh,
+            excluded_paths,
+            scan_mode,
             move |progress| callback.report(progress),
         )?;
         Ok(super::session::publish_result_with_exclusions(
@@ -105,13 +123,15 @@ impl AnalysisService {
         let operation = OperationGuard::start(CoordinatedOperationKind::PermanentDelete)?;
         let started = Instant::now();
         let is_directory = candidate.is_directory;
+        let scan_mode = candidate.scan_mode;
         let requires_allocation_rescan = candidate.requires_rescan;
         let selected_path = std::path::PathBuf::from(&candidate.path);
         log::info!(
-            "analysis_permanent_delete_started operation_id={} scan_id={} path={} entry_kind={}",
+            "analysis_permanent_delete_started operation_id={} scan_id={} path={} scan_mode={} entry_kind={}",
             operation.id(),
             scan_id,
             diagnostic_path(std::path::Path::new(&candidate.path)),
+            scan_mode.as_str(),
             if is_directory { "directory" } else { "file" }
         );
         let mut outcome = match delete_analysis_candidate_permanently(candidate) {
@@ -196,11 +216,12 @@ impl AnalysisService {
                 requires_allocation_rescan
             );
         } else {
-            cache::remove_entry(
+            cache::remove_entry_in_mode(
                 &outcome.target,
                 outcome.removed_usage,
                 outcome.result.removed_file_count,
                 is_directory,
+                scan_mode,
             );
             synchronize_removed_path(scan_id, &outcome.target, outcome.result.released_bytes)
                 .map_err(|error| {
@@ -212,13 +233,14 @@ impl AnalysisService {
             operation.id(), cache_started.elapsed().as_millis()
         );
         log::info!(
-            "analysis_permanent_delete_finished operation_id={} scan_id={} path={} entry_kind={} snapshot_logical_bytes={} snapshot_allocated_bytes={} snapshot_file_count={} count_source=scan_snapshot elapsed_ms={}",
+            "analysis_permanent_delete_finished operation_id={} scan_id={} path={} entry_kind={} snapshot_logical_bytes={} snapshot_displayed_bytes={} scan_mode={} snapshot_file_count={} count_source=scan_snapshot elapsed_ms={}",
             operation.id(),
             scan_id,
             diagnostic_path(&outcome.target),
             if is_directory { "directory" } else { "file" },
             outcome.removed_usage.logical_bytes,
             outcome.result.released_bytes,
+            scan_mode.as_str(),
             outcome.result.removed_file_count,
             started.elapsed().as_millis()
         );
@@ -240,6 +262,102 @@ mod tests {
     };
 
     use super::*;
+
+    #[test]
+    fn scan_modes_keep_navigation_remainder_and_delete_in_one_metric() {
+        use mangodisk_platform::Platform;
+        let _operation_lock = crate::shared::operation::test_operation_lock();
+        cache::clear_all().unwrap();
+        let fixture = AnalysisFixture::new();
+        let nested = fixture.root.join("nested");
+        fs::create_dir(&nested).unwrap();
+        let candidate = nested.join("candidate.bin");
+        fs::write(&candidate, vec![0_u8; 1024 * 1024]).unwrap();
+        #[cfg(windows)]
+        {
+            let output = std::process::Command::new("compact.exe")
+                .args(["/C", "/F", "/EXE:XPRESS4K"])
+                .arg(&candidate)
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "WOF fixture compression must succeed"
+            );
+        }
+        #[cfg(unix)]
+        {
+            let file = fs::OpenOptions::new().write(true).open(&candidate).unwrap();
+            file.set_len(16 * 1024 * 1024).unwrap();
+        }
+        let logical = fs::metadata(&candidate).unwrap().len();
+        let native = mangodisk_platform::current_platform()
+            .file_space_usage(&candidate, &fs::metadata(&candidate).unwrap())
+            .allocated_bytes;
+        assert!(
+            native < logical,
+            "fixture must distinguish allocation from logical length"
+        );
+        for index in 0..520 {
+            fs::write(fixture.root.join(format!("small-{index:03}")), b"x").unwrap();
+        }
+        let analyze = |root: &PathBuf, refresh, mode| {
+            AnalysisService::analyze_with_mode_progress(
+                Some(root.to_string_lossy().into_owned()),
+                refresh,
+                ScanExclusionOptions::default(),
+                mode,
+                |_| {},
+            )
+            .unwrap()
+        };
+        let fast = analyze(&fixture.root, true, AnalysisScanMode::Fast);
+        assert_eq!(fast.scan_mode, AnalysisScanMode::Fast);
+        assert_eq!(fast.total_bytes, logical + 520);
+        let details = AnalysisService::list_remainder(AnalysisRemainderRequest {
+            schema_version: AnalysisRemainderRequest::SCHEMA_VERSION,
+            scan_id: fast.scan_id,
+            parent_path: fast.root.clone(),
+            visible_paths: fast
+                .entries
+                .iter()
+                .map(|entry| entry.path.clone())
+                .collect(),
+            expected_bytes: 21,
+            offset: 0,
+            snapshot_id: None,
+        })
+        .unwrap();
+        assert_eq!(details.total_bytes, 21);
+        assert!(details.entries.iter().all(|entry| entry.bytes == 1));
+        AnalysisService::release_remainder(details.snapshot_id).unwrap();
+        let child = analyze(&nested, false, AnalysisScanMode::Fast);
+        assert_eq!(child.total_bytes, logical);
+        assert_eq!(child.scan_mode, AnalysisScanMode::Fast);
+        let standard = analyze(&nested, false, AnalysisScanMode::Standard);
+        assert_eq!(
+            standard.total_bytes, native,
+            "switching a descendant must not reuse a logical ancestor"
+        );
+        assert_eq!(standard.scan_mode, AnalysisScanMode::Standard);
+        let child = analyze(&nested, false, AnalysisScanMode::Fast);
+        assert_eq!(
+            child.total_bytes, logical,
+            "switching back must not reuse native allocation"
+        );
+        let _standard_parent = analyze(&fixture.root, true, AnalysisScanMode::Standard);
+        let removed =
+            AnalysisService::delete_entry_permanently(child.scan_id, child.entries[0].path.clone())
+                .unwrap();
+        assert_eq!(
+            removed.released_bytes, logical,
+            "delete reconciliation uses the displayed metric"
+        );
+        let empty = analyze(&nested, true, AnalysisScanMode::Fast);
+        assert_eq!(empty.total_bytes, 0);
+        assert!(!candidate.exists());
+        cache::clear_all().unwrap();
+    }
 
     struct AnalysisFixture {
         root: PathBuf,

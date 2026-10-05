@@ -23,6 +23,7 @@ interface SplitActionItem {
 const props = withDefaults(
   defineProps<{
     accessibleLabel: string;
+    selectedValue?: string;
     disabled?: boolean;
     items?: readonly SplitActionItem[];
     primaryIcon: IconName;
@@ -31,6 +32,7 @@ const props = withDefaults(
     variant?: ButtonVariants['variant'];
   }>(),
   {
+    selectedValue: undefined,
     disabled: false,
     items: () => [],
     size: 'default',
@@ -65,8 +67,10 @@ const hasMenu = computed(() => props.items.length > 0);
       :disabled="disabled"
       @click="emit('primary')"
     >
-      <MdIcon :name="primaryIcon" :size="16" />
-      {{ primaryLabel }}
+      <slot name="primary">
+        <MdIcon :name="primaryIcon" :size="16" />
+        {{ primaryLabel }}
+      </slot>
     </Button>
 
     <DropdownMenuRoot v-if="hasMenu">
@@ -93,6 +97,7 @@ const hasMenu = computed(() => props.items.length > 0);
             v-for="item in items"
             :key="item.value"
             class="md-split-action__item"
+            :aria-current="item.value === selectedValue ? 'true' : undefined"
             @select="emit('select', item.value)"
           >
             <MdIcon :name="item.icon" :size="16" />
@@ -100,6 +105,7 @@ const hasMenu = computed(() => props.items.length > 0);
               <strong>{{ item.label }}</strong>
               <small>{{ item.description }}</small>
             </span>
+            <MdIcon v-if="item.value === selectedValue" name="check" :size="16" class="ml-auto" aria-hidden="true" />
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenuPortal>

@@ -13,7 +13,7 @@ import MdDelayedOperationWorkspace from '@/components/custom/md-delayed-operatio
 import MdAnalysisBrowserToolbar from './components/md-analysis-browser-toolbar.vue';
 import MdAnalysisFolderPane from './components/md-analysis-folder-pane.vue';
 import MdAnalysisVisualPane from './components/md-analysis-visual-pane.vue';
-import { Button } from '@/components/ui/button';
+import MdAnalysisScanButton from './components/md-analysis-scan-button.vue';
 import { i18n } from '@/i18n';
 import { Select } from '@/components/ui/select';
 import type { AnalysisResult } from '@/lib/models/analysis';
@@ -279,7 +279,7 @@ describe('analysis page', () => {
     expect(wrapper.findComponent(MdAnalysisBrowserToolbar).exists()).toBe(true);
     expect(wrapper.findComponent(MdAnalysisVisualPane).exists()).toBe(true);
 
-    wrapper.findComponent(Button).vm.$emit('click');
+    wrapper.findComponent(MdAnalysisScanButton).vm.$emit('scan', 'standard');
     await wrapper.setProps({ busy: true });
 
     expect(wrapper.findComponent(MdAnalysisBrowserToolbar).exists()).toBe(false);

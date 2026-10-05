@@ -9,12 +9,10 @@ import MdEmptyState from '@/components/custom/md-empty-state.vue';
 import MdOperationProgress from '@/components/custom/md-operation-progress.vue';
 import MdPageShell from '@/components/custom/md-page-shell.vue';
 import MdDestructiveActionDialog from '@/components/custom/md-destructive-action-dialog.vue';
-import MdIcon from '@/components/icons/md-icon.vue';
-import { Button } from '@/components/ui/button';
 import { ANALYSIS_VIEW_IDS } from '@/lib/models/analysis';
 import { STORAGE_SCOPE_IDS } from '@/lib/models/storage-scope';
 import { ICON_NAMES } from '@/lib/models/ui';
-import type { AnalysisResult, AnalysisViewId, DirectoryEntryInfo } from '@/lib/models/analysis';
+import type { AnalysisResult, AnalysisScanMode, AnalysisViewId, DirectoryEntryInfo } from '@/lib/models/analysis';
 import type { DiskInfo } from '@/lib/models/disk';
 import type { TraversalProgress } from '@/lib/models/progress';
 import * as AnalysisBreadcrumbUtils from '@/lib/utils/analysis-breadcrumb';
@@ -26,6 +24,7 @@ import { useStorageScanPreferencesStore } from '@/stores/storage-scan-preference
 import { useStorageScopeStore } from '@/stores/storage-scope-store';
 import { useAnalysisStore } from '@/stores/analysis-store';
 
+import MdAnalysisScanButton from './components/md-analysis-scan-button.vue';
 import MdAnalysisBrowserToolbar from './components/md-analysis-browser-toolbar.vue';
 import MdAnalysisFolderPane from './components/md-analysis-folder-pane.vue';
 import MdAnalysisVisualPane from './components/md-analysis-visual-pane.vue';
@@ -48,7 +47,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  analyze: [path?: string, refresh?: boolean, setHome?: boolean];
+  analyze: [path?: string, refresh?: boolean, setHome?: boolean, scanMode?: AnalysisScanMode];
   cancel: [];
   error: [error: unknown];
   openExclusions: [];
@@ -241,9 +240,11 @@ function removeScopeFolder(path: string) {
   pendingHistoryNavigation.value = null;
 }
 
-function startPrimaryAnalysis() {
+function startPrimaryAnalysis(scanMode: AnalysisScanMode = analysisStore.scanMode) {
   primaryAnalysisPending.value = true;
-  analyze(selectedScopePath.value, scopeIsAnalysisRoot.value, !scopeIsAnalysisRoot.value);
+  if (props.busy || props.deleting || !selectedScopePath.value) return;
+  pendingHistoryNavigation.value = null;
+  emit('analyze', selectedScopePath.value, scopeIsAnalysisRoot.value, !scopeIsAnalysisRoot.value, scanMode);
   // Cache hits and rejected operations may finish without toggling `busy`.
   // Clear the local interaction state after Vue has applied any synchronous
   // Store updates so it cannot leak into a later folder navigation.
@@ -296,42 +297,14 @@ function navigateHistory(index: number) {
           @remove-folder="removeScopeFolder"
           @update:model-value="selectScope"
         />
-        <Button
+        <MdAnalysisScanButton
           v-if="result"
-          :variant="scopeIsAnalysisRoot ? 'outline' : 'default'"
-          type="button"
+          :mode="analysisStore.scanMode"
+          :rescan="scopeIsAnalysisRoot"
+          :scanning="showPrimaryAnalysisProgress"
           :disabled="busy || deleting || !selectedScopePath"
-          :aria-label="
-            showPrimaryAnalysisProgress
-              ? t('loading.currentStage')
-              : scopeIsAnalysisRoot
-                ? t('analysis.rescan')
-                : t('analysis.start')
-          "
-          @click="startPrimaryAnalysis"
-        >
-          <MdIcon
-            :class="{ 'icon-spin': showPrimaryAnalysisProgress }"
-            :name="showPrimaryAnalysisProgress || scopeIsAnalysisRoot ? ICON_NAMES.refresh : ICON_NAMES.analysis"
-            :size="17"
-          />
-          <!--
-            Stack every localized label in one grid cell. Hidden labels still
-            reserve their intrinsic width, so neither navigation nor rescanning
-            can move the adjacent scope selector.
-          -->
-          <span class="primary-analysis-labels" aria-hidden="true">
-            <span :class="{ visible: !showPrimaryAnalysisProgress && !scopeIsAnalysisRoot }">
-              {{ t('analysis.start') }}
-            </span>
-            <span :class="{ visible: !showPrimaryAnalysisProgress && scopeIsAnalysisRoot }">
-              {{ t('analysis.rescan') }}
-            </span>
-            <span :class="{ visible: showPrimaryAnalysisProgress }">
-              {{ t('loading.currentStage') }}
-            </span>
-          </span>
-        </Button>
+          @scan="startPrimaryAnalysis"
+        />
       </div>
     </template>
 
@@ -382,15 +355,12 @@ function navigateHistory(index: number) {
         :description="t('analysis.emptyDescription')"
       >
         <div class="empty-primary-actions">
-          <Button
-            size="lg"
-            type="button"
+          <MdAnalysisScanButton
+            :mode="analysisStore.scanMode"
             :disabled="busy || deleting || !selectedScopePath"
-            @click="startPrimaryAnalysis"
-          >
-            <MdIcon :name="ICON_NAMES.analysis" :size="17" />
-            {{ t('analysis.start') }}
-          </Button>
+            large
+            @scan="startPrimaryAnalysis"
+          />
         </div>
       </MdEmptyState>
 
@@ -480,19 +450,6 @@ function navigateHistory(index: number) {
 .header-actions.folder-navigation-pending :deep(button:disabled) {
   opacity: 1;
   transition-duration: 0s;
-}
-
-.primary-analysis-labels {
-  display: grid;
-}
-
-.primary-analysis-labels > span {
-  visibility: hidden;
-  grid-area: 1 / 1;
-}
-
-.primary-analysis-labels > span.visible {
-  visibility: visible;
 }
 
 .browser-card {

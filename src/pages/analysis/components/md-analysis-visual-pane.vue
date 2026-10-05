@@ -2,9 +2,10 @@
 import { useI18n } from 'vue-i18n';
 import { computed, onDeactivated, ref, watch } from 'vue';
 
+import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdScanExclusionLink from '@/components/custom/md-scan-exclusion-link.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { ANALYSIS_CHART_MAX_DEPTH, ANALYSIS_VIEW_IDS } from '@/lib/models/analysis';
+import { ANALYSIS_CHART_MAX_DEPTH, ANALYSIS_SCAN_MODES, ANALYSIS_VIEW_IDS } from '@/lib/models/analysis';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ICON_NAMES } from '@/lib/models/ui';
 import type {
@@ -86,7 +87,19 @@ function updateDepth(value: unknown) {
           "
         >
           <strong>{{ ByteSizeService.bytes(result.totalBytes) }}</strong>
-          <span>{{ t('analysis.totalSizeLabel') }}</span>
+          <MdTooltip
+            :text="
+              t(
+                result.scanMode === ANALYSIS_SCAN_MODES.fast
+                  ? 'analysis.scanMode.fastHint'
+                  : 'analysis.scanMode.standardDescription'
+              )
+            "
+          >
+            <span>{{
+              t(result.scanMode === ANALYSIS_SCAN_MODES.fast ? 'analysis.fileSize' : 'analysis.diskUsage')
+            }}</span>
+          </MdTooltip>
         </p>
         <MdScanExclusionLink
           v-if="exclusionsActive"
@@ -163,6 +176,7 @@ function updateDepth(value: unknown) {
     </KeepAlive>
     <MdAnalysisOtherDialog
       :scan-id="result.scanId"
+      :scan-mode="result.scanMode"
       :selection="remainderSelection"
       @close="remainderSelection = null"
       @navigate="emit('navigate', $event)"

@@ -39,6 +39,34 @@ describe('analysis store', () => {
     vi.spyOn(AnalysisService, 'listenProgress').mockResolvedValue(vi.fn());
   });
 
+  it('preserves fast mode when a deletion requires a recovery scan', async () => {
+    const store = useAnalysisStore();
+    store.scanMode = 'fast';
+    const analyze = vi.spyOn(AnalysisService, 'analyze').mockResolvedValue({ ...result, scanMode: 'fast' });
+    await store.refreshAfterDelete('/fixture', entry.path, false);
+    expect(analyze).toHaveBeenCalledWith('/fixture', true, [], [], 'fast');
+    expect(store.result?.scanMode).toBe('fast');
+  });
+
+  it('defaults to standard and expires cached navigation when switching metrics', async () => {
+    const store = useAnalysisStore();
+    expect(store.scanMode).toBe('standard');
+    store.result = result;
+    store.cache = { '/fixture': result, '/fixture/child': { ...result, root: '/fixture/child' } };
+    store.cacheOrder = ['/fixture', '/fixture/child'];
+    const fastResult: AnalysisResult = { ...result, scanMode: 'fast', totalBytes: 128 };
+    const analyze = vi.spyOn(AnalysisService, 'analyze').mockResolvedValue(fastResult);
+    await store.analyze('/fixture', false, true, 'fast');
+    expect(analyze).toHaveBeenCalledWith('/fixture', true, [], [], 'fast');
+    expect(store.scanMode).toBe('fast');
+    expect(store.cache['/fixture/child']).toBeUndefined();
+    expect(store.result).toBe(fastResult);
+    await store.analyze('/fixture/child');
+    expect(analyze).toHaveBeenLastCalledWith('/fixture/child', false, [], [], 'fast');
+    await store.analyze('/fixture', false, true, 'standard');
+    expect(analyze).toHaveBeenLastCalledWith('/fixture', true, [], [], 'standard');
+  });
+
   it('preserves the page selected while an analysis is running', async () => {
     let completeAnalysis: (value: AnalysisResult) => void = () => undefined;
     const analyze = vi.spyOn(AnalysisService, 'analyze').mockImplementation(
@@ -148,7 +176,7 @@ describe('analysis store', () => {
 
     await analysisStore.analyze('/fixture');
 
-    expect(analyze).toHaveBeenCalledWith('/fixture', false, ['/fixture/cache'], []);
+    expect(analyze).toHaveBeenCalledWith('/fixture', false, ['/fixture/cache'], [], 'standard');
     expect(analysisStore.scanExcludedFolders).toEqual(['/fixture/cache']);
     expect(analysisStore.result).toEqual(result);
   });
@@ -169,7 +197,7 @@ describe('analysis store', () => {
     expect(analysisStore.cache).toEqual({});
     expect(analysisStore.cacheOrder).toEqual([]);
     await analysisStore.analyze('/fixture');
-    expect(analyze).toHaveBeenCalledWith('/fixture', false, ['/fixture/cache'], []);
+    expect(analyze).toHaveBeenCalledWith('/fixture', false, ['/fixture/cache'], [], 'standard');
   });
 
   it('ignores a scan that finishes after its exclusions change', async () => {

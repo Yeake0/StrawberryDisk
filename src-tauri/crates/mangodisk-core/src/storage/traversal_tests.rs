@@ -1329,7 +1329,7 @@ fn analysis_charges_hard_links_once_with_stable_native_and_fallback_ownership() 
     let progress = Arc::new(ProgressTracker::new(0, |_| {}, 0));
     let (aggregate, snapshot) = traverse_memory_only(
         &root,
-        ScanPurpose::Analysis,
+        TraversalKind::Analysis(AnalysisScanMode::Standard),
         now_ms(),
         None,
         &progress,
@@ -1426,7 +1426,7 @@ fn hierarchy_counts_small_direct_items_without_recursive_descendants_or_empty_fi
     let progress = Arc::new(ProgressTracker::new(0, |_| {}, 0));
     let (_, snapshot) = traverse_memory_only(
         &root,
-        ScanPurpose::Analysis,
+        TraversalKind::Analysis(AnalysisScanMode::Standard),
         now_ms(),
         None,
         &progress,
@@ -1484,7 +1484,7 @@ fn hierarchy_projects_medium_files_below_large_file_floor_in_native_and_fallback
     let progress = Arc::new(ProgressTracker::new(0, |_| {}, 0));
     let (aggregate, snapshot) = traverse_memory_only(
         &root,
-        ScanPurpose::Analysis,
+        TraversalKind::Analysis(AnalysisScanMode::Standard),
         now_ms(),
         None,
         &progress,

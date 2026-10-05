@@ -5,7 +5,7 @@ mod session;
 
 pub use models::{
     AnalysisDeleteResult, AnalysisDirectoryNode, AnalysisRemainderPage, AnalysisRemainderRequest,
-    AnalysisResult, DirectoryEntryInfo,
+    AnalysisResult, AnalysisScanMode, DirectoryEntryInfo,
 };
 pub(crate) use models::{
     AnalysisEntryCandidate, AnalysisRemainderParent, ANALYSIS_VISIBLE_ENTRY_LIMIT,

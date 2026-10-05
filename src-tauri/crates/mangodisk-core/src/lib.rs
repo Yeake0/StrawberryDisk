@@ -106,7 +106,7 @@ pub use startup::{
 };
 pub use storage::analysis::{
     AnalysisDeleteResult, AnalysisRemainderPage, AnalysisRemainderRequest, AnalysisResult,
-    AnalysisService, DirectoryEntryInfo,
+    AnalysisScanMode, AnalysisService, DirectoryEntryInfo,
 };
 pub use storage::duplicates::{
     DuplicateEntryDeletePolicy, DuplicateFileEntry, DuplicateFileService, DuplicateFilesResult,

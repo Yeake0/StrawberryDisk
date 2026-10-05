@@ -2,10 +2,11 @@ import type { ScanNameExclusion } from '@/lib/models/storage-scan';
 import { markRaw } from 'vue';
 import { defineStore } from 'pinia';
 
-import { ANALYSIS_RESULT_CACHE_LIMIT, ANALYSIS_VIEW_IDS } from '@/lib/models/analysis';
+import { ANALYSIS_RESULT_CACHE_LIMIT, ANALYSIS_SCAN_MODES, ANALYSIS_VIEW_IDS } from '@/lib/models/analysis';
 import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
 import type {
   AnalysisResult,
+  AnalysisScanMode,
   AnalysisViewId,
   AnalysisViewPreferences,
   DirectoryEntryInfo,
@@ -24,6 +25,7 @@ import { useAppStore } from './app-store';
 import { useStorageScanPreferencesStore } from './storage-scan-preferences-store';
 
 interface AnalysisState {
+  scanMode: AnalysisScanMode;
   viewPreferences: AnalysisViewPreferences;
   viewPreferencesInitialized: boolean;
   result: AnalysisResult | null;
@@ -45,6 +47,7 @@ const viewPreferenceLoads = new WeakMap<object, { promise: Promise<void>; edited
 
 export const useAnalysisStore = defineStore('analysis', {
   state: (): AnalysisState => ({
+    scanMode: ANALYSIS_SCAN_MODES.standard,
     viewPreferences: AnalysisViewPreferenceUtils.defaults(),
     viewPreferencesInitialized: false,
     result: null,
@@ -135,8 +138,21 @@ export const useAnalysisStore = defineStore('analysis', {
       this.scanExcludedFolders = currentExclusions;
       this.scanExcludedNames = currentNames;
     },
-    async analyze(path?: string, refresh = false, setHome = false) {
+    async analyze(path?: string, refresh = false, setHome = false, requestedMode?: AnalysisScanMode) {
       if (this.pending || this.deleting) return;
+      const scanMode = requestedMode ?? this.scanMode;
+      if (scanMode !== this.scanMode) {
+        LoggerService.info(LOG_DOMAINS.analysis, LOG_EVENTS.analysisCacheConfigurationChanged, {
+          previousMode: this.scanMode,
+          scanMode,
+          cachedResultCount: Object.keys(this.cache).length,
+        });
+        this.scanMode = scanMode;
+        this.result = null;
+        this.cache = {};
+        this.cacheOrder = [];
+        refresh = true;
+      }
       const appStore = useAppStore();
       const target = path?.trim() || appStore.disk?.mountPoint;
       const preferences = useStorageScanPreferencesStore();
@@ -185,6 +201,7 @@ export const useAnalysisStore = defineStore('analysis', {
         if (this.cancelling) return;
         LoggerService.info(LOG_DOMAINS.analysis, LOG_EVENTS.scanRequested, {
           root: target,
+          scanMode,
           refresh,
           excludedFolderCount: requestedExclusions.length,
           excludedNameCount: requestedNames.length,
@@ -192,7 +209,9 @@ export const useAnalysisStore = defineStore('analysis', {
         this.scanStarted = true;
         // Published snapshots are replaced rather than edited in place. Keep large
         // entry arrays out of deep reactivity; workflow state remains reactive.
-        const result = markRaw(await AnalysisService.analyze(target, refresh, requestedExclusions, requestedNames));
+        const result = markRaw(
+          await AnalysisService.analyze(target, refresh, requestedExclusions, requestedNames, scanMode)
+        );
         if (
           !StorageScanPreferenceUtils.sameExcludedFolders(requestedExclusions, preferences.pathsForScope('analysis')) ||
           !StorageScanPreferenceUtils.sameExcludedNames(requestedNames, preferences.namesForScope('analysis'))
@@ -216,6 +235,7 @@ export const useAnalysisStore = defineStore('analysis', {
         if (!this.cancelling) {
           LoggerService.warn(LOG_DOMAINS.analysis, LOG_EVENTS.operationFailed, {
             operation: 'analyze_path',
+            scanMode,
             root: target,
             refresh,
             excludedFolderCount: requestedExclusions.length,
@@ -266,12 +286,13 @@ export const useAnalysisStore = defineStore('analysis', {
         if (this.cancelling) return;
         LoggerService.info(LOG_DOMAINS.analysis, LOG_EVENTS.scanRequested, {
           operation: 'refresh_analysis_after_delete',
+          scanMode: this.scanMode,
           root,
           excludedFolderCount: paths.length,
           excludedNameCount: names.length,
         });
         this.scanStarted = true;
-        const refreshed = markRaw(await AnalysisService.analyze(root, true, paths, names));
+        const refreshed = markRaw(await AnalysisService.analyze(root, true, paths, names, this.scanMode));
         if (this.cancelling) return;
         if (
           StorageScanPreferenceUtils.sameExcludedFolders(paths, preferences.pathsForScope('analysis')) &&

@@ -1948,7 +1948,6 @@
     }
   },
   "analysis": {
-    "totalSizeLabel": "Toplam boyut",
     "shareOfCurrentFolder": "Geçerli klasördeki pay",
     "shareOfParentFolder": "Üst klasördeki pay",
     "title": "Disk Alanı Analizi",
@@ -1987,7 +1986,17 @@
     "sunburst": "Güneş grafiği",
     "sunburstDepth": "Derinlik",
     "sunburstLevels": "Derinlik {count}",
-    "sunburstRemainder": "Dosyalar ve diğer öğeler"
+    "sunburstRemainder": "Dosyalar ve diğer öğeler",
+    "scanMode": {
+      "label": "Tarama modu",
+      "standard": "Standart tarama",
+      "standardDescription": "Disk kullanımını hesaplar",
+      "fast": "Hızlı tarama",
+      "fastDescription": "Dosya boyutunu daha hızlı hesaplar",
+      "fastHint": "Sıkıştırılmış ve seyrek dosya boyutları disk kullanımından farklı olabilir"
+    },
+    "diskUsage": "Disk kullanımı",
+    "fileSize": "Dosya boyutu"
   },
   "storageScanExclusions": {
     "title": "Tarama dışında tutulanlar",

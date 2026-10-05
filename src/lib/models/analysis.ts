@@ -1,3 +1,6 @@
+export const ANALYSIS_SCAN_MODES = { standard: 'standard', fast: 'fast' } as const;
+export type AnalysisScanMode = (typeof ANALYSIS_SCAN_MODES)[keyof typeof ANALYSIS_SCAN_MODES];
+
 export const ANALYSIS_RESULT_CACHE_LIMIT = 80;
 export const ANALYSIS_CHART_MAX_DEPTH = 6;
 export const ANALYSIS_REMAINDER_SCHEMA_VERSION = 2;
@@ -41,6 +44,8 @@ export interface DirectoryEntryInfo {
 }
 
 export interface AnalysisResult {
+  /** Absent in results from older app versions; those use standard allocation. */
+  scanMode?: AnalysisScanMode;
   scanId: number;
   root: string;
   scannedAtMs: number;

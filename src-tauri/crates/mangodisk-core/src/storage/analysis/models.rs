@@ -3,6 +3,46 @@ pub(crate) const ANALYSIS_VISIBLE_ENTRY_LIMIT: usize = 500;
 
 use serde::{Deserialize, Serialize};
 
+/// Selects the byte metric without changing traversal or deletion safety boundaries.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum AnalysisScanMode {
+    #[default]
+    Standard,
+    Fast,
+}
+
+impl AnalysisScanMode {
+    pub(crate) const fn as_str(self) -> &'static str {
+        match self {
+            Self::Standard => "standard",
+            Self::Fast => "fast",
+        }
+    }
+
+    pub(crate) fn file_usage(
+        self,
+        path: &std::path::Path,
+        metadata: &std::fs::Metadata,
+    ) -> mangodisk_platform::FileSpaceUsage {
+        match self {
+            Self::Standard => mangodisk_platform::Platform::file_space_usage(
+                &mangodisk_platform::current_platform(),
+                path,
+                metadata,
+            ),
+            Self::Fast => mangodisk_platform::FileSpaceUsage::logical_only(metadata.len()),
+        }
+    }
+
+    pub(crate) const fn displayed_bytes(self, usage: mangodisk_platform::FileSpaceUsage) -> u64 {
+        match self {
+            Self::Standard => usage.allocated_bytes,
+            Self::Fast => usage.logical_bytes,
+        }
+    }
+}
+
 /// A bounded hierarchy projection of the same index used by the flat result.
 /// Omitted files and directories remain part of the parent's byte total.
 #[derive(Debug, Clone, Serialize)]
@@ -24,7 +64,7 @@ pub struct AnalysisDirectoryNode {
 pub struct DirectoryEntryInfo {
     pub name: String,
     pub path: String,
-    /// Physical storage charged to the volume and shown by disk analysis.
+    /// Bytes in the owning result's scan metric.
     pub bytes: u64,
     /// Logical content length retained for delete preflight and cache updates.
     #[serde(skip)]
@@ -38,10 +78,11 @@ pub struct DirectoryEntryInfo {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AnalysisResult {
+    pub scan_mode: AnalysisScanMode,
     pub scan_id: u64,
     pub root: String,
     pub scanned_at_ms: u64,
-    /// Physical storage charged to all direct result entries.
+    /// Sum in the declared scan metric, not a live measurement of reclaimed space.
     pub total_bytes: u64,
     /// Positive-byte direct children, counted before the bounded projection.
     pub total_entry_count: usize,
@@ -89,6 +130,7 @@ pub struct AnalysisRemainderPage {
 }
 
 pub(crate) struct AnalysisRemainderParent {
+    pub(crate) scan_mode: AnalysisScanMode,
     pub(crate) path: String,
     pub(crate) bytes: u64,
     pub(crate) exclusions: crate::filesystem::ScanExclusionOptions,
@@ -97,12 +139,13 @@ pub(crate) struct AnalysisRemainderParent {
 /// Captures an entry from an authoritative analysis snapshot.
 #[derive(Debug, Clone)]
 pub(crate) struct AnalysisEntryCandidate {
+    pub(crate) scan_mode: AnalysisScanMode,
     pub(crate) requires_rescan: bool,
     pub(crate) exclusions: crate::filesystem::ScanExclusionOptions,
     pub(crate) root: String,
     pub(crate) path: String,
     pub(crate) expected_logical_bytes: u64,
-    pub(crate) expected_allocated_bytes: u64,
+    pub(crate) expected_displayed_bytes: u64,
     pub(crate) expected_file_count: u64,
     pub(crate) is_directory: bool,
 }
@@ -114,7 +157,7 @@ pub struct AnalysisDeleteResult {
     /// The original path changed or shared allocation must be reassigned.
     /// Clients must discard navigation snapshots before refreshing this result.
     pub requires_rescan: bool,
-    /// Scan-time allocated bytes to remove from the displayed snapshot.
+    /// Scan-time bytes in the source result's metric to remove from the snapshot.
     /// This is not a live measurement of storage reclaimed by the filesystem.
     pub released_bytes: u64,
     /// Scan-time file count used only for snapshot reconciliation.

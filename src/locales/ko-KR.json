@@ -1948,7 +1948,6 @@
     }
   },
   "analysis": {
-    "totalSizeLabel": "전체 크기",
     "shareOfCurrentFolder": "현재 폴더에서 차지하는 비율",
     "shareOfParentFolder": "상위 폴더에서 차지하는 비율",
     "title": "디스크 공간 분석",
@@ -1987,7 +1986,17 @@
     "sunburst": "선버스트",
     "sunburstDepth": "깊이",
     "sunburstLevels": "깊이 {count}단계",
-    "sunburstRemainder": "파일 및 기타 항목"
+    "sunburstRemainder": "파일 및 기타 항목",
+    "scanMode": {
+      "label": "스캔 방식",
+      "standard": "표준 스캔",
+      "standardDescription": "디스크 사용량 계산",
+      "fast": "빠른 스캔",
+      "fastDescription": "파일 크기를 계산해 더 빠르게 스캔",
+      "fastHint": "압축 및 희소 파일의 크기는 디스크 사용량과 다를 수 있습니다"
+    },
+    "diskUsage": "디스크 사용량",
+    "fileSize": "파일 크기"
   },
   "storageScanExclusions": {
     "title": "스캔 제외",

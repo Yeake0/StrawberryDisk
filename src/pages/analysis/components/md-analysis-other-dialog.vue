@@ -10,7 +10,13 @@ import MdSpinner from '@/components/custom/md-spinner.vue';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import type { AnalysisRemainderPage, AnalysisRemainderSelection, DirectoryEntryInfo } from '@/lib/models/analysis';
+import type {
+  AnalysisRemainderPage,
+  AnalysisRemainderSelection,
+  AnalysisScanMode,
+  DirectoryEntryInfo,
+} from '@/lib/models/analysis';
+import { ANALYSIS_SCAN_MODES } from '@/lib/models/analysis';
 import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
 import { AnalysisService } from '@/lib/services/analysis-service';
 import { ByteSizeService } from '@/lib/services/byte-size-service';
@@ -18,7 +24,11 @@ import { LoggerService } from '@/lib/services/logger-service';
 import * as FormatUtils from '@/lib/utils/format';
 import MdAnalysisEntryIcon from './md-analysis-entry-icon.vue';
 
-const props = defineProps<{ scanId: number; selection: AnalysisRemainderSelection | null }>();
+const props = defineProps<{
+  scanId: number;
+  scanMode?: AnalysisScanMode;
+  selection: AnalysisRemainderSelection | null;
+}>();
 const emit = defineEmits<{ close: []; navigate: [path: string]; refreshDirectory: [path: string] }>();
 const { t } = useI18n({ useScope: 'global' });
 const entries = shallowRef<DirectoryEntryInfo[]>([]);
@@ -162,7 +172,7 @@ onBeforeUnmount(() => {
       </MdDialogHeader>
       <div v-if="entries.length" class="other-columns">
         <span>{{ t('analysis.name') }}</span>
-        <span>{{ t('analysis.size') }}</span>
+        <span>{{ t(scanMode === ANALYSIS_SCAN_MODES.fast ? 'analysis.fileSize' : 'analysis.diskUsage') }}</span>
       </div>
       <div ref="bodyElement" class="other-body scrollbar-stable" :aria-busy="loading">
         <div class="other-virtual-content" :style="{ height: `${virtualizer.getTotalSize()}px` }">

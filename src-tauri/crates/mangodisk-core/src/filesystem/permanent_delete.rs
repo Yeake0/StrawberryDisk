@@ -454,7 +454,7 @@ pub(crate) fn delete_analysis_candidate_permanently(
     }
     let removed_usage = FileSpaceUsage {
         logical_bytes: candidate.expected_logical_bytes,
-        allocated_bytes: candidate.expected_allocated_bytes,
+        allocated_bytes: candidate.expected_displayed_bytes,
     };
     Ok(AnalysisDeleteOutcome {
         target,
@@ -462,7 +462,7 @@ pub(crate) fn delete_analysis_candidate_permanently(
         result: AnalysisDeleteResult {
             requires_rescan: false,
             removed_path: candidate.path,
-            released_bytes: candidate.expected_allocated_bytes,
+            released_bytes: candidate.expected_displayed_bytes,
             removed_file_count: candidate.expected_file_count,
         },
     })
@@ -2256,12 +2256,13 @@ mod permanent_delete_tests {
         fs::write(path.join("new-after-analysis.bin"), b"new")
             .expect("write the new analysis fixture");
         let candidate = AnalysisEntryCandidate {
+            scan_mode: Default::default(),
             requires_rescan: false,
             exclusions: Default::default(),
             root: sandbox.0.to_string_lossy().into_owned(),
             path: path.to_string_lossy().into_owned(),
             expected_logical_bytes: b"payload".len() as u64,
-            expected_allocated_bytes: 4_096,
+            expected_displayed_bytes: 4_096,
             expected_file_count: 1,
             is_directory: true,
         };

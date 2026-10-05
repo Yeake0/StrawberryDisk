@@ -1948,7 +1948,6 @@
     }
   },
   "analysis": {
-    "totalSizeLabel": "总占用",
     "shareOfCurrentFolder": "占当前目录",
     "shareOfParentFolder": "占父目录",
     "title": "磁盘空间分析",
@@ -1981,13 +1980,23 @@
     "emptyDescription": "分析所选位置中文件和文件夹的空间占用",
     "folderFileSummary": "{folders} 个文件夹 · {files} 个文件",
     "folderSpaceSummary": "{folders} 个文件夹 · {size}",
-    "limitedEntries": "最多显示占用空间最大的 {count} 项",
+    "limitedEntries": "最多显示最大的 {count} 项",
     "exclusionHint": "此处仅统计参与分析的内容；排除设置不会改变磁盘实际已用空间",
     "deleting": "正在删除…",
     "sunburst": "旭日图",
     "sunburstDepth": "深度",
     "sunburstLevels": "深度 {count} 层",
-    "sunburstRemainder": "文件及其他项目"
+    "sunburstRemainder": "文件及其他项目",
+    "scanMode": {
+      "label": "扫描模式",
+      "standard": "标准扫描",
+      "standardDescription": "统计磁盘占用",
+      "fast": "快速扫描",
+      "fastDescription": "统计文件大小，速度更快",
+      "fastHint": "压缩、稀疏文件的大小可能与磁盘占用不同"
+    },
+    "diskUsage": "磁盘占用",
+    "fileSize": "文件大小"
   },
   "storageScanExclusions": {
     "title": "扫描排除",
