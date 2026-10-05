@@ -311,6 +311,24 @@ pub fn ready(app: &tauri::AppHandle) {
 }
 
 fn show(app: &tauri::AppHandle) -> tauri::Result<()> {
+    #[cfg(target_os = "linux")]
+    {
+        let target = app.clone();
+        // Linux monitor work-area queries access GDK directly. Dispatch the
+        // entire positioning sequence to GTK's main thread to avoid concurrent
+        // X11 requests from menu or command workers corrupting the connection.
+        app.run_on_main_thread(move || {
+            if let Err(error) = show_window(&target) {
+                hide(&target);
+                super::diagnostics::Failure::record("panel_show", &error);
+            }
+        })
+    }
+    #[cfg(not(target_os = "linux"))]
+    show_window(app)
+}
+
+fn show_window(app: &tauri::AppHandle) -> tauri::Result<()> {
     let state = app.state::<Arc<ResidentState>>();
     if !state.panel_open.load(Ordering::Relaxed) || !state.enabled() {
         return Ok(());

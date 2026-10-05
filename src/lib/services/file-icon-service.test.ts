@@ -34,6 +34,22 @@ describe('FileIconService', () => {
     expect(icons).toEqual(['data:image/png;base64,batch', 'data:image/png;base64,batch']);
   });
 
+  it('keeps extensionless executable icons distinct in path mode', async () => {
+    invokeMock.mockImplementation(async (_command: string, args: { requests: Array<{ path: string }> }) => ({
+      assignments: args.requests.map(request => ({ ...request, iconKey: `path:${request.path}` })),
+      assets: args.requests.map(request => ({ iconKey: `path:${request.path}`, dataUrl: `icon:${request.path}` })),
+    }));
+    const first = { path: '/usr/bin/first-icon-test', kind: 'file' as const, mode: 'path' as const };
+    const second = { ...first, path: '/usr/bin/second-icon-test' };
+    expect(await Promise.all([FileIconService.resolve(first), FileIconService.resolve(second)])).toEqual([
+      `icon:${first.path}`,
+      `icon:${second.path}`,
+    ]);
+    expect(invokeMock.mock.calls[0]?.[1].requests).toHaveLength(2);
+    expect(await FileIconService.resolve(first)).toBe(`icon:${first.path}`);
+    expect(invokeMock).toHaveBeenCalledTimes(1);
+  });
+
   it('reuses a resolved file type without another native call', async () => {
     invokeMock.mockImplementation(async (_command: string, args: { requests: Array<{ path: string }> }) => ({
       assignments: args.requests.map(request => ({ ...request, iconKey: 'ext:sessionpdf' })),

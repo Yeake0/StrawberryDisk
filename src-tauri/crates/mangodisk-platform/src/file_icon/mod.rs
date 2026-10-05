@@ -4,6 +4,10 @@ use std::{
 };
 
 mod cache;
+#[cfg(all(target_os = "linux", feature = "linux-desktop-icons"))]
+mod linux;
+#[cfg(any(all(target_os = "linux", feature = "linux-desktop-icons"), test))]
+mod linux_desktop_identity;
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(windows)]
@@ -78,6 +82,12 @@ pub struct NativeFileIconService;
 
 impl NativeFileIconService {
     pub const MAX_REQUESTS: usize = 128;
+
+    /// Associates the running application's verified executable with its bundled artwork.
+    #[cfg(all(target_os = "linux", feature = "linux-desktop-icons"))]
+    pub fn register_process_icon(path: PathBuf, png: &'static [u8]) {
+        linux::register_process_icon(path, png);
+    }
 
     /// Resolves only presentation assets. Scan results remain image-free, and
     /// grouping by identity guarantees that repeated types such as PDF trigger
@@ -225,7 +235,16 @@ fn platform_provider_variant(query: &IconQuery) -> Vec<u8> {
     windows::provider_variant(query)
 }
 
-#[cfg(not(any(target_os = "macos", windows)))]
+#[cfg(all(target_os = "linux", feature = "linux-desktop-icons"))]
+fn platform_provider_variant(query: &IconQuery) -> Vec<u8> {
+    linux::provider_variant(query)
+}
+
+#[cfg(not(any(
+    target_os = "macos",
+    windows,
+    all(target_os = "linux", feature = "linux-desktop-icons")
+)))]
 fn platform_provider_variant(_query: &IconQuery) -> Vec<u8> {
     Vec::new()
 }
@@ -240,7 +259,16 @@ fn platform_load_png(query: &IconQuery) -> Option<Vec<u8>> {
     windows::load_png(query)
 }
 
-#[cfg(not(any(target_os = "macos", windows)))]
+#[cfg(all(target_os = "linux", feature = "linux-desktop-icons"))]
+fn platform_load_png(query: &IconQuery) -> Option<Vec<u8>> {
+    linux::load_png(query)
+}
+
+#[cfg(not(any(
+    target_os = "macos",
+    windows,
+    all(target_os = "linux", feature = "linux-desktop-icons")
+)))]
 fn platform_load_png(_query: &IconQuery) -> Option<Vec<u8>> {
     None
 }

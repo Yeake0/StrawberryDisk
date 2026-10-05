@@ -66,6 +66,14 @@ Memory process details are requested only by its selected page or startup icon
 warming. CPU application counters stay warm while resident mode is enabled, every 4 seconds in the background and every 2 seconds on the CPU page. Opening or explicitly refreshing that page requests a sample immediately while reusing any in-flight query and displaying cached rows. Baseline-only results receive at most two 250 ms retries. Reopening preserves the last
 selected tab within the application session; a new process defaults to CPU.
 A different metric entry can navigate an already open panel.
+Linux AppIndicator does not publish tray click events, so its native menu starts
+with a localized System status action that opens the same reusable detail panel.
+Linux also lacks tray geometry; the panel uses the existing placement fallback
+at the upper-right of the primary monitor's work area.
+Linux panel positioning and showing run on the GTK main thread: monitor work-area
+queries access GDK directly and can corrupt an X11 connection when called by a
+menu or command worker alongside GTK events. Showing failures clear open intent
+and record a diagnostic instead of leaving detailed sampling active.
 CPU and network require two valid observations; unavailable values remain `—`.
 Windows keeps one PDH query on its CPU worker and uses language-neutral
 `Processor Information(_Total)` counters. Windows 10 and older Windows 11
@@ -528,6 +536,28 @@ CPU and memory share icon identity, disclosure, and file-manager navigation. CPU
 view-only: normal app-wide quit and memory exclusions remain in the memory list.
 Version 7 replaces the ephemeral IPC protocol; readers reject other versions and
 no persisted preferences are migrated.
+
+Linux process rows request path-specific icons rather than sharing an extensionless
+file-type icon. The GUI enables the platform's `linux-desktop-icons` feature;
+standalone Core/CLI builds do not acquire GTK dependencies. The adapter indexes registered desktop entries through
+GIO, matches canonical executable paths, and resolves their artwork through the
+current GTK icon theme. Conflicting entries, script/sandbox launchers, and processes
+without registered artwork retain a neutral process glyph. The running MangoDisk
+executable uses its bundled artwork after registration of its exact path.
+Shared-launcher checks apply to both the desktop command and its canonical
+executable, so a differently named symlink cannot assign a script's artwork to
+unrelated interpreter processes. An isolated desktop-registry regression test
+covers this alias case without modifying the user's registered applications.
+Metadata and scaled PNG decoding run on icon workers, independently of resource
+sampling. Only theme lookup uses the GTK main loop, with a bounded wait and retry
+backoff. Desktop indexing and positive/negative path resolution are bounded and
+refresh after sixty seconds; theme changes invalidate native resolved paths. Existing
+frontend batching and native PNG caching avoid repeated decoding on panel reopen.
+Run `cargo test -p mangodisk-platform --features linux-desktop-icons --test linux_file_icons -- --ignored --nocapture`
+with the target desktop's `DISPLAY` for cold/repeated timings and real application
+coverage. Set `MANGODISK_EXPECT_NATIVE_ICONS=1` on the Ubuntu GNOME test desktop to
+assert registered application artwork and daemon fallback. Keep raw output under
+the ignored `.local/` directory.
 
 For repeatable sensor-cost measurements, build `resource_sampling_probe` in
 `mangodisk-platform` with `--release`, then run `overview`, `memory`, `cpu`,

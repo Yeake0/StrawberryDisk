@@ -73,6 +73,7 @@ export const ICON_NAMES = {
   code: 'code',
   aiTools: 'brainCircuit',
   application: 'application',
+  process: 'process',
   menuBar: 'menuBar',
   taskbar: 'taskbar',
   userProfile: 'circleUserRound',

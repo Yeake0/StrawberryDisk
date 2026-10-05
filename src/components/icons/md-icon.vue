@@ -204,6 +204,7 @@ import MdIconGitMind from '@/components/icons/md-icon-gitmind.vue';
 import MdIconIqiyi from '@/components/icons/md-icon-iqiyi.vue';
 import MdIconLark from '@/components/icons/md-icon-lark.vue';
 import MdIconLinuxFolder from '@/components/icons/md-icon-linux-folder.vue';
+import MdIconProcess from '@/components/icons/md-icon-process.vue';
 import MdIconLobsterAi from '@/components/icons/md-icon-lobsterai.vue';
 import MdIconManus from '@/components/icons/md-icon-manus.vue';
 import MdIconNotion from '@/components/icons/md-icon-notion.vue';
@@ -309,6 +310,7 @@ const iconMap: Record<IconName, IconDefinition> = {
   code: lucide(CodeXml),
   brainCircuit: lucide(BrainCircuit),
   application: lucide(AppWindow),
+  process: custom(MdIconProcess),
   menuBar: lucide(AppWindowMac),
   taskbar: tabler(IconLayoutBottombarFilled),
   circleUserRound: lucide(CircleUserRound),

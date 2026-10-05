@@ -11,7 +11,9 @@ import zhCN from '@/locales/zh-CN.json';
 import zhTW from '@/locales/zh-TW.json';
 import jaJP from '@/locales/ja-JP.json';
 import koKR from '@/locales/ko-KR.json';
-vi.mock('@/lib/services/operating-system-service', () => ({ OperatingSystemService: { isWindows: () => true } }));
+vi.mock('@/lib/services/operating-system-service', () => ({
+  OperatingSystemService: { isWindows: () => true, isLinux: () => false },
+}));
 vi.mock('@/lib/services/memory-release-service', () => ({ MemoryReleaseService: { save: vi.fn() } }));
 vi.mock('@/lib/services/byte-size-service', () => ({ ByteSizeService: { memory: (n: number) => `${n} B` } }));
 it('excludes all matching image processes from the ranking without quitting or removing the row', async () => {

@@ -80,6 +80,16 @@ pub fn install(app: &tauri::AppHandle) -> tauri::Result<()> {
 }
 
 fn menu(app: &tauri::AppHandle, labels: &labels::Labels) -> tauri::Result<Menu<tauri::Wry>> {
+    // AppIndicator does not emit tray clicks on Linux. Keep the detail panel
+    // reachable through the native menu that the desktop opens instead.
+    #[cfg(target_os = "linux")]
+    let status = MenuItem::with_id(
+        app,
+        "resident-status",
+        labels.text("details"),
+        true,
+        None::<&str>,
+    )?;
     let open = MenuItem::with_id(
         app,
         "resident-open",
@@ -101,7 +111,11 @@ fn menu(app: &tauri::AppHandle, labels: &labels::Labels) -> tauri::Result<Menu<t
         true,
         None::<&str>,
     )?;
-    Menu::with_items(app, &[&open, &settings, &quit])
+    let menu = Menu::new(app)?;
+    #[cfg(target_os = "linux")]
+    menu.append(&status)?;
+    menu.append_items(&[&open, &settings, &quit])?;
+    Ok(menu)
 }
 
 pub fn brand_icon() -> tauri::image::Image<'static> {
@@ -149,6 +163,17 @@ fn ensure(app: &tauri::AppHandle, id: DisplayId, labels: &labels::Labels) -> tau
         .menu(&menu(app, labels)?)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
+            #[cfg(target_os = "linux")]
+            "resident-status" => {
+                let app = app.clone();
+                // Menu activation is also a native callback; leave it before
+                // creating or focusing the panel's WebView.
+                tauri::async_runtime::spawn(async move {
+                    if let Err(error) = panel::open(&app) {
+                        super::diagnostics::Failure::record("panel_menu_entry", &error);
+                    }
+                });
+            }
             "resident-open" => {
                 main_window::request(app, main_window::Destination::Main, "tray_menu")
             }

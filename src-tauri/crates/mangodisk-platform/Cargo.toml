@@ -4,6 +4,9 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 
+[features]
+linux-desktop-icons = ["dep:gdk-pixbuf", "dep:gio", "dep:glib", "dep:gtk"]
+
 [dependencies]
 blake3 = "1"
 dirs = "6"
@@ -28,6 +31,10 @@ plist = "1.7"
 rusqlite = { version = "0.37", features = ["bundled"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
+gdk-pixbuf = { version = "0.18", optional = true }
+gio = { version = "0.18", optional = true }
+glib = { version = "0.18", optional = true }
+gtk = { version = "0.18", optional = true }
 libc = "0.2"
 walkdir = "2"
 

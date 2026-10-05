@@ -5,6 +5,17 @@ use mangodisk_platform::{
 };
 use tauri::Manager;
 
+#[cfg(target_os = "linux")]
+pub fn install() {
+    match std::env::current_exe() {
+        Ok(path) => NativeFileIconService::register_process_icon(
+            path,
+            include_bytes!("../../icons/32x32.png"),
+        ),
+        Err(error) => log::warn!("resident_application_icon_registration_failed error={error}"),
+    }
+}
+
 pub fn warm(app: &tauri::AppHandle, summary: &ProcessMemorySummary) {
     let started = std::time::Instant::now();
     let requests = requests(summary);
@@ -37,7 +48,7 @@ fn requests(summary: &ProcessMemorySummary) -> Vec<NativeFileIconRequest> {
                 } else {
                     NativeFileIconItemKind::File
                 },
-                mode: if application.application.is_bundle {
+                mode: if application.application.is_bundle || cfg!(target_os = "linux") {
                     NativeFileIconMode::Path
                 } else {
                     NativeFileIconMode::Automatic
@@ -83,6 +94,13 @@ mod tests {
         assert_eq!(requests[0].kind, NativeFileIconItemKind::Directory);
         assert_eq!(requests[0].mode, NativeFileIconMode::Path);
         assert_eq!(requests[1].kind, NativeFileIconItemKind::File);
-        assert_eq!(requests[1].mode, NativeFileIconMode::Automatic);
+        assert_eq!(
+            requests[1].mode,
+            if cfg!(target_os = "linux") {
+                NativeFileIconMode::Path
+            } else {
+                NativeFileIconMode::Automatic
+            }
+        );
     }
 }

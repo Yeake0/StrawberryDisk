@@ -11,7 +11,9 @@ import en from '@/locales/en-US.json';
 vi.mock('@/lib/services/preference-storage-service', () => ({
   PreferenceStorageService: { loadResourceSort: vi.fn(async () => null), saveResourceSort: vi.fn(async () => {}) },
 }));
-vi.mock('@/lib/services/operating-system-service', () => ({ OperatingSystemService: { isWindows: () => true } }));
+vi.mock('@/lib/services/operating-system-service', () => ({
+  OperatingSystemService: { isWindows: () => true, isLinux: () => false },
+}));
 const app = (id: string, usedPercent: number): ApplicationCpu => ({
   id,
   name: id,

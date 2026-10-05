@@ -27,6 +27,7 @@ const emit = defineEmits<{
 
 const resolvedPlatform = computed<ApplicationUninstallPlatform>(() => {
   if (props.platform) return props.platform;
+  if (OperatingSystemService.isLinux()) return 'linuxPackage';
   return OperatingSystemService.isWindows() ? 'windowsRegistry' : 'macosBundle';
 });
 
@@ -84,6 +85,7 @@ const resolvedArtworkSize = computed(() => {
       'fallback-container': !imageSource,
       'macos-icon': resolvedPlatform === 'macosBundle',
       'windows-icon': resolvedPlatform === 'windowsRegistry',
+      'linux-icon': resolvedPlatform === 'linuxPackage',
     }"
     :style="{ width: `${size}px`, height: `${size}px` }"
   >
@@ -95,7 +97,10 @@ const resolvedArtworkSize = computed(() => {
       @error="handleImageError"
     />
     <span v-else class="fallback-icon" aria-hidden="true">
-      <MdIcon :name="ICON_NAMES.application" :size="Math.round(size * 0.6)" />
+      <MdIcon
+        :name="resolvedPlatform === 'linuxPackage' ? ICON_NAMES.process : ICON_NAMES.application"
+        :size="Math.round(size * (resolvedPlatform === 'linuxPackage' ? 0.8 : 0.6))"
+      />
     </span>
   </span>
 </template>
@@ -142,5 +147,9 @@ img {
   width: 100%;
   height: 100%;
   place-items: center;
+}
+
+.linux-icon .fallback-icon {
+  color: var(--muted-foreground);
 }
 </style>

@@ -214,6 +214,7 @@ export class FileIconService {
   }
 
   private static reusableTypeKey(request: FileIconRequest): string | null {
+    if (request.mode === 'path') return null;
     if (request.kind === 'directory') {
       // Generic result surfaces intentionally use one operating-system folder
       // icon. Path-aware mode remains available for Downloads, Documents, and

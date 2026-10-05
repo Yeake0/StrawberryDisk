@@ -8,7 +8,7 @@ vi.mock('@/lib/services/application-icon-service', () => ({
   ApplicationIconService: { peekFallback: fallback.peek, resolveFallback: fallback.resolve },
 }));
 vi.mock('@/lib/services/operating-system-service', () => ({
-  OperatingSystemService: { isWindows: () => false },
+  OperatingSystemService: { isWindows: () => false, isLinux: () => false },
 }));
 
 import MdApplicationIcon from '@/components/custom/md-application-icon.vue';
@@ -23,6 +23,16 @@ describe('MdApplicationIcon', () => {
     const wrapper = mount(MdApplicationIcon, { props: { src: 'original.png' } });
     expect(wrapper.get('img').attributes('src')).toBe('original.png');
     expect(fallback.resolve).not.toHaveBeenCalled();
+  });
+
+  it('uses a neutral process fallback on Linux without requesting a macOS icon', async () => {
+    fallback.resolve.mockResolvedValue(null);
+    const wrapper = mount(MdApplicationIcon, { props: { platform: 'linuxPackage', size: 30 } });
+    await flushPromises();
+    expect(wrapper.find('img').exists()).toBe(false);
+    expect(wrapper.classes()).toContain('linux-icon');
+    expect(wrapper.get('.process-icon').attributes('style')).toContain('width: 24px');
+    expect(fallback.resolve).toHaveBeenCalledExactlyOnceWith('linuxPackage');
   });
 
   it('uses the full native canvas for a missing macOS application icon', async () => {

@@ -25,6 +25,8 @@ pub const PANEL_LABEL: &str = "tray-panel";
 pub const TRAY_ID: &str = "resident";
 
 pub fn install(app: &tauri::AppHandle) -> tauri::Result<()> {
+    #[cfg(target_os = "linux")]
+    application_icons::install();
     #[cfg(windows)]
     taskbar_display::install(app);
     tray_display::install(app)?;

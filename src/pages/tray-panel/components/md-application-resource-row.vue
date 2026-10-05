@@ -62,6 +62,7 @@ const emit = defineEmits<{ toggle: [] }>();
 const { t } = useI18n({ useScope: 'global' });
 const memorySettings = useMemoryReleaseStore();
 const windows = OperatingSystemService.isWindows();
+const linux = OperatingSystemService.isLinux();
 const excluded = computed(() => memorySettings.excluded(props.application.iconPath));
 const revealing = ref(false);
 const failed = ref(false);
@@ -142,6 +143,7 @@ async function reveal() {
         :name="application.name"
         :directory="application.isBundle"
         directory-mode="path"
+        :file-mode="linux ? 'path' : 'automatic'"
         compact
       >
         <template #fallback>
