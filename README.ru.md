@@ -17,6 +17,14 @@
   <img alt="Ядро на Rust" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
 </p>
 
+<p align="center">
+  <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/readme/en-dark.jpg">
+      <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/readme/en-light.jpg">
+      <img src="https://assets.mangodisk.app/images/readme/en-light.jpg" width="1200" alt="StrawberryDisk: очистка диска, анализ хранилища, защита конфиденциальности и оптимизация системы">
+    </picture>
+</p>
+
 ## Возможности StrawberryDisk
 
 > **Хранилище**
@@ -109,6 +117,106 @@
 StrawberryDisk поддерживает собственные правила очистки. Сторонние проекты могут быть источником идей для исследования, но новое правило принимается только после проверки надёжных источников, безопасных границ и поведения на реальной системе. Всё, для чего нельзя определить чёткую границу безопасности, исключается.
 
 Полная библиотека правил и история её изменений открыты для проверки: [библиотека правил очистки StrawberryDisk](https://github.com/Yeake0/StrawberryDisk/tree/main/src-tauri/crates/strawberrydisk-core/rules).
+
+## Снимки экрана
+
+На снимках показан исходный интерфейс; текущая версия StrawberryDisk может отличаться.
+
+<p align="center">
+  <strong>Глубокая очистка</strong><br>
+  <sub>Поиск очищаемых данных в системе, приложениях, инструментах разработчика и проектах</sub>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-01-deep-cleanup.jpg">
+    <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-01-deep-cleanup.jpg">
+    <img src="https://assets.mangodisk.app/images/screenshots/en/light-01-deep-cleanup.jpg" width="1200" alt="Интерфейс глубокой очистки StrawberryDisk">
+  </picture>
+</p>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Очистка крупных файлов</strong><br>
+      <sub>Поиск файлов, занимающих больше всего места, без ручного обхода папок</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-02-large-file-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-02-large-file-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-02-large-file-cleanup.jpg" width="100%" alt="Интерфейс очистки крупных файлов StrawberryDisk">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>Очистка дубликатов</strong><br>
+      <sub>Безопасное удаление точных дубликатов с сохранением не менее одной копии</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-03-duplicate-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-03-duplicate-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-03-duplicate-cleanup.jpg" width="100%" alt="Интерфейс очистки дубликатов StrawberryDisk">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Анализ дискового пространства</strong><br>
+      <sub>Поиск самых больших файлов и папок с наглядным представлением занятого места</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-05-disk-space-analysis.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-05-disk-space-analysis.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-05-disk-space-analysis.jpg" width="100%" alt="Интерфейс анализа дискового пространства StrawberryDisk">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>Управление автозагрузкой</strong><br>
+      <sub>Отключение ненужных программ для ускорения входа и снижения фоновой активности</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-06-startup-items.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-06-startup-items.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-06-startup-items.jpg" width="100%" alt="Интерфейс управления автозагрузкой StrawberryDisk">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Удаление приложений и связанных данных</strong><br>
+      <sub>Удаление приложений и их остаточных файлов для освобождения места</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-04-app-uninstaller.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-04-app-uninstaller.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-04-app-uninstaller.jpg" width="100%" alt="Интерфейс удаления приложений StrawberryDisk">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>Оптимизация системы</strong><br>
+      <sub>Настройка производительности, конфиденциальности и удобства одним нажатием</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-07-system-optimization.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-07-system-optimization.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-07-system-optimization.jpg" width="100%" alt="Интерфейс оптимизации системы StrawberryDisk">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Обслуживание системы</strong><br>
+      <sub>Быстрое исправление распространённых системных проблем</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-08-system-maintenance.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-08-system-maintenance.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-08-system-maintenance.jpg" width="100%" alt="Интерфейс обслуживания системы StrawberryDisk">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>Очистка конфиденциальных данных</strong><br>
+      <sub>Сокращение следов активности и защита повседневной конфиденциальности</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-09-privacy-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-09-privacy-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-09-privacy-cleanup.jpg" width="100%" alt="Интерфейс очистки конфиденциальных данных StrawberryDisk">
+      </picture>
+    </td>
+  </tr>
+</table>
 
 ## Перед началом работы
 

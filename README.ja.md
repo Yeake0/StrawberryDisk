@@ -17,6 +17,14 @@
   <img alt="Rust Core" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
 </p>
 
+<p align="center">
+  <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/readme/ja-dark.jpg">
+      <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/readme/ja-light.jpg">
+      <img src="https://assets.mangodisk.app/images/readme/ja-light.jpg" width="1200" alt="StrawberryDisk のディスククリーンアップ、容量分析、プライバシー保護、システム最適化">
+    </picture>
+</p>
+
 ## StrawberryDisk でできること
 
 > **ストレージ**
@@ -109,6 +117,106 @@ StrawberryDisk はデフォルトで読み取り専用のスキャンを行い�
 クリーンアップルールは StrawberryDisk が独自に管理しています。サードパーティ製プロジェクトは調査の手がかりとしてのみ参照し、信頼できる情報源、安全な範囲、実際のシステムでの動作を確認してから採用します。安全性を明確に確認できない内容はルールに含めません。
 
 ルールライブラリと変更履歴はすべて公開されています：[StrawberryDisk のクリーンアップルールを見る](https://github.com/Yeake0/StrawberryDisk/tree/main/src-tauri/crates/strawberrydisk-core/rules)。
+
+## スクリーンショット
+
+スクリーンショットは元のバージョンの画面です。現在の StrawberryDisk とは異なる場合があります。
+
+<p align="center">
+<strong>ディープクリーン</strong><br>
+<sub>システム、アプリ、開発ツール、プロジェクトのクリーンアップ対象をまとめて見つけ、空き容量を増やします</sub>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-01-deep-cleanup.jpg">
+    <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-01-deep-cleanup.jpg">
+    <img src="https://assets.mangodisk.app/images/screenshots/ja/light-01-deep-cleanup.jpg" width="1200" alt="StrawberryDisk ディープクリーン画面">
+  </picture>
+</p>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+<strong>大容量ファイル</strong><br>
+<sub>フォルダーを一つずつたどらずに、容量を多く使うファイルを見つけます</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-02-large-file-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-02-large-file-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-02-large-file-cleanup.jpg" width="100%" alt="StrawberryDisk 大容量ファイル画面">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+<strong>重複ファイル</strong><br>
+<sub>完全に同じファイルを安全に整理し、各グループに少なくとも 1 ファイルを残します</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-03-duplicate-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-03-duplicate-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-03-duplicate-cleanup.jpg" width="100%" alt="StrawberryDisk 重複ファイル画面">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+<strong>ディスク容量分析</strong><br>
+<sub>容量の使い道をひと目で把握し、サイズの大きいデータをすばやく見つけます</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-05-disk-space-analysis.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-05-disk-space-analysis.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-05-disk-space-analysis.jpg" width="100%" alt="StrawberryDisk ディスク容量分析画面">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+<strong>スタートアップ項目の管理</strong><br>
+<sub>不要な自動起動を減らし、サインインを速くしてバックグラウンドの負荷を抑えます</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-06-startup-items.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-06-startup-items.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-06-startup-items.jpg" width="100%" alt="StrawberryDisk スタートアップ項目管理画面">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+<strong>アプリのアンインストールとクリーンアップ</strong><br>
+<sub>アプリと関連する残存ファイルをまとめて削除し、空き容量を増やします</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-04-app-uninstaller.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-04-app-uninstaller.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-04-app-uninstaller.jpg" width="100%" alt="StrawberryDisk アプリアンインストーラー画面">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+<strong>システム最適化</strong><br>
+<sub>パフォーマンス、プライバシー、使いやすさをワンクリックで整えます</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-07-system-optimization.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-07-system-optimization.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-07-system-optimization.jpg" width="100%" alt="StrawberryDisk システム最適化画面">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+<strong>システムメンテナンス</strong><br>
+<sub>よくあるシステムの問題をすばやく解消し、いつもの状態に戻します</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-08-system-maintenance.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-08-system-maintenance.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-08-system-maintenance.jpg" width="100%" alt="StrawberryDisk システムメンテナンス画面">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+<strong>プライバシークリーンアップ</strong><br>
+<sub>不要な利用履歴を減らし、日々のプライバシーを守ります</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-09-privacy-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-09-privacy-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-09-privacy-cleanup.jpg" width="100%" alt="StrawberryDisk プライバシークリーンアップ画面">
+      </picture>
+    </td>
+  </tr>
+</table>
 
 ## ご利用前の注意事項
 

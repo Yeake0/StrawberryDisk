@@ -17,6 +17,14 @@
   <img alt="Rust Core" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
 </p>
 
+<p align="center">
+  <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/readme/zh-dark.jpg">
+      <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/readme/zh-light.jpg">
+      <img src="https://assets.mangodisk.app/images/readme/zh-light.jpg" width="1200" alt="StrawberryDisk 磁盘清理、空间分析、隐私保护与系统优化工具">
+    </picture>
+</p>
+
 ## StrawberryDisk 能做什么
 
 > **存储空间**
@@ -109,6 +117,106 @@ StrawberryDisk 默认只读扫描。执行清理、删除、卸载或系统设�
 清理规则由 StrawberryDisk 独立维护。第三方项目只用于提供线索，候选规则必须核对可靠来源、明确安全边界，并通过真实系统验证后才会收录。无法确认安全的内容不会加入规则库。
 
 完整规则库及修改记录均可审计、追溯：[查看 StrawberryDisk 清理规则库](https://github.com/Yeake0/StrawberryDisk/tree/main/src-tauri/crates/strawberrydisk-core/rules)。
+
+## 界面预览
+
+截图展示的是原版界面，可能与当前的 StrawberryDisk 不同。
+
+<p align="center">
+  <strong>深度清理</strong><br>
+  <sub>集中找出系统、应用、开发工具和项目中的可清理内容，释放更多空间</sub>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-01-deep-cleanup.jpg">
+    <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-01-deep-cleanup.jpg">
+    <img src="https://assets.mangodisk.app/images/screenshots/zh/light-01-deep-cleanup.jpg" width="1200" alt="StrawberryDisk 深度清理界面">
+  </picture>
+</p>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <strong>大文件清理</strong><br>
+      <sub>快速锁定最占空间的文件，避免逐层翻找</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-02-large-file-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-02-large-file-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-02-large-file-cleanup.jpg" width="100%" alt="StrawberryDisk 大文件清理界面">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>重复文件清理</strong><br>
+      <sub>安全清理重复副本，并确保每组至少保留一份</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-03-duplicate-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-03-duplicate-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-03-duplicate-cleanup.jpg" width="100%" alt="StrawberryDisk 重复文件清理界面">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>磁盘空间分析</strong><br>
+      <sub>直观看清空间去向，快速定位占用最多的内容</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-05-disk-space-analysis.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-05-disk-space-analysis.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-05-disk-space-analysis.jpg" width="100%" alt="StrawberryDisk 磁盘空间分析界面">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>启动项管理</strong><br>
+      <sub>减少不必要的自启动程序，加快登录并降低后台占用</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-06-startup-items.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-06-startup-items.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-06-startup-items.jpg" width="100%" alt="StrawberryDisk 启动项管理界面">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>应用卸载与残留清理</strong><br>
+      <sub>卸载应用并清理关联残留，释放更多磁盘空间</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-04-app-uninstaller.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-04-app-uninstaller.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-04-app-uninstaller.jpg" width="100%" alt="StrawberryDisk 应用卸载界面">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>系统优化</strong><br>
+      <sub>一键优化性能、隐私与使用体验，让系统运行更流畅</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-07-system-optimization.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-07-system-optimization.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-07-system-optimization.jpg" width="100%" alt="StrawberryDisk 系统优化界面">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>系统维护</strong><br>
+      <sub>快速解决常见系统问题，让电脑恢复正常</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-08-system-maintenance.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-08-system-maintenance.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-08-system-maintenance.jpg" width="100%" alt="StrawberryDisk 系统维护界面">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>隐私清理</strong><br>
+      <sub>减少活动痕迹留存，更好地保护日常隐私</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-09-privacy-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-09-privacy-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-09-privacy-cleanup.jpg" width="100%" alt="StrawberryDisk 隐私清理界面">
+      </picture>
+    </td>
+  </tr>
+</table>
 
 ## 使用注意事项
 

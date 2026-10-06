@@ -17,6 +17,14 @@
   <img alt="Núcleo em Rust" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
 </p>
 
+<p align="center">
+  <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/readme/en-dark.jpg">
+      <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/readme/en-light.jpg">
+      <img src="https://assets.mangodisk.app/images/readme/en-light.jpg" width="1200" alt="Limpeza de disco, análise de armazenamento, proteção da privacidade e otimização do sistema no StrawberryDisk">
+    </picture>
+</p>
+
 ## O que o StrawberryDisk faz
 
 > **Armazenamento**
@@ -109,6 +117,106 @@ A Otimização do sistema usa apenas configurações integradas e validadas. Ela
 O StrawberryDisk mantém suas próprias regras de limpeza. Projetos de terceiros podem servir como ponto de partida para pesquisa, mas uma regra só é aceita após a verificação de fontes confiáveis, limites seguros e comportamento em sistemas reais. Regras sem limites claros de segurança são excluídas.
 
 A biblioteca completa de regras e seu histórico de revisões podem ser consultados em [regras de limpeza do StrawberryDisk](https://github.com/Yeake0/StrawberryDisk/tree/main/src-tauri/crates/strawberrydisk-core/rules).
+
+## Capturas de tela
+
+As capturas mostram a interface original e podem diferir da versão atual do StrawberryDisk.
+
+<p align="center">
+  <strong>Limpeza profunda</strong><br>
+  <sub>Encontre itens que podem ser limpos no sistema, em aplicativos, ferramentas de desenvolvimento e projetos</sub>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-01-deep-cleanup.jpg">
+    <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-01-deep-cleanup.jpg">
+    <img src="https://assets.mangodisk.app/images/screenshots/en/light-01-deep-cleanup.jpg" width="1200" alt="Tela de Limpeza profunda do StrawberryDisk">
+  </picture>
+</p>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Limpeza de arquivos grandes</strong><br>
+      <sub>Encontre os arquivos que mais ocupam espaço sem vasculhar pastas</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-02-large-file-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-02-large-file-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-02-large-file-cleanup.jpg" width="100%" alt="Tela de Limpeza de arquivos grandes do StrawberryDisk">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>Limpeza de arquivos duplicados</strong><br>
+      <sub>Remova duplicatas exatas com segurança, mantendo pelo menos uma cópia</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-03-duplicate-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-03-duplicate-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-03-duplicate-cleanup.jpg" width="100%" alt="Tela de Limpeza de arquivos duplicados do StrawberryDisk">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Análise do espaço em disco</strong><br>
+      <sub>Veja o que ocupa espaço e encontre rapidamente os maiores arquivos e pastas</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-05-disk-space-analysis.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-05-disk-space-analysis.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-05-disk-space-analysis.jpg" width="100%" alt="Tela de Análise do espaço em disco do StrawberryDisk">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>Gerenciamento de itens de inicialização</strong><br>
+      <sub>Reduza programas desnecessários na inicialização e a atividade em segundo plano</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-06-startup-items.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-06-startup-items.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-06-startup-items.jpg" width="100%" alt="Tela de Itens de inicialização do StrawberryDisk">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Desinstalação e limpeza de aplicativos</strong><br>
+      <sub>Desinstale aplicativos e remova resíduos relacionados para recuperar espaço</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-04-app-uninstaller.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-04-app-uninstaller.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-04-app-uninstaller.jpg" width="100%" alt="Tela de Desinstalação de aplicativos do StrawberryDisk">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>Otimização do sistema</strong><br>
+      <sub>Ajuste desempenho, privacidade e usabilidade com um clique</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-07-system-optimization.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-07-system-optimization.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-07-system-optimization.jpg" width="100%" alt="Tela de Otimização do sistema do StrawberryDisk">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Manutenção do sistema</strong><br>
+      <sub>Corrija problemas comuns e volte a usar o computador normalmente</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-08-system-maintenance.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-08-system-maintenance.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-08-system-maintenance.jpg" width="100%" alt="Tela de Manutenção do sistema do StrawberryDisk">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>Limpeza de privacidade</strong><br>
+      <sub>Deixe menos rastros de atividade e proteja sua privacidade</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-09-privacy-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-09-privacy-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-09-privacy-cleanup.jpg" width="100%" alt="Tela de Limpeza de privacidade do StrawberryDisk">
+      </picture>
+    </td>
+  </tr>
+</table>
 
 ## Antes de começar
 

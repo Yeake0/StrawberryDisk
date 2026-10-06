@@ -17,6 +17,14 @@
   <img alt="Rust Core" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
 </p>
 
+<p align="center">
+  <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/readme/en-dark.jpg">
+      <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/readme/en-light.jpg">
+      <img src="https://assets.mangodisk.app/images/readme/en-light.jpg" width="1200" alt="StrawberryDisk 디스크 정리, 저장 공간 분석, 개인정보 보호, 시스템 최적화">
+    </picture>
+</p>
+
 ## StrawberryDisk로 할 수 있는 일
 
 > **저장 공간**
@@ -109,6 +117,106 @@ StrawberryDisk는 기본적으로 읽기 전용으로 스캔합니다. 정리, �
 StrawberryDisk는 자체 정리 규칙을 관리합니다. 서드파티 프로젝트가 조사 단서를 줄 수는 있지만, 후보 규칙은 신뢰할 수 있는 출처, 안전 경계, 실제 시스템 동작이 검증된 뒤에만 채택됩니다. 안전 경계가 명확하지 않은 것은 제외됩니다.
 
 전체 규칙 라이브러리와 변경 이력은 공개되어 있습니다: [StrawberryDisk 정리 규칙 라이브러리 보기](https://github.com/Yeake0/StrawberryDisk/tree/main/src-tauri/crates/strawberrydisk-core/rules).
+
+## 스크린샷
+
+스크린샷은 기존 버전의 화면이며 현재 StrawberryDisk와 다를 수 있습니다.
+
+<p align="center">
+  <strong>심층 정리</strong><br>
+  <sub>시스템, 앱, 개발자 도구, 프로젝트 전반의 정리 가능한 콘텐츠를 찾아 더 많은 공간을 회수합니다</sub>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-01-deep-cleanup.jpg">
+    <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-01-deep-cleanup.jpg">
+    <img src="https://assets.mangodisk.app/images/screenshots/en/light-01-deep-cleanup.jpg" width="1200" alt="StrawberryDisk 심층 정리 화면">
+  </picture>
+</p>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <strong>대용량 파일 정리</strong><br>
+      <sub>폴더를 뒤지지 않고 가장 많은 공간을 차지하는 파일을 찾습니다</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-02-large-file-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-02-large-file-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-02-large-file-cleanup.jpg" width="100%" alt="StrawberryDisk 대용량 파일 정리 화면">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>중복 파일 정리</strong><br>
+      <sub>복사본을 하나 이상 남기면서 완전히 동일한 중복 파일을 안전하게 제거합니다</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-03-duplicate-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-03-duplicate-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-03-duplicate-cleanup.jpg" width="100%" alt="StrawberryDisk 중복 파일 정리 화면">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>디스크 공간 분석</strong><br>
+      <sub>저장 공간이 어디에 쓰이는지 보고 가장 큰 파일과 폴더를 빠르게 찾습니다</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-05-disk-space-analysis.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-05-disk-space-analysis.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-05-disk-space-analysis.jpg" width="100%" alt="StrawberryDisk 디스크 공간 분석 화면">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>시작 항목 관리</strong><br>
+      <sub>불필요한 시작 프로그램을 줄여 더 빠른 로그인과 더 적은 백그라운드 활동을 만듭니다</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-06-startup-items.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-06-startup-items.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-06-startup-items.jpg" width="100%" alt="StrawberryDisk 시작 항목 관리 화면">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>앱 제거 및 정리</strong><br>
+      <sub>앱을 제거하고 관련 잔여 파일까지 지워 더 많은 공간을 회수합니다</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-04-app-uninstaller.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-04-app-uninstaller.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-04-app-uninstaller.jpg" width="100%" alt="StrawberryDisk 앱 제거 화면">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>시스템 최적화</strong><br>
+      <sub>성능, 개인정보 보호, 일상적인 사용성을 한 번의 클릭으로 최적화합니다</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-07-system-optimization.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-07-system-optimization.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-07-system-optimization.jpg" width="100%" alt="StrawberryDisk 시스템 최적화 화면">
+      </picture>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>시스템 유지 관리</strong><br>
+      <sub>흔한 시스템 문제를 빠르게 고쳐 컴퓨터를 정상으로 되돌립니다</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-08-system-maintenance.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-08-system-maintenance.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-08-system-maintenance.jpg" width="100%" alt="StrawberryDisk 시스템 유지 관리 화면">
+      </picture>
+    </td>
+    <td width="50%" align="center">
+      <strong>개인정보 정리</strong><br>
+      <sub>활동 흔적을 덜 남기고 일상적인 사용을 더 비공개로 유지합니다</sub><br><br>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-09-privacy-cleanup.jpg">
+        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-09-privacy-cleanup.jpg">
+        <img src="https://assets.mangodisk.app/images/screenshots/en/light-09-privacy-cleanup.jpg" width="100%" alt="StrawberryDisk 개인정보 정리 화면">
+      </picture>
+    </td>
+  </tr>
+</table>
 
 ## 사용 전 주의 사항
 
