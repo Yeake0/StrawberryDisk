@@ -11,7 +11,7 @@ interface InstallationIdentity {
 }
 
 /**
- * Owns the random identifier used to count one MangoDisk installation.
+ * Owns the random identifier used to count one StrawberryDisk installation.
  *
  * The identifier is deliberately independent from user preferences so
  * resetting scan settings cannot silently create a second installation. It is

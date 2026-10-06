@@ -183,7 +183,7 @@ describe('privacy plan dialog component', () => {
     const wrapper = mountDialog(personalDataPlan);
 
     expect(wrapper.text()).not.toContain('saved passwords or autofill history');
-    expect(wrapper.text()).not.toContain('MangoDisk clears only selected items');
+    expect(wrapper.text()).not.toContain('StrawberryDisk clears only selected items');
     expect(wrapper.get('footer .risk-acceptance').text()).toContain('permanently delete personal data');
     expect(wrapper.findAll('button').at(-1)?.attributes('disabled')).toBeDefined();
     wrapper.unmount();

@@ -115,7 +115,7 @@ impl Client {
             .path()
             .app_log_dir()
             .map_err(|_| Failure::new(Stage::Spawn, 0))?
-            .join("MangoDisk.log");
+            .join("StrawberryDisk.log");
         let mut child = Command::new(executable)
             .arg(SWITCH)
             .arg(log)
@@ -239,7 +239,8 @@ pub fn run_helper_mode(args: impl IntoIterator<Item = std::ffi::OsString>) -> Op
     let Some(log_file) = args.next().map(PathBuf::from) else {
         return Some(2);
     };
-    if args.next().is_some() || log_file.file_name() != Some(std::ffi::OsStr::new("MangoDisk.log"))
+    if args.next().is_some()
+        || log_file.file_name() != Some(std::ffi::OsStr::new("StrawberryDisk.log"))
     {
         return Some(2);
     }

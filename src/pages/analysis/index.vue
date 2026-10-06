@@ -512,7 +512,7 @@ function navigateHistory(index: number) {
   }
 }
 
-/* Monterey's WKWebView has no container queries. At MangoDisk's supported
+/* Monterey's WKWebView has no container queries. At StrawberryDisk's supported
  * minimum desktop width, the available page area matches the two-pane mode.
  */
 @supports not (container-type: inline-size) {

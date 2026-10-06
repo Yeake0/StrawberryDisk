@@ -42,6 +42,9 @@ directory.writeUInt16LE(32, 12);
 directory.writeUInt32LE(png.length, 14);
 directory.writeUInt32LE(directory.length, 18);
 writeFileSync(
-  new URL('../src-tauri/crates/mangodisk-platform/src/windows/shortcut_overlay/transparent-v2.ico', import.meta.url),
+  new URL(
+    '../src-tauri/crates/strawberrydisk-platform/src/windows/shortcut_overlay/transparent-v2.ico',
+    import.meta.url
+  ),
   Buffer.concat([directory, png])
 );

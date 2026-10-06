@@ -2,6 +2,7 @@
 mod application_menu;
 mod commands;
 mod events;
+mod legacy_storage;
 mod resident;
 #[cfg(windows)]
 pub use resident::taskbar_display::run_layout_helper_mode;
@@ -9,9 +10,9 @@ mod services;
 mod webview_runtime;
 
 use log::LevelFilter;
-use mangodisk_core::{configure_application_paths, ApplicationPaths};
 use services::application_uninstall_catalog::ApplicationUninstallCatalogCache;
 use services::feedback::FeedbackDraftStore;
+use strawberrydisk_core::{configure_application_paths, ApplicationPaths};
 use tauri::{LogicalSize, Manager};
 use tauri_plugin_log::RotationStrategy;
 use tauri_plugin_window_state::{StateFlags, WindowExt};
@@ -26,6 +27,7 @@ const LOG_ARCHIVE_FILE_COUNT: usize = 4;
 fn configure_core_storage(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let local_data_directory = app.path().app_local_data_dir()?;
     let cache_directory = app.path().app_cache_dir()?;
+    legacy_storage::migrate(&local_data_directory, &app.path().app_config_dir()?);
     let paths = ApplicationPaths::from_base_directories(local_data_directory, cache_directory)?;
     configure_application_paths(paths)?;
     Ok(())
@@ -174,7 +176,7 @@ pub fn run() {
         .plugin(
             tauri_plugin_updater::Builder::new()
                 // The plugin carries these headers into both checks and downloads.
-                .headers(mangodisk_core::http_client::default_headers())
+                .headers(strawberrydisk_core::http_client::default_headers())
                 .build(),
         )
         .plugin(
@@ -300,7 +302,7 @@ pub fn run() {
             commands::system_maintenance::get_system_maintenance_runtime,
         ])
         .setup(move |app| {
-            mangodisk_platform::system_identity::log_current();
+            strawberrydisk_platform::system_identity::log_current();
             log::info!(
                 "application_started version={} distribution={}",
                 app.package_info().version,
@@ -325,7 +327,7 @@ pub fn run() {
                     "webview_runtime_version_failed platform={} engine={} error={}",
                     std::env::consts::OS,
                     webview_engine,
-                    mangodisk_platform::diagnostics::text(&error)
+                    strawberrydisk_platform::diagnostics::text(&error)
                 ),
             }
             #[cfg(target_os = "windows")]
@@ -370,7 +372,7 @@ pub fn run() {
             Ok(())
         })
         .build(tauri::generate_context!())
-        .expect("MangoDisk failed to start");
+        .expect("StrawberryDisk failed to start");
     app.run(move |_app, _event| {
         if !webview_update_required && matches!(_event, tauri::RunEvent::Ready) {
             resident::panel::prewarm(_app);

@@ -47,7 +47,7 @@ const emit = defineEmits<{
   'update:protectedPaths': [paths: string[]];
 }>();
 
-const CHOOSE_FOLDER_VALUE = '__mangodisk_choose_folder__';
+const CHOOSE_FOLDER_VALUE = '__strawberrydisk_choose_folder__';
 const selectOpen = ref(false);
 const hoveredFolderPath = ref('');
 const selectedPaths = computed(() =>

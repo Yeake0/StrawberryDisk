@@ -1,6 +1,6 @@
 use std::sync::{atomic::Ordering, Arc};
 
-use mangodisk_core::system_resources::metrics::MetricId;
+use strawberrydisk_core::system_resources::metrics::MetricId;
 use tauri::{Emitter, Manager, PhysicalPosition, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 use super::{runtime::ResidentState, PANEL_LABEL};
@@ -127,7 +127,7 @@ fn ensure_created(app: &tauri::AppHandle) -> tauri::Result<()> {
         let started = std::time::Instant::now();
         let builder =
             WebviewWindowBuilder::new(app, PANEL_LABEL, WebviewUrl::App("tray-panel.html".into()))
-                .title("MangoDisk")
+                .title("StrawberryDisk")
                 .inner_size(WIDTH, HEIGHT)
                 .resizable(false)
                 .decorations(false)

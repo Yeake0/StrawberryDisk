@@ -4,7 +4,7 @@ use std::{
     time::Instant,
 };
 
-use mangodisk_core::ai::{
+use strawberrydisk_core::ai::{
     discover_local_models, explain, AiConfiguration, AiConfigurationUpdate, AiDelta, AiError,
     AiPreferences, AiRequest, AiSettings, AiUsage, InstalledLocalModel,
 };
@@ -257,8 +257,8 @@ pub(crate) fn ai_cancel(id: String, state: State<'_, AiRuntime>) -> Result<(), A
 pub(crate) async fn ai_explain(
     id: String,
     request: AiRequest,
-    metadata: Option<mangodisk_core::ai::AiClientMetadata>,
-    expected_mode: mangodisk_core::ai::AiServiceMode,
+    metadata: Option<strawberrydisk_core::ai::AiClientMetadata>,
+    expected_mode: strawberrydisk_core::ai::AiServiceMode,
     on_delta: Channel<AiDelta>,
     state: State<'_, AiRuntime>,
 ) -> Result<AiUsage, AiError> {
@@ -287,8 +287,8 @@ pub(crate) async fn ai_explain(
         if config.mode != expected_mode {
             return Err(AiError::InvalidConfiguration);
         }
-        if config.mode == mangodisk_core::ai::AiServiceMode::Free {
-            return mangodisk_core::ai::official_explain(
+        if config.mode == strawberrydisk_core::ai::AiServiceMode::Free {
+            return strawberrydisk_core::ai::official_explain(
                 config,
                 request,
                 metadata.ok_or(AiError::InvalidContext)?,
@@ -315,36 +315,36 @@ pub(crate) async fn ai_explain(
 
 #[tauri::command]
 pub(crate) async fn ai_get_quota(
-    metadata: mangodisk_core::ai::AiClientMetadata,
+    metadata: strawberrydisk_core::ai::AiClientMetadata,
     state: State<'_, AiRuntime>,
-) -> Result<mangodisk_core::ai::AiQuota, AiError> {
+) -> Result<strawberrydisk_core::ai::AiQuota, AiError> {
     let mut disabled = state.quota_permit()?;
     tokio::select! {
         biased;
         _ = disabled.changed() => Err(AiError::Cancelled),
-        result = mangodisk_core::ai::official_quota(metadata) => result,
+        result = strawberrydisk_core::ai::official_quota(metadata) => result,
     }
 }
 
 #[tauri::command]
 pub(crate) async fn ai_set_feedback(
     request_id: String,
-    rating: Option<mangodisk_core::ai::AiFeedbackRating>,
-    metadata: mangodisk_core::ai::AiClientMetadata,
+    rating: Option<strawberrydisk_core::ai::AiFeedbackRating>,
+    metadata: strawberrydisk_core::ai::AiClientMetadata,
     state: State<'_, AiRuntime>,
-) -> Result<mangodisk_core::ai::AiFeedback, AiError> {
+) -> Result<strawberrydisk_core::ai::AiFeedback, AiError> {
     let mut disabled = state.quota_permit()?;
     let config = tauri::async_runtime::spawn_blocking(AiConfiguration::load)
         .await
         .map_err(|_| AiError::ConfigurationUnavailable)??
         .unwrap_or_else(AiConfiguration::initial);
-    if config.mode != mangodisk_core::ai::AiServiceMode::Free {
+    if config.mode != strawberrydisk_core::ai::AiServiceMode::Free {
         return Err(AiError::InvalidConfiguration);
     }
     tokio::select! {
         biased;
         _ = disabled.changed() => Err(AiError::Cancelled),
-        result = mangodisk_core::ai::official_feedback(metadata, request_id, rating) => result,
+        result = strawberrydisk_core::ai::official_feedback(metadata, request_id, rating) => result,
     }
 }
 

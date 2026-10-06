@@ -36,7 +36,7 @@ $shortCommit = (git rev-parse --short=8 upstream/main).Trim()
 $branch = "codex/upstream-$shortCommit"
 git switch -c $branch
 if ($LASTEXITCODE -ne 0) { throw "Could not create branch $branch" }
-git merge --no-ff upstream/main -m "Merge upstream MangoDisk $shortCommit"
+git merge --no-ff upstream/main -m "Merge upstream StrawberryDisk $shortCommit"
 if ($LASTEXITCODE -ne 0) {
     Write-Warning 'The merge has conflicts. Resolve them on this branch, preserving the private changes, then run the project checks.'
     exit 1

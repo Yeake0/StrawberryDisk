@@ -4,8 +4,8 @@ This file applies only to `src-tauri/` and inherits the repository-wide rules in
 
 ## Workspace boundaries
 
-- `crates/mangodisk-core`: platform-neutral product domains, use cases, safety policy, persistence, and reporting. It must not depend on Tauri or a WebView.
-- `crates/mangodisk-platform`: OS contracts and macOS/Windows implementations. It reports typed capabilities and safe fallbacks; it does not decide product workflows.
+- `crates/strawberrydisk-core`: platform-neutral product domains, use cases, safety policy, persistence, and reporting. It must not depend on Tauri or a WebView.
+- `crates/strawberrydisk-platform`: OS contracts and macOS/Windows implementations. It reports typed capabilities and safe fallbacks; it does not decide product workflows.
 - `src/`: thin Tauri adapter. Commands validate transport input, call Core, translate typed errors, and publish events.
 - `plugins/`: isolated Tauri plugin integration only when a capability genuinely needs a plugin.
 - A formal CLI is a separate console binary over Core. Engineering-only maintenance commands belong in `xtask`, not in the GUI binary or public CLI.
@@ -24,21 +24,21 @@ Core is organized around `cleanup`, `storage`, `applications`, `filesystem`, `hi
 ## Errors, logs, and protocols
 
 - Domain and platform code return typed errors or stable error codes. Convert to Tauri transport errors only in the adapter.
-- Logs use the centralized Rust logging entry point and stable domain/event/field names. Log operation IDs, useful object names/paths, counts, timings, fallback reasons, and readable native errors/codes. Use `mangodisk_platform::diagnostics::text` for bounded, escaped diagnostic fields. Never substitute a hash for the only failure explanation; exclude credentials and file contents at the source.
+- Logs use the centralized Rust logging entry point and stable domain/event/field names. Log operation IDs, useful object names/paths, counts, timings, fallback reasons, and readable native errors/codes. Use `strawberrydisk_platform::diagnostics::text` for bounded, escaped diagnostic fields. Never substitute a hash for the only failure explanation; exclude credentials and file contents at the source.
 - Persisted and cross-process structures require an explicit schema version and a documented read, migrate, rebuild, or reject policy.
 - Derived indexes may be rebuilt on incompatible versions. User history and settings require backward-compatible readers or an explicit migration.
 - Keep command names and event payloads versionable. Do not retain permanent old/new aliases after a migration window.
 
 ## Rules and cleanup safety
 
-- Declarative filesystem rules live under `crates/mangodisk-core/rules/filesystem`; project artifact rules live under `crates/mangodisk-core/rules/project-artifacts`.
+- Declarative filesystem rules live under `crates/strawberrydisk-core/rules/filesystem`; project artifact rules live under `crates/strawberrydisk-core/rules/project-artifacts`.
 - Contributors should add validated TOML for ordinary cleanup coverage without editing Rust match branches.
 - Rule resources expose stable machine data only. UI localization belongs to frontend locale files.
 - A specialized cleaner is justified only for a system command, application API, structured package, or safety verification that TOML cannot express.
 - All destructive flows preserve preview/dry-run, protected-path validation, link/reparse-point policy, preflight, explicit user intent, execution verification, and cache synchronization.
 - Missing permission, unavailable tools, unsupported change tracking, and platform uncertainty must fail closed or use a documented slower safe path.
 
-Read [`crates/mangodisk-core/rules/README.md`](crates/mangodisk-core/rules/README.md) before changing cleanup rules or their filesystem schema.
+Read [`crates/strawberrydisk-core/rules/README.md`](crates/strawberrydisk-core/rules/README.md) before changing cleanup rules or their filesystem schema.
 
 ## Platform code
 
@@ -64,7 +64,7 @@ For Rust changes, run:
 pnpm rust:fmt:check
 pnpm rust:clippy
 pnpm rust:check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 Run `pnpm check` before submitting or merging a change. Cross-platform changes must run applicable checks in macOS and Windows environments. If a platform is unavailable, document the unvalidated scope. Changes to rules, scan engines, indexes, persistence, native fast paths, or performance require tests or a reproducible measurement appropriate to the affected behavior; keep raw machine evidence and private datasets outside the repository.

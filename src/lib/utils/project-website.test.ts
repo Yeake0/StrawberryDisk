@@ -1,21 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { projectWebsiteUrl } from './project-website';
 
-describe('localized project website links', () => {
-  it.each([
-    ['zh-CN', '/zh'],
-    ['zh-TW', '/tw'],
-    ['ja-JP', '/ja'],
-    ['ko-KR', ''],
-    ['ru-RU', ''],
-    ['en-US', ''],
-    ['tr-TR', ''],
-    ['pt-BR', ''],
-    ['unknown', ''],
-  ])('maps %s to a stable documentation route without query parameters', (locale, prefix) => {
-    expect(projectWebsiteUrl(locale)).toBe(`https://mangodisk.app${prefix}`);
+describe('project documentation links', () => {
+  it.each(['zh-CN', 'ja-JP', 'pt-BR', 'unknown'])('maps %s to the maintained AI guide', locale => {
+    expect(projectWebsiteUrl(locale)).toBe('https://github.com/Yeake0/StrawberryDisk');
     expect(projectWebsiteUrl(locale, '/docs/ai#custom-service')).toBe(
-      `https://mangodisk.app${prefix}/docs/ai#custom-service`
+      'https://github.com/Yeake0/StrawberryDisk/blob/main/docs/ai.md'
     );
   });
 });

@@ -1,5 +1,5 @@
 EXPORTS
 DllGetClassObject PRIVATE
 DllCanUnloadNow PRIVATE
-MangoTaskbarApply
-MangoTaskbarRelease
+StrawberryTaskbarApply
+StrawberryTaskbarRelease

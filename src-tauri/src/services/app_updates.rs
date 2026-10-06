@@ -180,7 +180,7 @@ impl AppUpdates {
             .as_secs();
         match &result {
             Ok(update) => log::info!("app_update_check_completed source={source:?} request_id={request_id} available={} version={} changed={changed} next_check_secs={next} elapsed_ms={}", update.is_some(), update.as_ref().map_or("none", |u| u.version.as_str()), started.elapsed().as_millis()),
-            Err(error) => log::warn!("app_update_check_failed source={source:?} request_id={request_id} error={} retained_notice={} failures={} retry_secs={next} elapsed_ms={}", mangodisk_platform::diagnostics::text(error), cache.update.is_some(), cache.schedule.failures, started.elapsed().as_millis()),
+            Err(error) => log::warn!("app_update_check_failed source={source:?} request_id={request_id} error={} retained_notice={} failures={} retry_secs={next} elapsed_ms={}", strawberrydisk_platform::diagnostics::text(error), cache.update.is_some(), cache.schedule.failures, started.elapsed().as_millis()),
         }
         result.map(|update| (update, Some(cache.schedule.notice.clone())))
     }
@@ -190,7 +190,7 @@ impl AppUpdates {
             .check_with(source, || async {
                 match tokio::time::timeout(TIMEOUT + Duration::from_secs(5), discover(app)).await {
                     Ok(result) => {
-                        result.map_err(|error| mangodisk_platform::diagnostics::text(&error))
+                        result.map_err(|error| strawberrydisk_platform::diagnostics::text(&error))
                     }
                     Err(_) => Err("update_check_timeout".into()),
                 }
@@ -211,23 +211,23 @@ async fn discover(
         .updater_builder()
         .timeout(TIMEOUT)
         .header("Accept-Language", &locale)?
-        .header("x-mangodisk-locale", &locale)?
+        .header("x-strawberrydisk-locale", &locale)?
         .header(
-            "x-mangodisk-os-version",
+            "x-strawberrydisk-os-version",
             super::app_update_os_version::telemetry_os_version(),
         )?
         .header(
-            "x-mangodisk-distribution",
+            "x-strawberrydisk-distribution",
             crate::commands::app_distribution::current().diagnostic_name(),
         )?;
     // Keep the operating system locale separate from the selected UI language.
     // Optional telemetry must not prevent a signed update when the OS has no locale.
     if let Some(system_locale) = tauri_plugin_os::locale().and_then(valid_system_locale) {
-        builder = builder.header("x-mangodisk-system-locale", system_locale)?;
+        builder = builder.header("x-strawberrydisk-system-locale", system_locale)?;
     }
     #[cfg(target_os = "windows")]
     if let Some(native_arch) = super::app_update_native_arch::telemetry_native_arch() {
-        builder = builder.header("x-mangodisk-native-arch", native_arch)?;
+        builder = builder.header("x-strawberrydisk-native-arch", native_arch)?;
     }
     // Reuse an existing identity without racing the frontend's first-time
     // identity creation. Missing telemetry must never block signed updates.
@@ -243,7 +243,7 @@ async fn discover(
                     .and_then(|v| v.as_str())
                     .and_then(|v| uuid::Uuid::parse_str(v).ok())
                 {
-                    builder = builder.header("x-mangodisk-install-id", id.to_string())?;
+                    builder = builder.header("x-strawberrydisk-install-id", id.to_string())?;
                 }
             }
         }

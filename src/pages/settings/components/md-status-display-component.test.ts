@@ -475,7 +475,7 @@ describe('status display interactions', () => {
     wrappers.push(wrapper);
     await flushPromises();
     await openConfiguration(wrapper);
-    expect(wrapper.get('.logo-marker img').attributes('src')).toBe('/mangodisk.svg');
+    expect(wrapper.get('.logo-marker img').attributes('src')).toBe('/strawberrydisk.png');
     await wrapper.get('#status-app-icon').trigger('click');
     await flushPromises();
     expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(

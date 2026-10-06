@@ -40,38 +40,38 @@ function assertExists(relativePath) {
 const packageJson = readJson('package.json');
 const tauriConfig = readJson('src-tauri/tauri.conf.json');
 const tauriManifest = readText('src-tauri/Cargo.toml');
-const cliManifest = readText('src-tauri/crates/mangodisk-cli/Cargo.toml');
+const cliManifest = readText('src-tauri/crates/strawberrydisk-cli/Cargo.toml');
 const readme = readText('README.md');
 const indexHtml = readText('index.html');
 const tauriLibrary = readText('src-tauri/src/lib.rs');
-const coreLibrary = readText('src-tauri/crates/mangodisk-core/src/lib.rs');
+const coreLibrary = readText('src-tauri/crates/strawberrydisk-core/src/lib.rs');
 const tauriMain = readText('src-tauri/src/main.rs');
-const macosChangeTracking = readText('src-tauri/crates/mangodisk-platform/src/macos/change_tracking.rs');
+const macosChangeTracking = readText('src-tauri/crates/strawberrydisk-platform/src/macos/change_tracking.rs');
 
-assertEqual(packageJson.name, 'mangodisk', 'npm package name');
-assertEqual(tauriConfig.productName, 'MangoDisk', 'Tauri product name');
-assertEqual(tauriConfig.identifier, 'app.mangodisk.desktop', 'Tauri bundle identifier');
+assertEqual(packageJson.name, 'strawberrydisk', 'npm package name');
+assertEqual(tauriConfig.productName, 'StrawberryDisk', 'Tauri product name');
+assertEqual(tauriConfig.identifier, 'app.strawberrydisk.desktop', 'Tauri bundle identifier');
 assertContains(
   coreLibrary,
-  'pub const APPLICATION_IDENTIFIER: &str = "app.mangodisk.desktop";',
+  'pub const APPLICATION_IDENTIFIER: &str = "app.strawberrydisk.desktop";',
   'Core application identifier'
 );
-assertEqual(tauriConfig.mainBinaryName, 'MangoDisk', 'Tauri binary name');
-assertEqual(tauriConfig.app?.windows?.[0]?.title, 'MangoDisk', 'main window title');
+assertEqual(tauriConfig.mainBinaryName, 'StrawberryDisk', 'Tauri binary name');
+assertEqual(tauriConfig.app?.windows?.[0]?.title, 'StrawberryDisk', 'main window title');
 
-assertContains(tauriManifest, 'name = "mangodisk"', 'Tauri package manifest');
-assertContains(tauriManifest, 'name = "mangodisk_lib"', 'Tauri library manifest');
-assertContains(cliManifest, 'name = "mangodisk-cli"', 'CLI package manifest');
-assertContains(cliManifest, 'name = "mangodisk"', 'CLI binary manifest');
+assertContains(tauriManifest, 'name = "strawberrydisk"', 'Tauri package manifest');
+assertContains(tauriManifest, 'name = "strawberrydisk_lib"', 'Tauri library manifest');
+assertContains(cliManifest, 'name = "strawberrydisk-cli"', 'CLI package manifest');
+assertContains(cliManifest, 'name = "strawberrydisk"', 'CLI binary manifest');
 
-assertExists('public/mangodisk.png');
-assertExists('public/mangodisk.svg');
-assertExists('src/components/icons/md-icon-mangodisk.vue');
+assertExists('public/strawberrydisk.png');
+assertExists('public/strawberrydisk-source.png');
+assertExists('src/components/icons/md-icon-strawberrydisk.vue');
 
-assertContains(readme, 'mangodisk clean', 'README CLI usage');
-assertContains(indexHtml, 'MangoDisk', 'HTML application shell');
-assertContains(tauriLibrary, 'MangoDisk', 'Tauri library');
-assertContains(tauriMain, 'mangodisk_lib', 'Tauri entry point');
-assertContains(macosChangeTracking, 'app.mangodisk.cache-dirty-monitor', 'macOS cache monitor identity');
+assertContains(readme, 'strawberrydisk clean', 'README CLI usage');
+assertContains(indexHtml, 'StrawberryDisk', 'HTML application shell');
+assertContains(tauriLibrary, 'StrawberryDisk', 'Tauri library');
+assertContains(tauriMain, 'strawberrydisk_lib', 'Tauri entry point');
+assertContains(macosChangeTracking, 'app.strawberrydisk.cache-dirty-monitor', 'macOS cache monitor identity');
 
 console.log('Product identity is consistent.');

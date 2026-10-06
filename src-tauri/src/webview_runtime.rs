@@ -47,7 +47,7 @@ pub fn show_update_prompt(app: &tauri::AppHandle) {
     // the application's CSS. Its callback leaves the main event loop free.
     app.dialog()
         .message(labels.text("/webviewRuntime/updateRequired"))
-        .title("MangoDisk")
+        .title("StrawberryDisk")
         .kind(MessageDialogKind::Warning)
         .buttons(MessageDialogButtons::OkCancelCustom(
             labels.text("/webviewRuntime/update").into(),
@@ -58,7 +58,7 @@ pub fn show_update_prompt(app: &tauri::AppHandle) {
                 if let Err(error) = app.opener().open_url(DOWNLOAD_URL, None::<&str>) {
                     log::warn!(
                         "webview_runtime_update_link_failed error={}",
-                        mangodisk_platform::diagnostics::text(&error)
+                        strawberrydisk_platform::diagnostics::text(&error)
                     );
                     app.dialog()
                         .message(
@@ -66,7 +66,7 @@ pub fn show_update_prompt(app: &tauri::AppHandle) {
                                 .text("/webviewRuntime/openFailed")
                                 .replace("{url}", DOWNLOAD_URL),
                         )
-                        .title("MangoDisk")
+                        .title("StrawberryDisk")
                         .buttons(MessageDialogButtons::OkCustom(
                             labels.text("/webviewRuntime/exit").into(),
                         ))

@@ -81,7 +81,7 @@ def main() -> None:
     if not (appimage.stat().st_mode & stat.S_IXOTH):
         raise RuntimeError(f"AppImage is not executable: {appimage}")
 
-    with tempfile.TemporaryDirectory(prefix="mangodisk-linux-bundle-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="strawberrydisk-linux-bundle-") as tmp:
         root = Path(tmp)
         deb_root = root / "deb"
         deb_root.mkdir()

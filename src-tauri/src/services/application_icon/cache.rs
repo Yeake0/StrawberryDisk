@@ -159,7 +159,7 @@ mod tests {
             .expect("system clock must follow the Unix epoch")
             .as_nanos();
         std::env::temp_dir().join(format!(
-            "mangodisk-icon-cache-{name}-{}-{nonce}",
+            "strawberrydisk-icon-cache-{name}-{}-{nonce}",
             std::process::id()
         ))
     }

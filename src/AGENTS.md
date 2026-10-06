@@ -19,7 +19,7 @@ Pages may present several domains together, but shared product orchestration mus
 ## Vue and TypeScript
 
 - Use Vue 3 `<script setup lang="ts">` and strict TypeScript. Do not introduce `any`.
-- Project-owned Vue files use `kebab-case`; reusable custom components and icon files use the `md-` prefix so their ownership is recognizable as MangoDisk code.
+- Project-owned Vue files use `kebab-case`; reusable custom components and icon files use the `md-` prefix so their ownership is recognizable as StrawberryDisk code.
 - Prefer props and emits for component communication. Do not use provide/inject as a hidden event bus.
 - Pinia stores use the Options API (`state`, `getters`, `actions`).
 - Prefer exported module functions or static service methods for stateless adapters. Use an owned service instance when it has lifecycle state, replaceable dependencies, or requires test isolation.

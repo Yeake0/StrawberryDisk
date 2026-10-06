@@ -1,7 +1,7 @@
 import { ICON_NAMES } from './ui';
 
-export const APP_NAME = 'MangoDisk' as const;
-export const APP_ICON_PATH = '/mangodisk.svg' as const;
+export const APP_NAME = 'StrawberryDisk' as const;
+export const APP_ICON_PATH = '/strawberrydisk.png' as const;
 export const APP_SHELL_EXPANDED_MIN_WIDTH_PX = 1100;
 
 export function isAppShellExpanded(viewportWidth: number): boolean {
@@ -49,10 +49,10 @@ export function toggleSidebarLayout(state: SidebarLayoutState): SidebarLayoutSta
 }
 
 export const PROJECT_LINKS = {
-  website: 'https://mangodisk.app',
-  repository: 'https://github.com/Yeake0/MangoDisk',
-  issues: 'https://github.com/harry0703/mangodisk/issues',
-  license: 'https://github.com/Yeake0/MangoDisk/blob/main/LICENSE',
+  website: 'https://github.com/Yeake0/StrawberryDisk',
+  repository: 'https://github.com/Yeake0/StrawberryDisk',
+  issues: 'https://github.com/Yeake0/StrawberryDisk/issues',
+  license: 'https://github.com/Yeake0/StrawberryDisk/blob/main/LICENSE',
 } as const;
 
 export const PAGE_IDS = {

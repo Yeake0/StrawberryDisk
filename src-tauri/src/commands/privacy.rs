@@ -1,4 +1,4 @@
-use mangodisk_core::{
+use strawberrydisk_core::{
     ApplicationCloseBatchResult, PrivacyBrowserCloseRequest, PrivacyBrowserStatusRequest,
     PrivacyBrowserStatusResult, PrivacyDetailsPage, PrivacyDetailsRequest, PrivacyExecutionPlan,
     PrivacyExecutionRequest, PrivacyExecutionResult, PrivacyExecutionRunRequest,

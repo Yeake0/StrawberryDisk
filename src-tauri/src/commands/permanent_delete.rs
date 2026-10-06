@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use mangodisk_core::{
+use strawberrydisk_core::{
     diagnostic_path, AnalysisDeleteResult, AnalysisService, LargeFileService,
     PermanentDeleteBatchResult,
 };

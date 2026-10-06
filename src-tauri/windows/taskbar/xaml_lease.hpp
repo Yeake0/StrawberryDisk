@@ -14,7 +14,7 @@ inline std::wstring const& channel_class() {
         DWORD length = GetModuleFileNameW(bridge_module, path, 32768);
         if (!length || length >= 32768) winrt::throw_last_error();
         auto file = wcsrchr(path, L'\\');
-        return std::wstring(L"MangoDisk.Taskbar.Xaml.") + (file ? file + 1 : path);
+        return std::wstring(L"StrawberryDisk.Taskbar.Xaml.") + (file ? file + 1 : path);
     }();
     return name;
 }
@@ -158,8 +158,9 @@ struct Lease {
             !request.height || request.height > 32768 || !request.gap || request.gap > 128 || request.placement > Placement::BarRight ||
             request.log_file[1023] != 0) return E_INVALIDARG;
         auto length = wcsnlen_s(request.log_file, 1024);
-        if (length < 13 || wcscmp(request.log_file + length - 13, L"MangoDisk.log") != 0) {
-            // sizeof("MangoDisk.log") includes its terminator; the name is 13 characters.
+        constexpr wchar_t log_name[] = L"StrawberryDisk.log";
+        constexpr size_t log_name_length = (sizeof(log_name) / sizeof(wchar_t)) - 1;
+        if (length < log_name_length || wcscmp(request.log_file + length - log_name_length, log_name) != 0) {
             return E_INVALIDARG;
         }
         if (owner && WaitForSingleObject(owner, 0) != WAIT_TIMEOUT) restore();

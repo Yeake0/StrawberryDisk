@@ -1,5 +1,5 @@
 //! Metric labels remain local to the resident display domain.
-use mangodisk_core::system_resources::metrics::{MetricId, MetricStatus};
+use strawberrydisk_core::system_resources::metrics::{MetricId, MetricStatus};
 
 use crate::services::native_labels::NativeLabels;
 

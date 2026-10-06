@@ -1,6 +1,8 @@
 //! Desktop serialization for an explicit memory action; the Core owns execution semantics.
-use mangodisk_core::system_resources::release::{self, MemoryReleaseResult, MemoryReleaseStatus};
 use std::sync::{Mutex, TryLockError};
+use strawberrydisk_core::system_resources::release::{
+    self, MemoryReleaseResult, MemoryReleaseStatus,
+};
 
 static ACTION: Mutex<()> = Mutex::new(());
 
@@ -18,7 +20,7 @@ pub fn execute_configured(
             log::info!("memory_release_automatic_skipped reason=settings_changed");
             return MemoryReleaseResult::status(MemoryReleaseStatus::Cancelled);
         }
-        let options = mangodisk_platform::system_resources::release::ReleaseOptions {
+        let options = strawberrydisk_platform::system_resources::release::ReleaseOptions {
             excluded_paths: preferences
                 .exclusions
                 .iter()

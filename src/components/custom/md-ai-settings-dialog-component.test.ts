@@ -54,7 +54,7 @@ describe('AI configuration dialog', () => {
     });
     try {
       await flushPromises();
-      const link = document.querySelector('a[href$="/docs/ai#custom-service"]') as HTMLAnchorElement;
+      const link = document.querySelector('a[href$="/blob/main/docs/ai.md"]') as HTMLAnchorElement;
       expect(link.closest('label')).toBeNull();
       link.click();
       await flushPromises();

@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="public/mangodisk.svg" width="40" alt="MangoDisk 應用程式圖示"> MangoDisk
+  <img src="public/strawberrydisk.png" width="40" alt="StrawberryDisk 應用程式圖示"> StrawberryDisk
 </h1>
 
 <p align="center">適用於 <b>macOS</b>、<b>Windows</b> 與 <b>Linux</b> 的磁碟清理、儲存空間分析與隱私保護工具</p>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/harry0703/MangoDisk/releases/latest"><img alt="最新版本" src="https://img.shields.io/github/v/release/harry0703/MangoDisk?display_name=tag&sort=semver"></a>
+  <a href="https://github.com/Yeake0/StrawberryDisk-updates/releases/latest"><img alt="最新版本" src="https://img.shields.io/github/v/release/Yeake0/StrawberryDisk-updates?display_name=tag&sort=semver"></a>
   <img alt="支援 macOS" src="https://img.shields.io/badge/macOS-supported-111827?logo=apple&logoColor=white">
   <img alt="支援 Windows" src="https://img.shields.io/badge/Windows-supported-2563eb?logo=windows&logoColor=white">
   <img alt="支援 Linux" src="https://img.shields.io/badge/Linux-supported-f59e0b?logo=linux&logoColor=white">
@@ -17,17 +17,7 @@
   <img alt="Rust Core" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
 </p>
 
-<p align="center">
-  <a href="https://mangodisk.app/tw">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/readme/tw-dark.jpg">
-      <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/readme/tw-light.jpg">
-      <img src="https://assets.mangodisk.app/images/readme/tw-light.jpg" width="1200" alt="MangoDisk 磁碟清理、空間分析、隱私保護與系統最佳化工具">
-    </picture>
-  </a>
-</p>
-
-## MangoDisk 能做什麼
+## StrawberryDisk 能做什麼
 
 > **儲存空間**
 
@@ -109,114 +99,16 @@
 ## 安全與規則
 
 > [!IMPORTANT]
-> **MangoDisk 始終將資料安全放在清理效果之前。**
+> **StrawberryDisk 始終將資料安全放在清理效果之前。**
 > 所有清理規則與系統最佳化項目，只有在安全邊界明確且通過實際系統驗證後，才會納入正式版本。
 
-MangoDisk 預設只進行唯讀掃描。執行清理、刪除、解除安裝或變更系統設定前，會先顯示內容並由使用者確認；操作結果會保留在操作紀錄中。
+StrawberryDisk 預設只進行唯讀掃描。執行清理、刪除、解除安裝或變更系統設定前，會先顯示內容並由使用者確認；操作結果會保留在操作紀錄中。
 
 系統最佳化只會執行內建且經過驗證的設定，不接受任意登錄路徑、終端機指令或腳本。變更後會重新讀取系統狀態；高影響、需要系統管理員權限或需要重新啟動的項目都會提前提示。
 
-清理規則由 MangoDisk 獨立維護。第三方專案只用來提供研究線索；候選規則必須核對可靠來源、確認安全範圍，並通過真實系統驗證後才會收錄。安全範圍不明確的內容不會加入規則庫。
+清理規則由 StrawberryDisk 獨立維護。第三方專案只用來提供研究線索；候選規則必須核對可靠來源、確認安全範圍，並通過真實系統驗證後才會收錄。安全範圍不明確的內容不會加入規則庫。
 
-完整規則庫與修改紀錄均可檢視、追溯：[查看 MangoDisk 清理規則庫](https://github.com/harry0703/MangoDisk/tree/main/src-tauri/crates/mangodisk-core/rules)。
-
-## 介面預覽
-
-<p align="center">
-  <strong>深度清理</strong><br>
-  <sub>集中找出系統、應用程式、開發工具與專案中的可清理內容，釋放更多空間</sub>
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/tw/dark-01-deep-cleanup.jpg">
-    <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/tw/light-01-deep-cleanup.jpg">
-    <img src="https://assets.mangodisk.app/images/screenshots/tw/light-01-deep-cleanup.jpg" width="1200" alt="MangoDisk 深度清理介面">
-  </picture>
-</p>
-
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <strong>大型檔案清理</strong><br>
-      <sub>快速鎖定最佔空間的檔案，不必逐層翻找</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/tw/dark-02-large-file-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/tw/light-02-large-file-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/tw/light-02-large-file-cleanup.jpg" width="100%" alt="MangoDisk 大型檔案清理介面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>重複檔案清理</strong><br>
-      <sub>安全清理重複副本，並確保每組至少保留一份</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/tw/dark-03-duplicate-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/tw/light-03-duplicate-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/tw/light-03-duplicate-cleanup.jpg" width="100%" alt="MangoDisk 重複檔案清理介面">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>磁碟空間分析</strong><br>
-      <sub>一眼看懂空間去向，快速找出佔用最多的內容</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/tw/dark-05-disk-space-analysis.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/tw/light-05-disk-space-analysis.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/tw/light-05-disk-space-analysis.jpg" width="100%" alt="MangoDisk 磁碟空間分析介面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>啟動項目管理</strong><br>
-      <sub>減少不必要的開機啟動程式，加快登入並降低背景占用</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/tw/dark-06-startup-items.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/tw/light-06-startup-items.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/tw/light-06-startup-items.jpg" width="100%" alt="MangoDisk 啟動項目管理介面">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>解除安裝應用程式與殘留清理</strong><br>
-      <sub>解除安裝應用程式並清除相關殘留，釋放更多磁碟空間</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/tw/dark-04-app-uninstaller.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/tw/light-04-app-uninstaller.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/tw/light-04-app-uninstaller.jpg" width="100%" alt="MangoDisk 解除安裝應用程式介面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>系統最佳化</strong><br>
-      <sub>一鍵改善效能、隱私與使用體驗，讓系統運作更流暢</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/tw/dark-07-system-optimization.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/tw/light-07-system-optimization.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/tw/light-07-system-optimization.jpg" width="100%" alt="MangoDisk 系統最佳化介面">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>系統維護</strong><br>
-      <sub>快速解決常見系統問題，讓電腦恢復正常</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/tw/dark-08-system-maintenance.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/tw/light-08-system-maintenance.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/tw/light-08-system-maintenance.jpg" width="100%" alt="MangoDisk 系統維護介面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>隱私清理</strong><br>
-      <sub>減少活動痕跡殘留，讓日常隱私更有保障</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/tw/dark-09-privacy-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/tw/light-09-privacy-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/tw/light-09-privacy-cleanup.jpg" width="100%" alt="MangoDisk 隱私清理介面">
-      </picture>
-    </td>
-  </tr>
-</table>
+完整規則庫與修改紀錄均可檢視、追溯：[查看 StrawberryDisk 清理規則庫](https://github.com/Yeake0/StrawberryDisk/tree/main/src-tauri/crates/strawberrydisk-core/rules)。
 
 ## 使用注意事項
 
@@ -228,113 +120,44 @@ MangoDisk 預設只進行唯讀掃描。執行清理、刪除、解除安裝或�
 
 ## 桌面版
 
-可從 [官網下載頁面](https://mangodisk.app/tw/download) 或 [GitHub Releases](https://github.com/harry0703/MangoDisk/releases/latest) 下載安裝檔，並依照所用系統選擇下方的安裝方式。
-
-### macOS
-
-**系統需求：** macOS Monterey 12.5 或更新版本。
-
-**使用 Homebrew 安裝：**
-
-```sh
-brew install --cask harry0703/tap/mangodisk
-```
-
-**手動安裝：** 從 [官網下載頁面](https://mangodisk.app/tw/download) 下載 DMG，開啟後將 MangoDisk 拖入「應用程式」資料夾。
+可從 [官網下載頁面](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) 或 [GitHub Releases](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) 下載安裝檔，並依照所用系統選擇下方的安裝方式。
 
 ### Windows
 
 **系統需求：** 64 位元 Windows 10 或更新版本。
 
-**使用 PowerShell 安裝：**
-
-```powershell
-irm https://get.mangodisk.app | iex
-```
-
-**使用 WinGet 安裝（官方來源）：**
-
-```powershell
-winget install --id MangoDisk.MangoDisk --exact --source winget
-```
-
-**手動安裝：** 從 [官網下載頁面](https://mangodisk.app/tw/download) 下載 Windows 安裝程式，依照畫面指示完成安裝。
-
-### Linux
-
-**建議系統：** Ubuntu 22.04 LTS 或更新版本，支援 x64 與 ARM64。
-
-提供 `.deb` 套件與 AppImage；其他 Linux 發行版的相容性取決於系統函式庫與桌面環境。
-
-**透過終端機安裝（Debian/Ubuntu）：** 自動辨識架構，並安裝對應的最新版 `.deb` 套件。
-
-```sh
-curl -fsSL https://get.mangodisk.app/linux | bash
-```
-
-**手動安裝：** 從 [官網下載頁面](https://mangodisk.app/tw/download) 選擇對應架構的安裝檔。
-
-- **Debian/Ubuntu**：安裝對應架構的 `.deb` 套件。
-- **其他發行版**：可嘗試 AppImage，賦予執行權限後即可執行。
+**手動安裝：** 從 [官網下載頁面](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) 下載 Windows 安裝程式，依照畫面指示完成安裝。
 
 ## 命令列版（CLI）
 
-適合在終端機中使用或搭配指令碼，與桌面版採用同一套安全清理引擎。
-
-### macOS
-
-**使用 Homebrew 安裝：**
-
-```sh
-brew install harry0703/tap/mangodisk-cli
-```
-
-### Windows
-
-**使用 PowerShell 安裝：**
-
-```powershell
-irm https://get.mangodisk.app/cli | iex
-```
-
-**使用 WinGet 安裝（官方來源）：**
-
-```powershell
-winget install --id MangoDisk.CLI --exact --source winget
-```
-
-### Linux
-
-目前尚未提供 Linux 獨立 CLI 的預先編譯版本，可依照下方 [從原始碼建置](#從原始碼建置) 的步驟自行編譯。
-
 ### 使用範例
 
-安裝完成後，如果暫時找不到 `mangodisk`，請重新開啟終端機，再檢查版本：
+安裝完成後，如果暫時找不到 `strawberrydisk`，請重新開啟終端機，再檢查版本：
 
 ```sh
-mangodisk --version
+strawberrydisk --version
 ```
 
 常用指令：
 
 ```sh
 # 僅掃描並顯示可清理的內容
-mangodisk clean
+strawberrydisk clean
 
 # 套用與桌面版相同的智慧建議
-mangodisk clean --apply
+strawberrydisk clean --apply
 
 # 預覽所有可選項目，不實際刪除
-mangodisk clean --apply --selection all --dry-run
+strawberrydisk clean --apply --selection all --dry-run
 
 # 輸出方便指令碼處理的 JSON
-mangodisk clean --format json --no-progress
+strawberrydisk clean --format json --no-progress
 ```
 
-`mangodisk clean` 預設只會掃描，不會修改檔案。在非互動式環境執行實際清理時，還必須傳入 `--yes` 明確確認；完整選項請執行：
+`strawberrydisk clean` 預設只會掃描，不會修改檔案。在非互動式環境執行實際清理時，還必須傳入 `--yes` 明確確認；完整選項請執行：
 
 ```sh
-mangodisk clean --help
+strawberrydisk clean --help
 ```
 
 ## 從原始碼建置
@@ -350,8 +173,8 @@ mangodisk clean --help
 ### 取得原始碼並啟動桌面應用程式
 
 ```sh
-git clone https://github.com/harry0703/MangoDisk.git
-cd MangoDisk
+git clone https://github.com/Yeake0/StrawberryDisk.git
+cd StrawberryDisk
 pnpm install --frozen-lockfile
 pnpm tauri:dev
 ```
@@ -360,7 +183,7 @@ pnpm tauri:dev
 
 ```sh
 pnpm check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 ### 建置桌面安裝程式
@@ -375,7 +198,7 @@ pnpm tauri:build
 pnpm cli:build
 ```
 
-本機建置產物不包含 MangoDisk 正式發布流程提供的簽名、公證和更新元資料，僅用於開發與驗證。
+本機建置產物不包含 StrawberryDisk 正式發布流程提供的簽名、公證和更新元資料，僅用於開發與驗證。
 
 ## 參與貢獻
 
@@ -383,13 +206,13 @@ pnpm cli:build
 [`CONTRIBUTING.md`](CONTRIBUTING.md) 和 [`AGENTS.md`](AGENTS.md)。
 
 一般清理規則應使用經過建置期驗證的宣告式 TOML。規則結構、安全限制和驗證方式請參閱
-[`src-tauri/crates/mangodisk-core/rules/README.md`](src-tauri/crates/mangodisk-core/rules/README.md)。
+[`src-tauri/crates/strawberrydisk-core/rules/README.md`](src-tauri/crates/strawberrydisk-core/rules/README.md)。
 
 提交修改前，請至少執行：
 
 ```sh
 pnpm check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 發現安全問題時，請按照 [`SECURITY.md`](SECURITY.md) 透過 GitHub Security Advisories 私下報告，不要建立公開 Issue。
@@ -402,4 +225,4 @@ cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
 
 ## 授權條款
 
-MangoDisk 採用 [GNU General Public License v3.0](https://github.com/harry0703/MangoDisk/blob/main/LICENSE) 開放原始碼。第三方元件仍適用各自的授權條款。
+StrawberryDisk 採用 [GNU General Public License v3.0](https://github.com/Yeake0/StrawberryDisk/blob/main/LICENSE) 開放原始碼。第三方元件仍適用各自的授權條款。

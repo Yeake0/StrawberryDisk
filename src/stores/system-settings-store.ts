@@ -98,7 +98,7 @@ export const useSystemSettingsStore = defineStore('system-settings', {
       if (!this.catalog || this.preparing || this.executing) return null;
       const restoreIds = new Set(
         this.catalog.items
-          // Recovery remains valid when a later MangoDisk release changes its recommendation.
+          // Recovery remains valid when a later StrawberryDisk release changes its recommendation.
           // Core exposes only settings whose current value still matches the durable baseline.
           .filter(item => item.restoreAvailable)
           .map(item => item.settingId)

@@ -1,5 +1,5 @@
-use mangodisk_core::DiskInfo;
-use mangodisk_platform::{current_platform, Platform};
+use strawberrydisk_core::DiskInfo;
+use strawberrydisk_platform::{current_platform, Platform};
 
 use super::error::{run_blocking, CommandResult};
 
@@ -7,7 +7,7 @@ use super::error::{run_blocking, CommandResult};
 pub async fn get_system_disk(refresh: Option<bool>) -> CommandResult<DiskInfo> {
     run_blocking("get_system_disk", move || {
         if refresh.unwrap_or(false) {
-            mangodisk_platform::system_resources::disk::invalidate_capacity_cache();
+            strawberrydisk_platform::system_resources::disk::invalidate_capacity_cache();
         }
         let disk = current_platform().system_volume().map(DiskInfo::from)?;
         log::info!(
@@ -17,7 +17,7 @@ pub async fn get_system_disk(refresh: Option<bool>) -> CommandResult<DiskInfo> {
             disk.available_bytes,
             disk.used_bytes
         );
-        Ok::<_, mangodisk_platform::PlatformError>(disk)
+        Ok::<_, strawberrydisk_platform::PlatformError>(disk)
     })
     .await
 }

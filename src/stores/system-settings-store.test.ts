@@ -162,7 +162,7 @@ describe('system settings store', () => {
     expect(store.desiredOptimizedIds).toContain(setting.settingId);
   });
 
-  it('prepares recovery only for settings changed by MangoDisk', async () => {
+  it('prepares recovery only for settings changed by StrawberryDisk', async () => {
     const recoverable = {
       ...setting,
       settingId: 'windows.taskbar.disable-animations',

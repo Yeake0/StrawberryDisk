@@ -1,13 +1,13 @@
 [package]
 name = "xtask"
 version.workspace = true
-description = "MangoDisk repository maintenance tasks"
+description = "StrawberryDisk repository maintenance tasks"
 edition.workspace = true
 rust-version.workspace = true
 publish = false
 
 [dependencies]
 blake3 = "1"
-mangodisk-core = { path = "../crates/mangodisk-core" }
-mangodisk-platform = { path = "../crates/mangodisk-platform" }
+strawberrydisk-core = { path = "../crates/strawberrydisk-core" }
+strawberrydisk-platform = { path = "../crates/strawberrydisk-platform" }
 serde_json = "1"

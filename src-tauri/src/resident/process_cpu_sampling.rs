@@ -1,17 +1,17 @@
 //! Application counters have their own cadence and cannot delay overview readings.
 use super::sampling_schedule::{Demand, SamplingSlot};
 use super::sampling_workers::{timestamp_ms, SamplingEvent};
-use mangodisk_core::system_resources::{
-    metrics::{MetricId, MetricReading, MetricStatus},
-    readings::ResourceCache,
-};
-use mangodisk_core::{
-    system_resources::{models::ProcessCpuSummary, process_cpu::ProcessCpuService},
-    CoreResult,
-};
 use std::{
     sync::mpsc::{self, SyncSender},
     time::Instant,
+};
+use strawberrydisk_core::system_resources::{
+    metrics::{MetricId, MetricReading, MetricStatus},
+    readings::ResourceCache,
+};
+use strawberrydisk_core::{
+    system_resources::{models::ProcessCpuSummary, process_cpu::ProcessCpuService},
+    CoreResult,
 };
 
 pub const BACKGROUND_INTERVAL_MS: u64 = 4000;
@@ -155,7 +155,7 @@ impl ProcessCpuSampling {
                         log::warn!(
                             "resident_process_cpu_failed code={:?} error={}",
                             error.code(),
-                            mangodisk_platform::diagnostics::text(&error)
+                            strawberrydisk_platform::diagnostics::text(&error)
                         );
                     }
                     MetricReading {
@@ -230,7 +230,7 @@ fn start_worker(origin: Instant, events: SyncSender<SamplingEvent>) -> SyncSende
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mangodisk_platform::system_resources::process_cpu::CpuUsageScale;
+    use strawberrydisk_platform::system_resources::process_cpu::CpuUsageScale;
 
     fn summary() -> ProcessCpuSummary {
         ProcessCpuSummary {

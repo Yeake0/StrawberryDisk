@@ -115,7 +115,7 @@ function render(
           locale: 'en',
         }),
       ],
-      stubs: { MdIcon: true, MdIconMangodisk: true, MdNativeFileIcon: !nativeIcons },
+      stubs: { MdIcon: true, MdIconStrawberrydisk: true, MdNativeFileIcon: !nativeIcons },
     },
   });
   wrappers.push(wrapper);

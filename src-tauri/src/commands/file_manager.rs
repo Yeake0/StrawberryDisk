@@ -1,6 +1,8 @@
 use std::{fmt::Display, path::Path};
 
-use mangodisk_core::{diagnostic_path, AnalysisService, DuplicateFileService, LargeFileService};
+use strawberrydisk_core::{
+    diagnostic_path, AnalysisService, DuplicateFileService, LargeFileService,
+};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_opener::OpenerExt;
 
@@ -93,7 +95,7 @@ fn open_path_with_default_handler(path: &Path) -> Result<(), tauri_plugin_opener
     tauri_plugin_opener::open_path(path, None::<&str>)
 }
 
-/// Opens MangoDisk's application-owned log directory without exposing its
+/// Opens StrawberryDisk's application-owned log directory without exposing its
 /// platform-specific path to the webview. Directory resolution stays in the
 /// Tauri adapter because it depends on the installed application identity.
 #[tauri::command]
@@ -123,17 +125,17 @@ pub fn open_application_log_directory(app: AppHandle) -> CommandResult<()> {
 }
 
 fn opener_error_diagnostic(error: &tauri_plugin_opener::Error) -> String {
-    let diagnostic = mangodisk_platform::diagnostics::text(error);
+    let diagnostic = strawberrydisk_platform::diagnostics::text(error);
     format!("opener_reveal_failed error={diagnostic}")
 }
 
 fn open_error_diagnostic(error: &tauri_plugin_opener::Error) -> String {
-    let diagnostic = mangodisk_platform::diagnostics::text(error);
+    let diagnostic = strawberrydisk_platform::diagnostics::text(error);
     format!("opener_open_failed error={diagnostic}")
 }
 
 fn log_directory_error_diagnostic(error: &dyn Display) -> String {
-    let diagnostic = mangodisk_platform::diagnostics::text(error);
+    let diagnostic = strawberrydisk_platform::diagnostics::text(error);
     format!("application_log_directory_open_failed error={diagnostic}")
 }
 
@@ -172,7 +174,7 @@ mod tests {
     #[test]
     fn default_open_rejects_a_missing_target_before_dispatch() {
         let missing_path = std::env::temp_dir().join(format!(
-            "mangodisk-missing-open-target-{}",
+            "strawberrydisk-missing-open-target-{}",
             std::process::id()
         ));
         assert!(!missing_path.exists(), "the test target must remain absent");
@@ -182,7 +184,7 @@ mod tests {
 
     #[test]
     fn log_directory_diagnostic_preserves_the_target_and_native_cause() {
-        let private_path = r"C:\Users\Developer\AppData\Local\MangoDisk\logs";
+        let private_path = r"C:\Users\Developer\AppData\Local\StrawberryDisk\logs";
 
         let diagnostic = log_directory_error_diagnostic(&format!("cannot open {private_path}"));
 

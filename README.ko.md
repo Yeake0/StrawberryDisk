@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="public/mangodisk.svg" width="40" alt="MangoDisk application icon"> MangoDisk
+  <img src="public/strawberrydisk.png" width="40" alt="StrawberryDisk application icon"> StrawberryDisk
 </h1>
 
 <p align="center"><b>macOS</b>, <b>Windows</b>, <b>Linux</b>용 디스크 정리·저장 공간 분석·개인정보 보호 도구</p>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/harry0703/MangoDisk/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/harry0703/MangoDisk?display_name=tag&sort=semver"></a>
+  <a href="https://github.com/Yeake0/StrawberryDisk-updates/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Yeake0/StrawberryDisk-updates?display_name=tag&sort=semver"></a>
   <img alt="macOS supported" src="https://img.shields.io/badge/macOS-supported-111827?logo=apple&logoColor=white">
   <img alt="Windows supported" src="https://img.shields.io/badge/Windows-supported-2563eb?logo=windows&logoColor=white">
   <img alt="Linux supported" src="https://img.shields.io/badge/Linux-supported-f59e0b?logo=linux&logoColor=white">
@@ -17,23 +17,13 @@
   <img alt="Rust Core" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
 </p>
 
-<p align="center">
-  <a href="https://mangodisk.app/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/readme/en-dark.jpg">
-      <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/readme/en-light.jpg">
-      <img src="https://assets.mangodisk.app/images/readme/en-light.jpg" width="1200" alt="MangoDisk 디스크 정리, 저장 공간 분석, 개인정보 보호, 시스템 최적화">
-    </picture>
-  </a>
-</p>
-
-## MangoDisk로 할 수 있는 일
+## StrawberryDisk로 할 수 있는 일
 
 > **저장 공간**
 
 ### 1. 심층 정리
 
-시스템, 앱, 개발자 도구, 로컬 프로젝트 곳곳에 흩어진 정리 가능한 콘텐츠를 한 번의 스캔으로 찾습니다. 위치마다 직접 확인할 필요 없이 MangoDisk가 회수 가능한 공간별로 결과를 묶어 보여줍니다:
+시스템, 앱, 개발자 도구, 로컬 프로젝트 곳곳에 흩어진 정리 가능한 콘텐츠를 한 번의 스캔으로 찾습니다. 위치마다 직접 확인할 필요 없이 StrawberryDisk가 회수 가능한 공간별로 결과를 묶어 보여줍니다:
 
 - **시스템 및 사용자 캐시**: 시간이 지나며 쌓인 시스템 임시 파일, 진단 데이터, 다시 만들 수 있는 캐시가 차지한 공간을 회수합니다.
 - **앱 캐시**: 앱 캐시, 로그, 업데이트 패키지, 임시 콘텐츠가 조용히 저장 공간을 잠식하지 않게 합니다.
@@ -109,114 +99,16 @@ CPU와 메모리 사용량, 네트워크 속도, 디스크 상태를 언제든 �
 ## 안전과 규칙
 
 > [!IMPORTANT]
-> **MangoDisk는 더 많은 공간을 회수하는 것보다 데이터 안전을 우선합니다.**
+> **StrawberryDisk는 더 많은 공간을 회수하는 것보다 데이터 안전을 우선합니다.**
 > 정리 규칙과 시스템 최적화는 안전 경계가 명확히 정의되고 실제 시스템에서 검증을 통과한 뒤에만 배포됩니다.
 
-MangoDisk는 기본적으로 읽기 전용으로 스캔합니다. 정리, 삭제, 제거, 시스템 설정 변경을 시작하기 전에 정확히 무슨 일이 일어날지 검토하고 확인할 수 있습니다. 결과는 작업 기록에 저장됩니다.
+StrawberryDisk는 기본적으로 읽기 전용으로 스캔합니다. 정리, 삭제, 제거, 시스템 설정 변경을 시작하기 전에 정확히 무슨 일이 일어날지 검토하고 확인할 수 있습니다. 결과는 작업 기록에 저장됩니다.
 
-시스템 최적화는 내장된 검증 완료 설정만 사용합니다. 임의의 레지스트리 경로, 터미널 명령, 스크립트는 받지 않습니다. MangoDisk는 설정을 변경한 뒤 다시 읽어 확인하며, 영향이 큰 항목과 관리자 권한이나 재시동이 필요한 변경을 명확히 알립니다.
+시스템 최적화는 내장된 검증 완료 설정만 사용합니다. 임의의 레지스트리 경로, 터미널 명령, 스크립트는 받지 않습니다. StrawberryDisk는 설정을 변경한 뒤 다시 읽어 확인하며, 영향이 큰 항목과 관리자 권한이나 재시동이 필요한 변경을 명확히 알립니다.
 
-MangoDisk는 자체 정리 규칙을 관리합니다. 서드파티 프로젝트가 조사 단서를 줄 수는 있지만, 후보 규칙은 신뢰할 수 있는 출처, 안전 경계, 실제 시스템 동작이 검증된 뒤에만 채택됩니다. 안전 경계가 명확하지 않은 것은 제외됩니다.
+StrawberryDisk는 자체 정리 규칙을 관리합니다. 서드파티 프로젝트가 조사 단서를 줄 수는 있지만, 후보 규칙은 신뢰할 수 있는 출처, 안전 경계, 실제 시스템 동작이 검증된 뒤에만 채택됩니다. 안전 경계가 명확하지 않은 것은 제외됩니다.
 
-전체 규칙 라이브러리와 변경 이력은 공개되어 있습니다: [MangoDisk 정리 규칙 라이브러리 보기](https://github.com/harry0703/MangoDisk/tree/main/src-tauri/crates/mangodisk-core/rules).
-
-## 스크린샷
-
-<p align="center">
-  <strong>심층 정리</strong><br>
-  <sub>시스템, 앱, 개발자 도구, 프로젝트 전반의 정리 가능한 콘텐츠를 찾아 더 많은 공간을 회수합니다</sub>
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-01-deep-cleanup.jpg">
-    <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-01-deep-cleanup.jpg">
-    <img src="https://assets.mangodisk.app/images/screenshots/en/light-01-deep-cleanup.jpg" width="1200" alt="MangoDisk 심층 정리 화면">
-  </picture>
-</p>
-
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <strong>대용량 파일 정리</strong><br>
-      <sub>폴더를 뒤지지 않고 가장 많은 공간을 차지하는 파일을 찾습니다</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-02-large-file-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-02-large-file-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-02-large-file-cleanup.jpg" width="100%" alt="MangoDisk 대용량 파일 정리 화면">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>중복 파일 정리</strong><br>
-      <sub>복사본을 하나 이상 남기면서 완전히 동일한 중복 파일을 안전하게 제거합니다</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-03-duplicate-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-03-duplicate-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-03-duplicate-cleanup.jpg" width="100%" alt="MangoDisk 중복 파일 정리 화면">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>디스크 공간 분석</strong><br>
-      <sub>저장 공간이 어디에 쓰이는지 보고 가장 큰 파일과 폴더를 빠르게 찾습니다</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-05-disk-space-analysis.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-05-disk-space-analysis.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-05-disk-space-analysis.jpg" width="100%" alt="MangoDisk 디스크 공간 분석 화면">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>시작 항목 관리</strong><br>
-      <sub>불필요한 시작 프로그램을 줄여 더 빠른 로그인과 더 적은 백그라운드 활동을 만듭니다</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-06-startup-items.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-06-startup-items.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-06-startup-items.jpg" width="100%" alt="MangoDisk 시작 항목 관리 화면">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>앱 제거 및 정리</strong><br>
-      <sub>앱을 제거하고 관련 잔여 파일까지 지워 더 많은 공간을 회수합니다</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-04-app-uninstaller.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-04-app-uninstaller.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-04-app-uninstaller.jpg" width="100%" alt="MangoDisk 앱 제거 화면">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>시스템 최적화</strong><br>
-      <sub>성능, 개인정보 보호, 일상적인 사용성을 한 번의 클릭으로 최적화합니다</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-07-system-optimization.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-07-system-optimization.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-07-system-optimization.jpg" width="100%" alt="MangoDisk 시스템 최적화 화면">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>시스템 유지 관리</strong><br>
-      <sub>흔한 시스템 문제를 빠르게 고쳐 컴퓨터를 정상으로 되돌립니다</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-08-system-maintenance.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-08-system-maintenance.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-08-system-maintenance.jpg" width="100%" alt="MangoDisk 시스템 유지 관리 화면">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>개인정보 정리</strong><br>
-      <sub>활동 흔적을 덜 남기고 일상적인 사용을 더 비공개로 유지합니다</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-09-privacy-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-09-privacy-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-09-privacy-cleanup.jpg" width="100%" alt="MangoDisk 개인정보 정리 화면">
-      </picture>
-    </td>
-  </tr>
-</table>
+전체 규칙 라이브러리와 변경 이력은 공개되어 있습니다: [StrawberryDisk 정리 규칙 라이브러리 보기](https://github.com/Yeake0/StrawberryDisk/tree/main/src-tauri/crates/strawberrydisk-core/rules).
 
 ## 사용 전 주의 사항
 
@@ -228,113 +120,44 @@ MangoDisk는 자체 정리 규칙을 관리합니다. 서드파티 프로젝트�
 
 ## 데스크톱 버전
 
-[공식 다운로드 페이지](https://mangodisk.app/download)나 [GitHub Releases](https://github.com/harry0703/MangoDisk/releases/latest)에서 설치 파일을 다운로드한 뒤, 사용 중인 운영체제에 맞는 방법으로 설치하세요.
-
-### macOS
-
-**시스템 요구 사항:** macOS Monterey 12.5 이상.
-
-**Homebrew로 설치:**
-
-```sh
-brew install --cask harry0703/tap/mangodisk
-```
-
-**직접 설치:** [공식 다운로드 페이지](https://mangodisk.app/download)에서 DMG를 다운로드해 열고, MangoDisk를 ‘응용 프로그램’ 폴더로 드래그하세요.
+[공식 다운로드 페이지](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest)나 [GitHub Releases](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest)에서 설치 파일을 다운로드한 뒤, 사용 중인 운영체제에 맞는 방법으로 설치하세요.
 
 ### Windows
 
 **시스템 요구 사항:** 64비트 Windows 10 이상.
 
-**PowerShell로 설치:**
-
-```powershell
-irm https://get.mangodisk.app | iex
-```
-
-**WinGet으로 설치(공식 소스):**
-
-```powershell
-winget install --id MangoDisk.MangoDisk --exact --source winget
-```
-
-**직접 설치:** [공식 다운로드 페이지](https://mangodisk.app/download)에서 Windows 설치 프로그램을 다운로드하고 화면의 안내에 따라 설치하세요.
-
-### Linux
-
-**권장 환경:** Ubuntu 22.04 LTS 이상. x64와 ARM64를 지원합니다.
-
-`.deb` 패키지와 AppImage를 제공합니다. 다른 Linux 배포판에서의 호환성은 시스템 라이브러리와 데스크톱 환경에 따라 달라집니다.
-
-**터미널에서 설치(Debian/Ubuntu):** 아키텍처를 자동으로 감지해 해당 아키텍처의 최신 `.deb` 패키지를 설치합니다.
-
-```sh
-curl -fsSL https://get.mangodisk.app/linux | bash
-```
-
-**직접 설치:** [공식 다운로드 페이지](https://mangodisk.app/download)에서 아키텍처에 맞는 파일을 선택하세요.
-
-- **Debian/Ubuntu:** 아키텍처에 맞는 `.deb` 패키지를 설치하세요.
-- **다른 배포판:** AppImage를 사용해 볼 수 있습니다. 실행 권한을 부여한 뒤 실행하세요.
+**직접 설치:** [공식 다운로드 페이지](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest)에서 Windows 설치 프로그램을 다운로드하고 화면의 안내에 따라 설치하세요.
 
 ## 명령줄 버전(CLI)
 
-터미널에서 사용하거나 스크립트에 통합할 수 있으며, 데스크톱 버전과 동일한 안전 중심의 정리 엔진을 사용합니다.
-
-### macOS
-
-**Homebrew로 설치:**
-
-```sh
-brew install harry0703/tap/mangodisk-cli
-```
-
-### Windows
-
-**PowerShell로 설치:**
-
-```powershell
-irm https://get.mangodisk.app/cli | iex
-```
-
-**WinGet으로 설치(공식 소스):**
-
-```powershell
-winget install --id MangoDisk.CLI --exact --source winget
-```
-
-### Linux
-
-Linux용 독립 실행형 CLI는 아직 미리 빌드된 실행 파일을 제공하지 않습니다. 아래의 [소스에서 빌드](#소스에서-빌드) 절차에 따라 직접 빌드할 수 있습니다.
-
 ### 사용 예시
 
-설치 후 `mangodisk` 명령을 찾을 수 없다면 터미널을 다시 열고 버전을 확인하세요.
+설치 후 `strawberrydisk` 명령을 찾을 수 없다면 터미널을 다시 열고 버전을 확인하세요.
 
 ```sh
-mangodisk --version
+strawberrydisk --version
 ```
 
 자주 사용하는 명령:
 
 ```sh
 # 파일을 변경하지 않고 정리 가능한 항목만 스캔
-mangodisk clean
+strawberrydisk clean
 
 # 데스크톱 버전과 같은 스마트 추천 적용
-mangodisk clean --apply
+strawberrydisk clean --apply
 
 # 실제로 삭제하지 않고 선택 가능한 모든 항목 미리 보기
-mangodisk clean --apply --selection all --dry-run
+strawberrydisk clean --apply --selection all --dry-run
 
 # 스크립트에서 처리하기 쉬운 JSON 형식으로 출력
-mangodisk clean --format json --no-progress
+strawberrydisk clean --format json --no-progress
 ```
 
-`mangodisk clean`은 기본적으로 스캔만 하며 파일을 수정하지 않습니다. 비대화형 환경에서 정리를 실행하려면 `--yes`를 함께 넘겨 명시적으로 확인해야 합니다. 사용 가능한 모든 옵션은 다음 명령으로 확인하세요:
+`strawberrydisk clean`은 기본적으로 스캔만 하며 파일을 수정하지 않습니다. 비대화형 환경에서 정리를 실행하려면 `--yes`를 함께 넘겨 명시적으로 확인해야 합니다. 사용 가능한 모든 옵션은 다음 명령으로 확인하세요:
 
 ```sh
-mangodisk clean --help
+strawberrydisk clean --help
 ```
 
 ## 소스에서 빌드
@@ -350,8 +173,8 @@ mangodisk clean --help
 ### 소스 받기 및 데스크탑 앱 실행
 
 ```sh
-git clone https://github.com/harry0703/MangoDisk.git
-cd MangoDisk
+git clone https://github.com/Yeake0/StrawberryDisk.git
+cd StrawberryDisk
 pnpm install --frozen-lockfile
 pnpm tauri:dev
 ```
@@ -360,7 +183,7 @@ pnpm tauri:dev
 
 ```sh
 pnpm check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 ### 데스크탑 설치 프로그램 빌드
@@ -375,19 +198,19 @@ pnpm tauri:build
 pnpm cli:build
 ```
 
-로컬 빌드에는 공식 MangoDisk 릴리스가 제공하는 서명, 공증, 업데이트 메타데이터가 포함되지 않습니다. 로컬 개발과 검증 용도로만 사용하세요.
+로컬 빌드에는 공식 StrawberryDisk 릴리스가 제공하는 서명, 공증, 업데이트 메타데이터가 포함되지 않습니다. 로컬 개발과 검증 용도로만 사용하세요.
 
 ## 기여하기
 
 이슈, 정리 규칙, 수정, 새 기능 모두 환영합니다. 시작하기 전에 [`CONTRIBUTING.md`](CONTRIBUTING.md)와 [`AGENTS.md`](AGENTS.md)를 읽어 주세요.
 
-일반적인 정리 범위는 빌드 시 검증되는 선언형 TOML 규칙을 사용해야 합니다. 규칙 스키마, 안전 제약, 검증 방법은 [`src-tauri/crates/mangodisk-core/rules/README.md`](src-tauri/crates/mangodisk-core/rules/README.md)를 참고하세요.
+일반적인 정리 범위는 빌드 시 검증되는 선언형 TOML 규칙을 사용해야 합니다. 규칙 스키마, 안전 제약, 검증 방법은 [`src-tauri/crates/strawberrydisk-core/rules/README.md`](src-tauri/crates/strawberrydisk-core/rules/README.md)를 참고하세요.
 
 변경 사항을 제출하기 전에 최소한 다음을 실행하세요:
 
 ```sh
 pnpm check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 보안 취약점은 [`SECURITY.md`](SECURITY.md)에 설명된 대로 GitHub Security Advisories를 통해 비공개로 신고해 주세요. 보안 취약점을 공개 이슈로 올리지 마세요.
@@ -400,4 +223,4 @@ cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
 
 ## 라이선스
 
-MangoDisk는 [GNU General Public License v3.0](https://github.com/harry0703/MangoDisk/blob/main/LICENSE)에 따라 공개된 오픈소스입니다. 서드파티 구성 요소에는 각각의 라이선스가 적용됩니다.
+StrawberryDisk는 [GNU General Public License v3.0](https://github.com/Yeake0/StrawberryDisk/blob/main/LICENSE)에 따라 공개된 오픈소스입니다. 서드파티 구성 요소에는 각각의 라이선스가 적용됩니다.

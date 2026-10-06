@@ -1,8 +1,8 @@
-use mangodisk_core::{
+use serde::Deserialize;
+use strawberrydisk_core::{
     SystemSettingsCatalog, SystemSettingsChangePlan, SystemSettingsChangeResult,
     SystemSettingsChangeSelection, SystemSettingsService,
 };
-use serde::Deserialize;
 
 use super::error::{run_blocking, CommandResult};
 
@@ -171,7 +171,7 @@ impl WindowsStartupTool {
     }
 }
 
-/// Opens one fixed Windows management console snap-in for startup entries that MangoDisk cannot
+/// Opens one fixed Windows management console snap-in for startup entries that StrawberryDisk cannot
 /// safely remove. The enum prevents the webview from passing arbitrary programs or arguments.
 #[tauri::command]
 pub async fn open_windows_startup_tool(tool: WindowsStartupTool) -> CommandResult<()> {
@@ -199,7 +199,7 @@ fn open_settings_uri(_uri: &str) -> Result<(), String> {
 #[cfg(target_os = "windows")]
 fn open_windows_management_console(
     tool: WindowsStartupTool,
-) -> Result<(), mangodisk_core::CoreError> {
+) -> Result<(), strawberrydisk_core::CoreError> {
     use std::os::windows::ffi::OsStrExt;
     use windows_sys::Win32::{
         Foundation::GetLastError,
@@ -249,7 +249,7 @@ fn open_windows_management_console(
             "windows_startup_tool_open_failed tool={} stage=com hresult={com}",
             tool.diagnostic_name()
         );
-        return Err(mangodisk_core::CoreError::operation_failed(
+        return Err(strawberrydisk_core::CoreError::operation_failed(
             "initialize management console launcher failed",
         ));
     }
@@ -288,22 +288,22 @@ fn open_windows_management_console(
 #[cfg(not(target_os = "windows"))]
 fn open_windows_management_console(
     tool: WindowsStartupTool,
-) -> Result<(), mangodisk_core::CoreError> {
-    Err(mangodisk_core::CoreError::operation_failed(format!(
+) -> Result<(), strawberrydisk_core::CoreError> {
+    Err(strawberrydisk_core::CoreError::operation_failed(format!(
         "Windows startup tool {} is unavailable on this platform",
         tool.snap_in()
     )))
 }
 
 #[cfg(any(target_os = "windows", test))]
-fn management_console_error(code: u32) -> mangodisk_core::CoreError {
+fn management_console_error(code: u32) -> strawberrydisk_core::CoreError {
     match code {
-        1223 => mangodisk_core::CoreError::operation_cancelled(),
-        5 => mangodisk_core::CoreError::new(
-            mangodisk_core::CoreErrorCode::PermissionDenied,
+        1223 => strawberrydisk_core::CoreError::operation_cancelled(),
+        5 => strawberrydisk_core::CoreError::new(
+            strawberrydisk_core::CoreErrorCode::PermissionDenied,
             "management console elevation was denied",
         ),
-        _ => mangodisk_core::CoreError::operation_failed(format!(
+        _ => strawberrydisk_core::CoreError::operation_failed(format!(
             "management console launch failed: os_error={code}"
         )),
     }
@@ -315,7 +315,7 @@ mod tests {
 
     #[test]
     fn management_console_errors_distinguish_cancel_permission_and_failure() {
-        use mangodisk_core::CoreErrorCode;
+        use strawberrydisk_core::CoreErrorCode;
         assert_eq!(
             management_console_error(1223).code(),
             CoreErrorCode::OperationCancelled

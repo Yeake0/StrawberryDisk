@@ -14,11 +14,11 @@ const sourceRoots = [
   'src',
   'src-tauri/src',
   'src-tauri/xtask/src',
-  'src-tauri/crates/mangodisk-cli/src',
-  'src-tauri/crates/mangodisk-core/src',
-  'src-tauri/crates/mangodisk-core/examples',
-  'src-tauri/crates/mangodisk-platform/src',
-  'src-tauri/crates/mangodisk-platform/examples',
+  'src-tauri/crates/strawberrydisk-cli/src',
+  'src-tauri/crates/strawberrydisk-core/src',
+  'src-tauri/crates/strawberrydisk-core/examples',
+  'src-tauri/crates/strawberrydisk-platform/src',
+  'src-tauri/crates/strawberrydisk-platform/examples',
 ];
 const allowedExtensions = new Set(['.rs', '.ts', '.vue']);
 const hanCharacter = /\p{Script=Han}/u;

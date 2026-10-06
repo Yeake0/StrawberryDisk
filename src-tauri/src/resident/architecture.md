@@ -152,7 +152,7 @@ and recreated buttons invalidate the image cache; accessibility retains the text
 summary. The adapter
 uses Tauri 2.11 native tray access; its minor version is constrained so an upgrade
 receives native UI regression checks. Windows uses at most six retained tray handles and
-bounded native-size bitmaps. Logical entry IDs are stable within MangoDisk; they
+bounded native-size bitmaps. Logical entry IDs are stable within StrawberryDisk; they
 are not Windows notification GUIDs and do not guarantee retained shell placement
 across restarts or changed selections. Windows controls icon order and overflow.
 Hidden Windows entries are absent from the notification area even while their
@@ -208,8 +208,8 @@ A session-local mutex serializes companion lifetimes, including restoration, so
 rapid disable/re-enable cannot overlap allocations. Restoration only touches the
 same shell process/control and our last applied axis; a newer Explorer layout wins.
 Cross-axis DPI changes preserve the current thickness while restoring our axis.
-TrafficMonitor reserves the outer `MSTaskSwWClass` container. MangoDisk only
-resizes the inner task list, so TrafficMonitor never sees MangoDisk's contraction
+TrafficMonitor reserves the outer `MSTaskSwWClass` container. StrawberryDisk only
+resizes the inner task list, so TrafficMonitor never sees StrawberryDisk's contraction
 as a new outer baseline. Manual left placement remains before application buttons
 rather than following their growing UIA bounds. Both the GUI and companion check
 for foreign rebar surfaces; unknown integrations use fresh UIA gaps instead of
@@ -230,7 +230,7 @@ allows reservation again; an undersized manual-edge gap falls back to the tray.
 Coexistence acceptance on both Windows versions must require two visible native
 panels and assert their rectangles do not intersect for left, right and automatic
 placement, including application-button changes and shell recreation. Checking
-only MangoDisk's visibility and screen half does not establish coexistence.
+only StrawberryDisk's visibility and screen half does not establish coexistence.
 After releasing a companion, placement waits asynchronously for its exit and a
 UIA snapshot whose collection started after that exit, including disable/re-enable.
 A release stalled beyond three seconds exposes tray fallback while continuing to
@@ -571,7 +571,7 @@ file-type icon. The GUI enables the platform's `linux-desktop-icons` feature;
 standalone Core/CLI builds do not acquire GTK dependencies. The adapter indexes registered desktop entries through
 GIO, matches canonical executable paths, and resolves their artwork through the
 current GTK icon theme. Conflicting entries, script/sandbox launchers, and processes
-without registered artwork retain a neutral process glyph. The running MangoDisk
+without registered artwork retain a neutral process glyph. The running StrawberryDisk
 executable uses its bundled artwork after registration of its exact path.
 Shared-launcher checks apply to both the desktop command and its canonical
 executable, so a differently named symlink cannot assign a script's artwork to
@@ -582,14 +582,14 @@ sampling. Only theme lookup uses the GTK main loop, with a bounded wait and retr
 backoff. Desktop indexing and positive/negative path resolution are bounded and
 refresh after sixty seconds; theme changes invalidate native resolved paths. Existing
 frontend batching and native PNG caching avoid repeated decoding on panel reopen.
-Run `cargo test -p mangodisk-platform --features linux-desktop-icons --test linux_file_icons -- --ignored --nocapture`
+Run `cargo test -p strawberrydisk-platform --features linux-desktop-icons --test linux_file_icons -- --ignored --nocapture`
 with the target desktop's `DISPLAY` for cold/repeated timings and real application
-coverage. Set `MANGODISK_EXPECT_NATIVE_ICONS=1` on the Ubuntu GNOME test desktop to
+coverage. Set `STRAWBERRYDISK_EXPECT_NATIVE_ICONS=1` on the Ubuntu GNOME test desktop to
 assert registered application artwork and daemon fallback. Keep raw output under
 the ignored `.local/` directory.
 
 For repeatable sensor-cost measurements, build `resource_sampling_probe` in
-`mangodisk-platform` with `--release`, then run `overview`, `memory`, `cpu`,
+`strawberrydisk-platform` with `--release`, then run `overview`, `memory`, `cpu`,
 `cpu-background`, or `cpu-memory` with a duration in seconds (60 by default).
 `gpu` isolates two-second GPU sampling, and `overview-gpu` adds it to the
 CPU/memory baseline. `gpu_usage_probe <seconds> --lifecycle` prints native

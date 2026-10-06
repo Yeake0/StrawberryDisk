@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './themes/default.css';
-@import './themes/mangodisk.css';
+@import './themes/strawberrydisk.css';
 
 /*
  * Cross-page scrolling behavior belongs in the global utility layer. Feature

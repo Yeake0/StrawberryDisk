@@ -28,7 +28,7 @@ describe('feedback validation', () => {
     expect(resolveFeedbackFileType({ name: 'photo.jpeg', type: '' })).toBe('image/jpeg');
     expect(resolveFeedbackFileType({ name: 'capture.webp', type: '' })).toBe('image/webp');
     expect(resolveFeedbackFileType({ name: 'steps.pdf', type: '' })).toBe('application/pdf');
-    expect(resolveFeedbackFileType({ name: 'MangoDisk.log', type: '' })).toBe('text/plain');
+    expect(resolveFeedbackFileType({ name: 'StrawberryDisk.log', type: '' })).toBe('text/plain');
     expect(resolveFeedbackFileType({ name: 'report.zip', type: '' })).toBe('application/zip');
     expect(resolveFeedbackFileType({ name: 'tool.exe', type: '' })).toBeNull();
   });

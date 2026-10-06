@@ -23,7 +23,7 @@ pub struct Ownership(HANDLE);
 impl Ownership {
     pub fn acquire() -> Option<Self> {
         unsafe {
-            let handle = CreateMutexW(ptr::null(), 0, w!("Local\\MangoDisk.TaskbarLayout.v1"));
+            let handle = CreateMutexW(ptr::null(), 0, w!("Local\\StrawberryDisk.TaskbarLayout.v1"));
             if handle.is_null() {
                 return None;
             }

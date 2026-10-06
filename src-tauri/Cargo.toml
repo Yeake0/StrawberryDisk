@@ -1,13 +1,13 @@
 [package]
-name = "mangodisk"
+name = "strawberrydisk"
 version.workspace = true
-description = "MangoDisk cross-platform disk space manager"
+description = "StrawberryDisk cross-platform disk space manager"
 authors = ["harry0703"]
 edition.workspace = true
 rust-version.workspace = true
 
 [lib]
-name = "mangodisk_lib"
+name = "strawberrydisk_lib"
 crate-type = ["cdylib", "rlib", "staticlib"]
 
 [features]
@@ -22,8 +22,8 @@ tauri-build = { version = "2.6.3", features = [] }
 base64 = "0.22"
 blake3 = "1"
 log = "0.4.33"
-mangodisk-core = { path = "crates/mangodisk-core" }
-mangodisk-platform = { path = "crates/mangodisk-platform", features = ["linux-desktop-icons"] }
+strawberrydisk-core = { path = "crates/strawberrydisk-core" }
+strawberrydisk-platform = { path = "crates/strawberrydisk-platform", features = ["linux-desktop-icons"] }
 reqwest = { version = "0.13.4", features = ["json", "multipart"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

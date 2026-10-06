@@ -2,7 +2,7 @@ use std::{any::Any, collections::BTreeMap, fmt::Display};
 
 use serde::Serialize;
 
-use mangodisk_core::{CoreError, CoreErrorCode};
+use strawberrydisk_core::{CoreError, CoreErrorCode};
 
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -44,7 +44,7 @@ impl CommandError {
     where
         E: Any + Display,
     {
-        let diagnostic = mangodisk_platform::diagnostics::text(&error);
+        let diagnostic = strawberrydisk_platform::diagnostics::text(&error);
         if let Some(error) = (&error as &dyn Any).downcast_ref::<CoreError>() {
             let (code, retryable) = match error.code() {
                 CoreErrorCode::InvalidInput => (CommandErrorCode::InvalidInput, false),
@@ -78,7 +78,9 @@ impl CommandError {
             }
             // A failed postflight can follow a successful write. Preserve that uncertainty so
             // adapters refresh native state instead of presenting a retry against stale data.
-            if error.mutation_state() == mangodisk_platform::PlatformMutationState::MayHaveChanged {
+            if error.mutation_state()
+                == strawberrydisk_platform::PlatformMutationState::MayHaveChanged
+            {
                 command_error
                     .details
                     .insert("mutationState", "mayHaveChanged");
@@ -149,7 +151,7 @@ mod tests {
         let error = CommandError::operation(
             "scan_application_uninstall_catalog",
             CoreError::operation_busy(
-                "another MangoDisk operation is already running: cleanup_scan (1)",
+                "another StrawberryDisk operation is already running: cleanup_scan (1)",
             ),
         );
         let json = serde_json::to_value(error).expect("command errors must serialize");
@@ -163,7 +165,7 @@ mod tests {
         let error = CommandError::operation(
             "analyze_path",
             CoreError::operation_busy("native worker detail")
-                .with_reason(mangodisk_core::CoreErrorReason::ScanResourcesReleasing),
+                .with_reason(strawberrydisk_core::CoreErrorReason::ScanResourcesReleasing),
         );
         let json = serde_json::to_value(error).expect("command errors must serialize");
 
@@ -177,7 +179,7 @@ mod tests {
         let error = CommandError::operation(
             "analyze_path",
             CoreError::invalid_input("private excluded path")
-                .with_reason(mangodisk_core::CoreErrorReason::AnalysisRootExcluded),
+                .with_reason(strawberrydisk_core::CoreErrorReason::AnalysisRootExcluded),
         );
         let json = serde_json::to_value(error).expect("command errors must serialize");
 
@@ -214,7 +216,7 @@ mod tests {
         let error = CommandError::operation(
             "delete_analysis_entry_permanently",
             CoreError::operation_failed("private native diagnostic")
-                .with_reason(mangodisk_core::CoreErrorReason::ResourceBusy),
+                .with_reason(strawberrydisk_core::CoreErrorReason::ResourceBusy),
         );
         let json = serde_json::to_value(error).expect("command errors must serialize");
 
@@ -224,8 +226,8 @@ mod tests {
     }
     #[test]
     fn native_cancellation_and_uncertain_writes_reach_the_frontend() {
-        let cancelled = CoreError::from(mangodisk_platform::PlatformError::new(
-            mangodisk_platform::PlatformErrorCode::UserCancelled,
+        let cancelled = CoreError::from(strawberrydisk_platform::PlatformError::new(
+            strawberrydisk_platform::PlatformErrorCode::UserCancelled,
             "private cancellation detail",
         ));
         let json = serde_json::to_value(CommandError::operation(
@@ -237,7 +239,7 @@ mod tests {
         assert_eq!(json["retryable"], false);
         assert!(json["details"].get("mutationState").is_none());
         let uncertain = CoreError::from(
-            mangodisk_platform::PlatformError::operation_failed("private verification detail")
+            strawberrydisk_platform::PlatformError::operation_failed("private verification detail")
                 .with_possible_side_effects(),
         );
         let json = serde_json::to_value(CommandError::operation(
@@ -252,7 +254,7 @@ mod tests {
     fn incomplete_analysis_delete_preserves_mutation_and_reason() {
         let error = CoreError::operation_failed("private native failure")
             .with_possible_side_effects()
-            .with_reason(mangodisk_core::CoreErrorReason::DirectoryNotEmpty);
+            .with_reason(strawberrydisk_core::CoreErrorReason::DirectoryNotEmpty);
         let json = serde_json::to_value(CommandError::operation(
             "delete_analysis_entry_permanently",
             error,

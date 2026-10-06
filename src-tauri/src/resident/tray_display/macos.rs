@@ -176,7 +176,7 @@ pub fn apply(
     let previous_appearance = cache.appearance.clone();
     let previous_button = cache.button;
     let content = columns.clone();
-    let label = format!("MangoDisk\n{summary}");
+    let label = format!("StrawberryDisk\n{summary}");
     let result = tray.with_inner_tray_icon(move |tray| {
         let mtm = MainThreadMarker::new().expect("native tray rendering runs on the main thread");
         let item = tray.ns_status_item()?;

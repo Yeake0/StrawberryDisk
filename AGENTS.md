@@ -1,10 +1,10 @@
-# MangoDisk Contribution Guidelines
+# StrawberryDisk Contribution Guidelines
 
 These rules apply to the entire repository. More specific guidance lives in [`src/AGENTS.md`](src/AGENTS.md) and [`src-tauri/AGENTS.md`](src-tauri/AGENTS.md); a child file adds only rules for its own subtree and does not replace this file.
 
 ## Product and architecture
 
-MangoDisk is a Tauri 2 desktop application for safe disk analysis and cleanup. The Vue frontend is an adapter for user interaction. Rust owns filesystem access, platform safety, scan orchestration, cleanup execution, and persisted operational data.
+StrawberryDisk is a Tauri 2 desktop application for safe disk analysis and cleanup. The Vue frontend is an adapter for user interaction. Rust owns filesystem access, platform safety, scan orchestration, cleanup execution, and persisted operational data.
 
 Keep these domain boundaries stable:
 
@@ -55,7 +55,7 @@ Do not create broad modules such as `common`, `misc`, `manager`, `optimization`,
 5. Validate cross-platform behavior in an applicable macOS and Windows environment. If a platform is unavailable, document the unvalidated scope instead of claiming support from local results.
 6. For behavior or performance changes, describe the tested workload, environment, and observable result in the change description without committing raw machine reports or private data.
 7. Review the final diff for correctness, safety, privacy, platform fallbacks, naming, and stale documentation before committing.
-8. For macOS native UI inspection, stop running MangoDisk, Tauri dev, and Vite processes before building `pnpm tauri build --debug --bundles app --no-sign`. Launch and inspect the exact `target/debug/bundle/macos/MangoDisk.app` path; the raw `tauri dev` executable has no bundle ID and cannot be targeted reliably by macOS UI automation.
+8. For macOS native UI inspection, stop running StrawberryDisk, Tauri dev, and Vite processes before building `pnpm tauri build --debug --bundles app --no-sign`. Launch and inspect the exact `target/debug/bundle/macos/StrawberryDisk.app` path; the raw `tauri dev` executable has no bundle ID and cannot be targeted reliably by macOS UI automation.
 
 ## Required validation
 
@@ -63,7 +63,7 @@ Run the smallest applicable checks during development and the complete checks be
 
 ```sh
 pnpm check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 Cross-platform work must also run the same applicable checks in a Windows environment. When a required platform is unavailable, state that limitation in the change description. Performance changes require a reproducible before-and-after measurement appropriate to the affected path, but raw machine reports and private datasets must remain outside the repository.

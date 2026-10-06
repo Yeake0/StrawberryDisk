@@ -55,8 +55,8 @@ impl Lease {
             if module.is_null() {
                 return Err(Failure::new(Stage::Xaml, GetLastError()));
             }
-            let apply = GetProcAddress(module, c"MangoTaskbarApply".as_ptr().cast());
-            let release = GetProcAddress(module, c"MangoTaskbarRelease".as_ptr().cast());
+            let apply = GetProcAddress(module, c"StrawberryTaskbarApply".as_ptr().cast());
+            let release = GetProcAddress(module, c"StrawberryTaskbarRelease".as_ptr().cast());
             let (Some(apply), Some(release)) = (apply, release) else {
                 FreeLibrary(module);
                 return Err(Failure::new(Stage::Xaml, ERROR_PROC_NOT_FOUND));

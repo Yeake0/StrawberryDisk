@@ -21,7 +21,7 @@ function localeChunkName(moduleId: string): string | null {
 // prevents Vite from moving while the desktop window still opens the old URL.
 export default defineConfig({
   build: {
-    // MangoDisk supports Monterey's system WKWebView. Pinning the frontend
+    // StrawberryDisk supports Monterey's system WKWebView. Pinning the frontend
     // target prevents dependencies from silently raising the syntax baseline
     // to the much newer Safari version used by Vite's default target.
     target: 'safari15.6',

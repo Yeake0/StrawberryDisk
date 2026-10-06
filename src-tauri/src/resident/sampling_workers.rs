@@ -1,19 +1,19 @@
 //! Bounded native workers: a slow disk cannot delay CPU, network, or window callbacks.
-use mangodisk_core::{
+use std::{
+    sync::mpsc::{self, SyncSender},
+    time::{Instant, SystemTime, UNIX_EPOCH},
+};
+use strawberrydisk_core::{
     system_resources::{
         metrics::MetricId, models::SystemResourceSnapshot, service::SystemResourceService,
     },
     CoreResult,
 };
-use mangodisk_platform::system_resources::{
+use strawberrydisk_platform::system_resources::{
     cpu::{CpuReader, CpuSample},
     disk::{ResourceVolume, VolumeCapacity},
     gpu::{GpuAdapter, GpuReader, GpuSample},
     network::{InterfaceSample, NetworkReader},
-};
-use std::{
-    sync::mpsc::{self, SyncSender},
-    time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
 use super::sampling_schedule::Demand;
@@ -23,7 +23,7 @@ pub enum Observation {
     Cpu(CpuSample),
     GpuCatalogue(Vec<GpuAdapter>),
     Gpu {
-        sample: mangodisk_platform::PlatformResult<GpuSample>,
+        sample: strawberrydisk_platform::PlatformResult<GpuSample>,
         adapters: Vec<GpuAdapter>,
     },
     Memory(SystemResourceSnapshot),
@@ -154,12 +154,12 @@ impl Sensor {
         }
     }
     fn sample(&mut self, demand: &Demand, timestamp_ms: u64) -> CoreResult<Observation> {
-        use mangodisk_platform::system_resources::disk;
+        use strawberrydisk_platform::system_resources::disk;
         Ok(match self {
             Self::Cpu(reader) => match reader.read() {
                 Ok(counters) => Observation::Cpu(counters),
                 Err(error)
-                    if error.code() == mangodisk_platform::PlatformErrorCode::Unsupported =>
+                    if error.code() == strawberrydisk_platform::PlatformErrorCode::Unsupported =>
                 {
                     Observation::Unsupported
                 }
@@ -185,7 +185,7 @@ impl Sensor {
             Self::Network(reader) => Observation::Network(reader.read()?),
             Self::Disk => {
                 let volumes = disk::list()?;
-                let selected = mangodisk_core::system_resources::disk::select(
+                let selected = strawberrydisk_core::system_resources::disk::select(
                     &volumes,
                     demand.selection.as_deref(),
                 )

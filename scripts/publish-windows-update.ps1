@@ -1,5 +1,5 @@
 param(
-    [string]$ReleaseNotes = 'Atualização do MangoDisk para Windows x64, com as alterações desta versão integradas.'
+    [string]$ReleaseNotes = 'Atualização do StrawberryDisk para Windows x64, com as alterações desta versão integradas.'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -18,8 +18,8 @@ if ((Get-Content -LiteralPath 'package.json' -Raw | ConvertFrom-Json).version -n
 }
 
 $tag = "v$version"
-$updatesRepo = 'Yeake0/MangoDisk-updates'
-$sourceRepo = 'Yeake0/MangoDisk'
+$updatesRepo = 'Yeake0/StrawberryDisk-updates'
+$sourceRepo = 'Yeake0/StrawberryDisk'
 $expectedEndpoint = "https://github.com/$updatesRepo/releases/latest/download/latest.json"
 if (@($config.plugins.updater.endpoints).Count -ne 1 -or $config.plugins.updater.endpoints[0] -ne $expectedEndpoint) {
     throw 'The updater endpoint does not point to the public release channel.'
@@ -29,7 +29,7 @@ if (-not (Test-Path -LiteralPath $publicKeyPath -PathType Leaf) -or
     $config.plugins.updater.pubkey -ne (Get-Content -LiteralPath $publicKeyPath -Raw).Trim()) {
     throw 'The updater public key does not match the local signing key.'
 }
-$installerName = "MangoDisk_${version}_x64-setup.exe"
+$installerName = "StrawberryDisk_${version}_x64-setup.exe"
 $installerPath = Join-Path $repositoryRoot "target/release/bundle/nsis/$installerName"
 $signaturePath = "$installerPath.sig"
 foreach ($path in @($installerPath, $signaturePath)) {
@@ -77,7 +77,7 @@ $staging = Join-Path $repositoryRoot '.local'
 New-Item -ItemType Directory -Path $staging -Force | Out-Null
 $manifestPath = Join-Path $staging 'latest.json'
 $notesPath = Join-Path $staging 'release-notes.md'
-$sourceArchivePath = Join-Path $staging "MangoDisk-$version-source.zip"
+$sourceArchivePath = Join-Path $staging "StrawberryDisk-$version-source.zip"
 git archive --format=zip --output=$sourceArchivePath $localCommit
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $sourceArchivePath -PathType Leaf)) {
     throw 'Could not archive the exact source commit for this release.'
@@ -87,11 +87,11 @@ $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $manifestPath -En
 $ReleaseNotes
 
 Compilado a partir do commit $localCommit do código privado.
-O arquivo MangoDisk-$version-source.zip contém o código-fonte correspondente a este instalador.
+O arquivo StrawberryDisk-$version-source.zip contém o código-fonte correspondente a este instalador.
 O instalador e a assinatura de atualização são publicados juntos. O instalador Windows não tem assinatura Authenticode.
 "@ | Set-Content -LiteralPath $notesPath -Encoding utf8
 
-gh release create $tag $installerPath $signaturePath $manifestPath $sourceArchivePath --repo $updatesRepo --title "MangoDisk $version for Windows x64" --notes-file $notesPath --draft
+gh release create $tag $installerPath $signaturePath $manifestPath $sourceArchivePath --repo $updatesRepo --title "StrawberryDisk $version for Windows x64" --notes-file $notesPath --draft
 if ($LASTEXITCODE -ne 0) {
     throw 'Could not create the draft update release.'
 }

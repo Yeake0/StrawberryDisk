@@ -40,7 +40,7 @@ pub fn read_environment() -> Environment {
     };
     // Fixed-size, read-only registry queries run with the existing shell inspection.
     // Re-read instead of caching failures so access recovery and alignment changes
-    // take effect without restarting MangoDisk or modifying Explorer settings.
+    // take effect without restarting StrawberryDisk or modifying Explorer settings.
     unsafe {
         let mut build_text = [0u16; 32];
         let mut bytes = std::mem::size_of_val(&build_text) as u32;

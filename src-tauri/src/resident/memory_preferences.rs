@@ -1,10 +1,10 @@
 //! Persist release preferences independently from monitor appearance and sampling.
 use super::diagnostics::Failure;
-use mangodisk_core::system_resources::release_policy::ReleasePreferences;
 use std::sync::{
     atomic::{AtomicU64, Ordering},
     Arc, Mutex,
 };
+use strawberrydisk_core::system_resources::release_policy::ReleasePreferences;
 use tauri::{Emitter, Manager};
 use tauri_plugin_store::StoreExt;
 
@@ -104,8 +104,8 @@ pub fn save(
         if !current.exclusions.contains(item) {
             log::info!(
                 "memory_release_exclusion_added name={} path={}",
-                mangodisk_platform::diagnostics::text(&item.name),
-                mangodisk_platform::diagnostics::text(&item.path)
+                strawberrydisk_platform::diagnostics::text(&item.name),
+                strawberrydisk_platform::diagnostics::text(&item.path)
             );
         }
     }
@@ -113,8 +113,8 @@ pub fn save(
         if !preferences.exclusions.contains(item) {
             log::info!(
                 "memory_release_exclusion_removed name={} path={}",
-                mangodisk_platform::diagnostics::text(&item.name),
-                mangodisk_platform::diagnostics::text(&item.path)
+                strawberrydisk_platform::diagnostics::text(&item.name),
+                strawberrydisk_platform::diagnostics::text(&item.path)
             );
         }
     }

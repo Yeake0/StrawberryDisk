@@ -1,7 +1,3 @@
-use mangodisk_core::system_resources::{
-    metrics::{MetricId, MetricStatus},
-    readings::{ResourceCache, ResourceReadings},
-};
 use serde::Serialize;
 use std::{
     sync::{
@@ -10,6 +6,10 @@ use std::{
         Arc, Mutex,
     },
     time::{Duration, Instant},
+};
+use strawberrydisk_core::system_resources::{
+    metrics::{MetricId, MetricStatus},
+    readings::{ResourceCache, ResourceReadings},
 };
 use tauri::{Listener, Manager};
 
@@ -327,7 +327,7 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
                                         log::warn!(
                                             "resident_disk_io_unavailable code={:?} error={}",
                                             error.code(),
-                                            mangodisk_platform::diagnostics::text(&error)
+                                            strawberrydisk_platform::diagnostics::text(&error)
                                         );
                                     }
                                     cache.fail_disk_io(MetricStatus::Unsupported);
@@ -420,7 +420,7 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
                                 cache.gpu_adapters(adapters);
                                 match sample {
                                     Ok(sample) => {
-                                        let baseline = matches!(sample, mangodisk_platform::system_resources::gpu::GpuSample::Baseline);
+                                        let baseline = matches!(sample, strawberrydisk_platform::system_resources::gpu::GpuSample::Baseline);
                                         cache.gpu(
                                             sample,
                                             slots[index].demand.selection.as_deref(),
@@ -441,7 +441,7 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
                                         let status = if missing_selection {
                                             MetricStatus::Disconnected
                                         } else if error.code()
-                                            == mangodisk_platform::PlatformErrorCode::Unsupported
+                                            == strawberrydisk_platform::PlatformErrorCode::Unsupported
                                         {
                                             MetricStatus::Unsupported
                                         } else {
@@ -450,7 +450,7 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
                                         if status == MetricStatus::Failed
                                             && previous_status[index] != status
                                         {
-                                            log::warn!("resident_sample_failed metric=Gpu code={:?} error={}", error.code(), mangodisk_platform::diagnostics::text(&error));
+                                            log::warn!("resident_sample_failed metric=Gpu code={:?} error={}", error.code(), strawberrydisk_platform::diagnostics::text(&error));
                                         }
                                         cache.fail(MetricId::Gpu, status);
                                         worker.catalogue.fetch_and(!4, Ordering::Relaxed);
@@ -503,7 +503,7 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
                                         "resident_sample_failed metric={:?} code={:?} error={}",
                                         completion.metric,
                                         error.code(),
-                                        mangodisk_platform::diagnostics::text(&error)
+                                        strawberrydisk_platform::diagnostics::text(&error)
                                     );
                                 }
                                 cache.fail(completion.metric, MetricStatus::Failed);

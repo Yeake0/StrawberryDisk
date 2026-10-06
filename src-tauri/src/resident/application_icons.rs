@@ -1,6 +1,6 @@
 //! Warm presentation assets through the same native cache used by file-icon IPC.
-use mangodisk_core::system_resources::models::ProcessMemorySummary;
-use mangodisk_platform::{
+use strawberrydisk_core::system_resources::models::ProcessMemorySummary;
+use strawberrydisk_platform::{
     NativeFileIconItemKind, NativeFileIconMode, NativeFileIconRequest, NativeFileIconService,
 };
 use tauri::Manager;
@@ -61,12 +61,13 @@ fn requests(summary: &ProcessMemorySummary) -> Vec<NativeFileIconRequest> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mangodisk_core::system_resources::models::{ApplicationIdentity, ApplicationMemory};
+    use strawberrydisk_core::system_resources::models::{ApplicationIdentity, ApplicationMemory};
 
     #[test]
     fn prewarming_matches_row_icon_identities_and_skips_missing_paths() {
         let summary = ProcessMemorySummary {
-            usage_kind: mangodisk_platform::system_resources::memory::ProcessMemoryKind::native(),
+            usage_kind:
+                strawberrydisk_platform::system_resources::memory::ProcessMemoryKind::native(),
             applications: [
                 (Some("/Editor.app"), true),
                 (Some("/editor.exe"), false),

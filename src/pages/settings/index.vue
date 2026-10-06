@@ -10,7 +10,7 @@ import MdIcon from '@/components/icons/md-icon.vue';
 import MdFeedbackDialog from '@/pages/settings/components/md-feedback-dialog.vue';
 import MdAiFeatureToggle from '@/pages/settings/components/md-ai-feature-toggle.vue';
 import MdAiSettingsDialog from '@/components/custom/md-ai-settings-dialog.vue';
-import MdIconMangodisk from '@/components/icons/md-icon-mangodisk.vue';
+import MdIconStrawberrydisk from '@/components/icons/md-icon-strawberrydisk.vue';
 import MdSettingsGroup from '@/components/custom/md-settings-group.vue';
 import MdSettingsRow from '@/components/custom/md-settings-row.vue';
 import MdSwitch from '@/components/custom/md-switch.vue';
@@ -313,7 +313,7 @@ function updateTheme(value: unknown) {
           :description="t('settings.aboutDescription')"
           @click="appUpdateStore.showAbout()"
         >
-          <template #icon><MdIconMangodisk :size="34" /></template>
+          <template #icon><MdIconStrawberrydisk :size="34" /></template>
           <template #title
             ><span class="update-title">
               {{ t('settings.aboutTitle') }}

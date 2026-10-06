@@ -8,7 +8,7 @@ import { extname, join, resolve } from 'node:path';
 
 const projectRoot = resolve(import.meta.dirname, '..');
 const sourceRoot = join(projectRoot, 'src');
-const coreRoot = join(projectRoot, 'src-tauri', 'crates', 'mangodisk-core');
+const coreRoot = join(projectRoot, 'src-tauri', 'crates', 'strawberrydisk-core');
 const localePaths = [
   'src/locales/zh-CN.json',
   'src/locales/zh-TW.json',

@@ -41,39 +41,42 @@ fn main() {
     configure_linux_webview();
 
     #[cfg(windows)]
-    if let Some(exit_code) = mangodisk_lib::run_layout_helper_mode(std::env::args_os()) {
+    if let Some(exit_code) = strawberrydisk_lib::run_layout_helper_mode(std::env::args_os()) {
         std::process::exit(exit_code);
     }
     #[cfg(windows)]
-    if let Some(exit_code) = mangodisk_platform::run_elevation_helper_mode(std::env::args_os()) {
-        std::process::exit(exit_code);
-    }
-    #[cfg(windows)]
-    if let Some(exit_code) =
-        mangodisk_platform::run_application_record_helper_mode(std::env::args_os())
-    {
-        std::process::exit(exit_code);
-    }
-    if let Some(exit_code) = mangodisk_platform::run_startup_helper_mode(std::env::args_os()) {
-        std::process::exit(exit_code);
-    }
-    #[cfg(windows)]
-    if let Some(exit_code) =
-        mangodisk_platform::run_system_settings_helper_mode(std::env::args_os())
+    if let Some(exit_code) = strawberrydisk_platform::run_elevation_helper_mode(std::env::args_os())
     {
         std::process::exit(exit_code);
     }
     #[cfg(windows)]
     if let Some(exit_code) =
-        mangodisk_platform::run_system_maintenance_helper_mode(std::env::args_os())
+        strawberrydisk_platform::run_application_record_helper_mode(std::env::args_os())
+    {
+        std::process::exit(exit_code);
+    }
+    if let Some(exit_code) = strawberrydisk_platform::run_startup_helper_mode(std::env::args_os()) {
+        std::process::exit(exit_code);
+    }
+    #[cfg(windows)]
+    if let Some(exit_code) =
+        strawberrydisk_platform::run_system_settings_helper_mode(std::env::args_os())
     {
         std::process::exit(exit_code);
     }
     #[cfg(windows)]
-    if let Some(exit_code) = mangodisk_platform::run_disk_cleanup_helper_mode(std::env::args_os()) {
+    if let Some(exit_code) =
+        strawberrydisk_platform::run_system_maintenance_helper_mode(std::env::args_os())
+    {
         std::process::exit(exit_code);
     }
-    mangodisk_lib::run();
+    #[cfg(windows)]
+    if let Some(exit_code) =
+        strawberrydisk_platform::run_disk_cleanup_helper_mode(std::env::args_os())
+    {
+        std::process::exit(exit_code);
+    }
+    strawberrydisk_lib::run();
 }
 
 #[cfg(all(test, target_os = "linux"))]
@@ -83,7 +86,7 @@ mod tests {
     #[test]
     fn webview_fallback_only_matches_vmware_svga_cards() {
         let fixture =
-            std::env::temp_dir().join(format!("mangodisk-webview-gpu-{}", std::process::id()));
+            std::env::temp_dir().join(format!("strawberrydisk-webview-gpu-{}", std::process::id()));
         let card = fixture.join("card0/device");
         std::fs::create_dir_all(&card).expect("create GPU fixture");
         std::fs::write(card.join("vendor"), "0x15ad\n").expect("write vendor");

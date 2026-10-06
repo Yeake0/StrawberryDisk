@@ -39,8 +39,8 @@ export class FeedbackService {
     const fileName = FeedbackService.encodeHeaderValue(file.name);
     return invoke<StagedFeedbackAttachment>('stage_feedback_attachment', await file.arrayBuffer(), {
       headers: {
-        'x-mangodisk-file-name': fileName,
-        'x-mangodisk-mime-type': mimeType,
+        'x-strawberrydisk-file-name': fileName,
+        'x-strawberrydisk-mime-type': mimeType,
       },
     });
   }

@@ -43,7 +43,7 @@ export function dateTime(timestamp: number | null | undefined, locale?: string):
   const cacheKey = locale || 'system';
   let formatter = DATE_TIME_FORMATTERS.get(cacheKey);
   if (!formatter) {
-    // Dates follow the language selected inside MangoDisk instead of the
+    // Dates follow the language selected inside StrawberryDisk instead of the
     // WebView locale. Keeping the time zone implicit still respects the
     // operating system location while preventing ambiguous month/day order.
     formatter = new Intl.DateTimeFormat(locale || undefined, DATE_TIME_FORMAT_OPTIONS);

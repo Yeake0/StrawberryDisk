@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="public/mangodisk.svg" width="40" alt="Ícone do aplicativo MangoDisk"> MangoDisk
+  <img src="public/strawberrydisk.png" width="40" alt="Ícone do aplicativo StrawberryDisk"> StrawberryDisk
 </h1>
 
 <p align="center">Limpeza de disco, análise de armazenamento e proteção da privacidade para <b>macOS</b>, <b>Windows</b> e <b>Linux</b></p>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/harry0703/MangoDisk/releases/latest"><img alt="Versão mais recente" src="https://img.shields.io/github/v/release/harry0703/MangoDisk?display_name=tag&sort=semver"></a>
+  <a href="https://github.com/Yeake0/StrawberryDisk-updates/releases/latest"><img alt="Versão mais recente" src="https://img.shields.io/github/v/release/Yeake0/StrawberryDisk-updates?display_name=tag&sort=semver"></a>
   <img alt="macOS compatível" src="https://img.shields.io/badge/macOS-supported-111827?logo=apple&logoColor=white">
   <img alt="Windows compatível" src="https://img.shields.io/badge/Windows-supported-2563eb?logo=windows&logoColor=white">
   <img alt="Linux compatível" src="https://img.shields.io/badge/Linux-supported-f59e0b?logo=linux&logoColor=white">
@@ -17,23 +17,13 @@
   <img alt="Núcleo em Rust" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
 </p>
 
-<p align="center">
-  <a href="https://mangodisk.app/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/readme/en-dark.jpg">
-      <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/readme/en-light.jpg">
-      <img src="https://assets.mangodisk.app/images/readme/en-light.jpg" width="1200" alt="Limpeza de disco, análise de armazenamento, proteção da privacidade e otimização do sistema no MangoDisk">
-    </picture>
-  </a>
-</p>
-
-## O que o MangoDisk faz
+## O que o StrawberryDisk faz
 
 > **Armazenamento**
 
 ### 1. Limpeza profunda
 
-Encontre, em uma única análise, itens que podem ser limpos no sistema, nos aplicativos, nas ferramentas de desenvolvimento e nos projetos locais. O MangoDisk reúne os resultados pelo espaço que pode ser recuperado:
+Encontre, em uma única análise, itens que podem ser limpos no sistema, nos aplicativos, nas ferramentas de desenvolvimento e nos projetos locais. O StrawberryDisk reúne os resultados pelo espaço que pode ser recuperado:
 
 - **Caches do sistema e do usuário**: recupere o espaço ocupado por arquivos temporários, dados de diagnóstico e caches que podem ser recriados.
 - **Caches de aplicativos**: evite que caches, logs, pacotes de atualização e arquivos temporários consumam cada vez mais espaço.
@@ -109,114 +99,16 @@ As versões oficiais incluem explicações gratuitas diárias e permitem conecta
 ## Segurança e regras
 
 > [!IMPORTANT]
-> **O MangoDisk prioriza a segurança dos dados.**
+> **O StrawberryDisk prioriza a segurança dos dados.**
 > Regras de limpeza e otimizações do sistema só são disponibilizadas após a definição clara dos seus limites de segurança e a validação em sistemas reais.
 
-Por padrão, o MangoDisk faz análises somente de leitura. Antes de iniciar uma limpeza, exclusão, desinstalação ou alteração de configuração, você pode revisar e confirmar exatamente o que acontecerá. Os resultados são salvos no Histórico de operações.
+Por padrão, o StrawberryDisk faz análises somente de leitura. Antes de iniciar uma limpeza, exclusão, desinstalação ou alteração de configuração, você pode revisar e confirmar exatamente o que acontecerá. Os resultados são salvos no Histórico de operações.
 
-A Otimização do sistema usa apenas configurações integradas e validadas. Ela não aceita caminhos arbitrários do Registro, comandos de terminal nem scripts. O MangoDisk verifica cada configuração após alterá-la e destaca itens de alto impacto e mudanças que exigem acesso de administrador ou reinicialização.
+A Otimização do sistema usa apenas configurações integradas e validadas. Ela não aceita caminhos arbitrários do Registro, comandos de terminal nem scripts. O StrawberryDisk verifica cada configuração após alterá-la e destaca itens de alto impacto e mudanças que exigem acesso de administrador ou reinicialização.
 
-O MangoDisk mantém suas próprias regras de limpeza. Projetos de terceiros podem servir como ponto de partida para pesquisa, mas uma regra só é aceita após a verificação de fontes confiáveis, limites seguros e comportamento em sistemas reais. Regras sem limites claros de segurança são excluídas.
+O StrawberryDisk mantém suas próprias regras de limpeza. Projetos de terceiros podem servir como ponto de partida para pesquisa, mas uma regra só é aceita após a verificação de fontes confiáveis, limites seguros e comportamento em sistemas reais. Regras sem limites claros de segurança são excluídas.
 
-A biblioteca completa de regras e seu histórico de revisões podem ser consultados em [regras de limpeza do MangoDisk](https://github.com/harry0703/MangoDisk/tree/main/src-tauri/crates/mangodisk-core/rules).
-
-## Capturas de tela
-
-<p align="center">
-  <strong>Limpeza profunda</strong><br>
-  <sub>Encontre itens que podem ser limpos no sistema, em aplicativos, ferramentas de desenvolvimento e projetos</sub>
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-01-deep-cleanup.jpg">
-    <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-01-deep-cleanup.jpg">
-    <img src="https://assets.mangodisk.app/images/screenshots/en/light-01-deep-cleanup.jpg" width="1200" alt="Tela de Limpeza profunda do MangoDisk">
-  </picture>
-</p>
-
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <strong>Limpeza de arquivos grandes</strong><br>
-      <sub>Encontre os arquivos que mais ocupam espaço sem vasculhar pastas</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-02-large-file-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-02-large-file-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-02-large-file-cleanup.jpg" width="100%" alt="Tela de Limpeza de arquivos grandes do MangoDisk">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>Limpeza de arquivos duplicados</strong><br>
-      <sub>Remova duplicatas exatas com segurança, mantendo pelo menos uma cópia</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-03-duplicate-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-03-duplicate-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-03-duplicate-cleanup.jpg" width="100%" alt="Tela de Limpeza de arquivos duplicados do MangoDisk">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>Análise do espaço em disco</strong><br>
-      <sub>Veja o que ocupa espaço e encontre rapidamente os maiores arquivos e pastas</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-05-disk-space-analysis.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-05-disk-space-analysis.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-05-disk-space-analysis.jpg" width="100%" alt="Tela de Análise do espaço em disco do MangoDisk">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>Gerenciamento de itens de inicialização</strong><br>
-      <sub>Reduza programas desnecessários na inicialização e a atividade em segundo plano</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-06-startup-items.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-06-startup-items.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-06-startup-items.jpg" width="100%" alt="Tela de Itens de inicialização do MangoDisk">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>Desinstalação e limpeza de aplicativos</strong><br>
-      <sub>Desinstale aplicativos e remova resíduos relacionados para recuperar espaço</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-04-app-uninstaller.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-04-app-uninstaller.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-04-app-uninstaller.jpg" width="100%" alt="Tela de Desinstalação de aplicativos do MangoDisk">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>Otimização do sistema</strong><br>
-      <sub>Ajuste desempenho, privacidade e usabilidade com um clique</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-07-system-optimization.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-07-system-optimization.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-07-system-optimization.jpg" width="100%" alt="Tela de Otimização do sistema do MangoDisk">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>Manutenção do sistema</strong><br>
-      <sub>Corrija problemas comuns e volte a usar o computador normalmente</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-08-system-maintenance.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-08-system-maintenance.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-08-system-maintenance.jpg" width="100%" alt="Tela de Manutenção do sistema do MangoDisk">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>Limpeza de privacidade</strong><br>
-      <sub>Deixe menos rastros de atividade e proteja sua privacidade</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/en/dark-09-privacy-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/en/light-09-privacy-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/en/light-09-privacy-cleanup.jpg" width="100%" alt="Tela de Limpeza de privacidade do MangoDisk">
-      </picture>
-    </td>
-  </tr>
-</table>
+A biblioteca completa de regras e seu histórico de revisões podem ser consultados em [regras de limpeza do StrawberryDisk](https://github.com/Yeake0/StrawberryDisk/tree/main/src-tauri/crates/strawberrydisk-core/rules).
 
 ## Antes de começar
 
@@ -228,120 +120,55 @@ A biblioteca completa de regras e seu histórico de revisões podem ser consulta
 
 ## Aplicativo para desktop
 
-Baixe o MangoDisk na [página oficial](https://mangodisk.app/download) ou em [GitHub Releases](https://github.com/harry0703/MangoDisk/releases/latest) e siga as instruções para seu sistema operacional.
-
-### macOS
-
-**Requisitos:** macOS Monterey 12.5 ou posterior.
-
-**Instalação pelo Homebrew:**
-
-```sh
-brew install --cask harry0703/tap/mangodisk
-```
-
-**Instalação manual:** baixe o DMG na [página oficial](https://mangodisk.app/download), abra-o e arraste o MangoDisk para a pasta Aplicativos.
+Baixe o instalador do StrawberryDisk para Windows x64 em [GitHub Releases](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest).
 
 ### Windows
 
 **Requisitos:** Windows 10 de 64 bits ou posterior.
 
-**Instalação pelo PowerShell:**
-
-```powershell
-irm https://get.mangodisk.app | iex
-```
-
-**Instalação pelo WinGet (fonte oficial):**
-
-```powershell
-winget install --id MangoDisk.MangoDisk --exact --source winget
-```
-
-**Instalação manual:** baixe o instalador para Windows na [página oficial](https://mangodisk.app/download) e siga as instruções na tela.
-
-### Linux
-
-**Recomendado:** Ubuntu 22.04 LTS ou posterior, em x64 ou ARM64.
-
-Disponível em pacotes `.deb` e AppImages. A compatibilidade com outras distribuições Linux depende das bibliotecas do sistema e do ambiente gráfico.
-
-**Instalação pelo terminal (Debian/Ubuntu):** este comando detecta a arquitetura e instala o pacote `.deb` correspondente mais recente.
-
-```sh
-curl -fsSL https://get.mangodisk.app/linux | bash
-```
-
-**Instalação manual:** escolha o pacote da sua arquitetura na [página oficial](https://mangodisk.app/download).
-
-- **Debian/Ubuntu:** instale o pacote `.deb` da sua arquitetura.
-- **Outras distribuições:** torne a AppImage executável e execute-a.
+**Instalação manual:** baixe o instalador para Windows na [página oficial](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) e siga as instruções na tela.
 
 ## Linha de comando (CLI)
 
-Use o MangoDisk no terminal ou em scripts, com o mesmo mecanismo de limpeza segura do aplicativo para desktop.
-
-### macOS
-
-**Instalação pelo Homebrew:**
-
-```sh
-brew install harry0703/tap/mangodisk-cli
-```
-
-### Windows
-
-**Instalação pelo PowerShell:**
-
-```powershell
-irm https://get.mangodisk.app/cli | iex
-```
-
-**Instalação pelo WinGet (fonte oficial):**
-
-```powershell
-winget install --id MangoDisk.CLI --exact --source winget
-```
-
-### Linux
-
-Ainda não há downloads de uma CLI independente pré-compilada para Linux. Siga as instruções em [Compilar a partir do código-fonte](#compilar-a-partir-do-código-fonte) para compilá-la.
+A CLI pode ser compilada a partir do código-fonte. Ainda não há um instalador separado para esta versão.
 
 ### Exemplos de uso
 
-Se o comando `mangodisk` não estiver disponível logo após a instalação, abra um novo terminal e verifique a instalação:
+Se o comando `strawberrydisk` não estiver disponível logo após a instalação, abra um novo terminal e verifique a instalação:
 
 ```sh
-mangodisk --version
+strawberrydisk --version
 ```
 
 Comandos comuns:
 
 ```sh
 # Analisar e mostrar itens que podem ser limpos sem alterar nada
-mangodisk clean
+strawberrydisk clean
 
 # Aplicar as mesmas recomendações do aplicativo para desktop
-mangodisk clean --apply
+strawberrydisk clean --apply
 
 # Visualizar todos os itens selecionáveis sem excluir nada
-mangodisk clean --apply --selection all --dry-run
+strawberrydisk clean --apply --selection all --dry-run
 
 # Produzir uma saída JSON legível por máquina
-mangodisk clean --format json --no-progress
+strawberrydisk clean --format json --no-progress
 ```
 
-Por padrão, `mangodisk clean` apenas analisa e não modifica arquivos. Para executar a limpeza em um ambiente não interativo, você também precisa informar `--yes` para confirmar a ação. Consulte todas as opções com:
+Por padrão, `strawberrydisk clean` apenas analisa e não modifica arquivos. Para executar a limpeza em um ambiente não interativo, você também precisa informar `--yes` para confirmar a ação. Consulte todas as opções com:
 
 ```sh
-mangodisk clean --help
+strawberrydisk clean --help
 ```
 
 ## Compilar a partir do código-fonte
 
 ### Atualizações desta versão pessoal
 
-O repositório de desenvolvimento desta versão permanece privado. Os instaladores, o código-fonte correspondente a cada versão publicada e os metadados de atualização para Windows x64 ficam em [MangoDisk-updates](https://github.com/Yeake0/MangoDisk-updates). O botão de atualização consulta esse canal e instala somente versões assinadas com a chave desta versão pessoal. Ele não instala diretamente os executáveis do projeto original.
+O repositório de desenvolvimento desta versão permanece privado. Os instaladores, o código-fonte correspondente a cada versão publicada e os metadados de atualização para Windows x64 ficam em [StrawberryDisk-updates](https://github.com/Yeake0/StrawberryDisk-updates). O botão de atualização consulta esse canal e instala somente versões assinadas com a chave desta versão pessoal. Ele não instala diretamente os executáveis do projeto original.
+
+Não reutilize os nomes anteriores dos repositórios no GitHub: os redirecionamentos desses endereços permitem que instalações antigas encontrem o canal de atualização.
 
 Para incorporar uma atualização do criador, execute `scripts/prepare-upstream-update.ps1` em uma `main` limpa. O script cria uma branch de integração; revise os conflitos, execute as verificações obrigatórias e incorpore a branch antes de publicar um novo instalador. O monitor semanal abre uma issue quando encontra mudanças no projeto original.
 
@@ -360,8 +187,8 @@ Para dependências específicas de cada plataforma, consulte os [pré-requisitos
 ### Obter o código-fonte e executar o aplicativo
 
 ```sh
-git clone https://github.com/harry0703/MangoDisk.git
-cd MangoDisk
+git clone https://github.com/Yeake0/StrawberryDisk.git
+cd StrawberryDisk
 pnpm install --frozen-lockfile
 pnpm tauri:dev
 ```
@@ -370,7 +197,7 @@ pnpm tauri:dev
 
 ```sh
 pnpm check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 ### Gerar o instalador para desktop
@@ -385,19 +212,19 @@ pnpm tauri:build
 pnpm cli:build
 ```
 
-Compilações locais não incluem a assinatura, a notarização nem os metadados de atualização das versões oficiais do MangoDisk. Use-as apenas para desenvolvimento e validação locais.
+Compilações locais não incluem a assinatura, a notarização nem os metadados de atualização das versões oficiais do StrawberryDisk. Use-as apenas para desenvolvimento e validação locais.
 
 ## Como contribuir
 
 Relatos de problemas, regras de limpeza, correções e novos recursos são bem-vindos. Leia [`CONTRIBUTING.md`](CONTRIBUTING.md) e [`AGENTS.md`](AGENTS.md) antes de começar.
 
-A cobertura de limpeza rotineira deve usar regras TOML declarativas validadas durante a compilação. Consulte [`src-tauri/crates/mangodisk-core/rules/README.md`](src-tauri/crates/mangodisk-core/rules/README.md) para conhecer o esquema das regras, os limites de segurança e as instruções de validação.
+A cobertura de limpeza rotineira deve usar regras TOML declarativas validadas durante a compilação. Consulte [`src-tauri/crates/strawberrydisk-core/rules/README.md`](src-tauri/crates/strawberrydisk-core/rules/README.md) para conhecer o esquema das regras, os limites de segurança e as instruções de validação.
 
 Antes de enviar alterações, execute pelo menos:
 
 ```sh
 pnpm check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 Comunique vulnerabilidades de segurança de forma privada pelo GitHub Security Advisories, conforme descrito em [`SECURITY.md`](SECURITY.md). Não abra uma issue pública para relatar uma vulnerabilidade.
@@ -410,4 +237,4 @@ Comunique vulnerabilidades de segurança de forma privada pelo GitHub Security A
 
 ## Licença
 
-O MangoDisk é um projeto de código aberto sob a [GNU General Public License v3.0](https://github.com/harry0703/MangoDisk/blob/main/LICENSE). Componentes de terceiros continuam sujeitos às respectivas licenças.
+O StrawberryDisk é um projeto de código aberto sob a [GNU General Public License v3.0](https://github.com/Yeake0/StrawberryDisk/blob/main/LICENSE). Componentes de terceiros continuam sujeitos às respectivas licenças.

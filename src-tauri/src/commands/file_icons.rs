@@ -1,10 +1,10 @@
 use std::time::Instant;
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use mangodisk_platform::{
+use serde::{Deserialize, Serialize};
+use strawberrydisk_platform::{
     NativeFileIconItemKind, NativeFileIconMode, NativeFileIconRequest, NativeFileIconService,
 };
-use serde::{Deserialize, Serialize};
 use tauri::Manager;
 
 use super::error::{run_blocking_value, CommandResult};

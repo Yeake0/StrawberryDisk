@@ -17,7 +17,7 @@ import { useAppStore } from './app-store';
 import { useApplicationStore } from './application-store';
 import { useHistoryStore } from './history-store';
 
-const authorizationPrompt = 'MangoDisk needs administrator permission to uninstall this app';
+const authorizationPrompt = 'StrawberryDisk needs administrator permission to uninstall this app';
 
 const plan: ApplicationUninstallBatchPlan = {
   schemaVersion: 1,

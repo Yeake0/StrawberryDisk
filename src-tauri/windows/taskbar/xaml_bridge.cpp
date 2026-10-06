@@ -163,7 +163,7 @@ STDAPI DllGetClassObject(REFCLSID clsid, REFIID iid, void** result) {
 // file can remain mapped until Explorer exits; installation files are unaffected.
 STDAPI DllCanUnloadNow() { return S_FALSE; }
 
-extern "C" HRESULT WINAPI MangoTaskbarApply(UINT width, UINT height, UINT gap, UINT placement, wchar_t const* log_file, RECT* bounds) {
+extern "C" HRESULT WINAPI StrawberryTaskbarApply(UINT width, UINT height, UINT gap, UINT placement, wchar_t const* log_file, RECT* bounds) {
     try {
         static ULONGLONG next_attach = 0;
         static HRESULT last_attach = E_PENDING;
@@ -218,7 +218,7 @@ extern "C" HRESULT WINAPI MangoTaskbarApply(UINT width, UINT height, UINT gap, U
     } catch (...) { return winrt::to_hresult(); }
 }
 
-extern "C" void WINAPI MangoTaskbarRelease() {
+extern "C" void WINAPI StrawberryTaskbarRelease() {
     if (HWND channel = find_channel()) {
         DWORD_PTR result = 0;
         SendMessageTimeoutW(channel, taskbar::release_message, GetCurrentProcessId(), 0,

@@ -1,5 +1,5 @@
-use mangodisk_core::ApplicationUninstallScanResult;
 use std::sync::RwLock;
+use strawberrydisk_core::ApplicationUninstallScanResult;
 
 #[derive(Default)]
 pub struct ApplicationUninstallCatalogCache {

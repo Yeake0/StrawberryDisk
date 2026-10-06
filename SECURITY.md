@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Security updates are provided for the latest MangoDisk release. Older releases
+Security updates are provided for the latest StrawberryDisk release. Older releases
 may not receive security fixes, so users should upgrade to the latest available
 version.
 
@@ -25,7 +25,7 @@ sensitive-path disclosure receive priority.
 
 ## Security boundaries
 
-MangoDisk treats scan results as untrusted until preflight. Destructive
+StrawberryDisk treats scan results as untrusted until preflight. Destructive
 operations must preserve protected-path checks, link and reparse-point policy,
 explicit user intent, execution verification, and safe failure when platform
 capabilities are unavailable.

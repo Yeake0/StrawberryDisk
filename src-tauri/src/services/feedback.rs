@@ -128,7 +128,7 @@ impl FeedbackDraftStore {
 
         // Feedback is optional application functionality. Defer filesystem
         // creation until the first attachment so an unavailable cache never
-        // prevents the rest of MangoDisk from starting.
+        // prevents the rest of StrawberryDisk from starting.
         fs::create_dir_all(&self.root).map_err(|_| FeedbackError::DraftStorage)?;
         let token = Uuid::new_v4().to_string();
         let path = self.root.join(format!("{token}.bin"));
@@ -325,13 +325,13 @@ impl FeedbackSubmissionService {
             form = form.part(
                 "diagnosticLog",
                 Part::bytes(archive)
-                    .file_name("MangoDisk-diagnostics.zip")
+                    .file_name("StrawberryDisk-diagnostics.zip")
                     .mime_str("application/zip")
                     .map_err(|_| FeedbackError::LogArchive)?,
             );
         }
 
-        let client = mangodisk_core::http_client::builder()
+        let client = strawberrydisk_core::http_client::builder()
             .connect_timeout(FEEDBACK_CONNECT_TIMEOUT)
             .timeout(FEEDBACK_REQUEST_TIMEOUT)
             .build()
@@ -523,9 +523,9 @@ fn create_recent_log_archive(
 fn feedback_endpoint() -> String {
     #[cfg(debug_assertions)]
     {
-        let override_url = std::env::var("MANGODISK_FEEDBACK_API_URL")
+        let override_url = std::env::var("STRAWBERRYDISK_FEEDBACK_API_URL")
             .ok()
-            .or_else(|| option_env!("MANGODISK_FEEDBACK_API_URL").map(str::to_string));
+            .or_else(|| option_env!("STRAWBERRYDISK_FEEDBACK_API_URL").map(str::to_string));
         if let Some(value) = override_url.and_then(|value| loopback_feedback_endpoint(&value)) {
             return value;
         }
@@ -582,7 +582,7 @@ mod tests {
     use std::io::Read;
 
     fn test_directory(name: &str) -> PathBuf {
-        std::env::temp_dir().join(format!("mangodisk-feedback-{name}-{}", Uuid::new_v4()))
+        std::env::temp_dir().join(format!("strawberrydisk-feedback-{name}-{}", Uuid::new_v4()))
     }
 
     #[test]

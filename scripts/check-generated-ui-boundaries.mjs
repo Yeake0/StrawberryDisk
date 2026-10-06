@@ -1,5 +1,5 @@
 /**
- * Protects the boundary between generated UI primitives and MangoDisk product
+ * Protects the boundary between generated UI primitives and StrawberryDisk product
  * code. Generated components must remain presentation-only, while localized
  * behavior and application workflows belong in project-owned wrappers.
  *

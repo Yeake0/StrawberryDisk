@@ -10,7 +10,7 @@ use std::{
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde::{Deserialize, Serialize};
 
-use mangodisk_platform::configure_background_process;
+use strawberrydisk_platform::configure_background_process;
 
 use super::{cache::ApplicationIconCache, ApplicationIcon, ApplicationIconLoadResult};
 
@@ -25,7 +25,7 @@ Add-Type @'
 using System;
 using System.Runtime.InteropServices;
 
-public static class MangoDiskShellIcon {
+public static class StrawberryDiskShellIcon {
   [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
   public static extern int SHDefExtractIcon(
     string iconFile,
@@ -62,7 +62,7 @@ foreach ($item in $items) {
       $largeIcon = [IntPtr]::Zero
       $smallIcon = [IntPtr]::Zero
       $iconSize = [uint32]((32 -shl 16) -bor 256)
-      $result = [MangoDiskShellIcon]::SHDefExtractIcon(
+      $result = [StrawberryDiskShellIcon]::SHDefExtractIcon(
         $source,
         0,
         0,
@@ -75,10 +75,10 @@ foreach ($item in $items) {
         $image = $icon.ToBitmap()
       }
       if ($largeIcon -ne [IntPtr]::Zero) {
-        [void][MangoDiskShellIcon]::DestroyIcon($largeIcon)
+        [void][StrawberryDiskShellIcon]::DestroyIcon($largeIcon)
       }
       if ($smallIcon -ne [IntPtr]::Zero) {
-        [void][MangoDiskShellIcon]::DestroyIcon($smallIcon)
+        [void][StrawberryDiskShellIcon]::DestroyIcon($smallIcon)
       }
     }
     if ($null -eq $image) { continue }
@@ -454,7 +454,7 @@ mod tests {
     #[test]
     fn appx_manifest_background_is_applied_only_to_tile_style_assets() {
         let root = env::temp_dir().join(format!(
-            "mangodisk-appx-icon-{}-{}",
+            "strawberrydisk-appx-icon-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -493,7 +493,7 @@ mod tests {
     #[test]
     fn appx_app_list_variant_uses_manifest_background_only_for_plated_assets() {
         let root = env::temp_dir().join(format!(
-            "mangodisk-appx-app-list-icon-{}-{}",
+            "strawberrydisk-appx-app-list-icon-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -540,8 +540,10 @@ mod tests {
         let source = env::var("SystemRoot")
             .map(|root| format!(r"{root}\System32\notepad.exe"))
             .expect("SystemRoot should be available");
-        let cache_root =
-            env::temp_dir().join(format!("mangodisk-icon-validation-{}", std::process::id()));
+        let cache_root = env::temp_dir().join(format!(
+            "strawberrydisk-icon-validation-{}",
+            std::process::id()
+        ));
         let first = super::load(vec![source.clone(); 32], Some(cache_root.clone()));
         assert_eq!(first.icons.len(), 32);
         assert_eq!(first.decoded_icons, 32);
@@ -555,7 +557,7 @@ mod tests {
     #[test]
     fn unicode_icon_paths_are_decoded_in_the_default_test_suite() {
         let root = env::temp_dir().join(format!(
-            "mangodisk-unicode-icon-{}-{}",
+            "strawberrydisk-unicode-icon-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

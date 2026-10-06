@@ -1,4 +1,4 @@
-use mangodisk_core::{DirectorySelectionOutcome, DirectorySelectionService};
+use strawberrydisk_core::{DirectorySelectionOutcome, DirectorySelectionService};
 
 use super::error::{run_blocking_value, CommandError, CommandResult};
 

@@ -1,9 +1,9 @@
-use mangodisk_core::{
+use serde::Deserialize;
+use strawberrydisk_core::{
     ApplicationCloseBatchResult, CleanupApplicationCloseRequest, CleanupRequest, CleanupResult,
     CleanupScanResult, CleanupScanService, CleanupService, CustomCleanupRule, ScanRuleResult,
 };
-use mangodisk_core::{ScanExclusionOptions, ScanNameExclusion};
-use serde::Deserialize;
+use strawberrydisk_core::{ScanExclusionOptions, ScanNameExclusion};
 
 use crate::events;
 

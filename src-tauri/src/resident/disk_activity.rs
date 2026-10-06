@@ -1,17 +1,17 @@
 //! Resident disk activity worker. Slow capacity queries cannot delay I/O samples.
 use super::sampling_workers::{timestamp_ms, SamplingEvent};
-use mangodisk_platform::system_resources::disk_io::{DeviceCounters, DiskIoReader};
 use std::{
     sync::mpsc::{self, SyncSender},
     time::Instant,
 };
+use strawberrydisk_platform::system_resources::disk_io::{DeviceCounters, DiskIoReader};
 
 pub struct Completion {
     pub generation: u64,
     pub monotonic_ms: u64,
     pub timestamp_ms: u64,
     pub duration_ms: u64,
-    pub result: mangodisk_platform::PlatformResult<Vec<DeviceCounters>>,
+    pub result: strawberrydisk_platform::PlatformResult<Vec<DeviceCounters>>,
 }
 pub fn start(origin: Instant, events: SyncSender<SamplingEvent>) -> SyncSender<u64> {
     let (sender, requests) = mpsc::sync_channel(1);

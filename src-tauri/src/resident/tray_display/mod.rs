@@ -136,10 +136,10 @@ fn ensure(app: &tauri::AppHandle, id: DisplayId, labels: &labels::Labels) -> tau
     #[cfg(windows)]
     let icon = if let Some(metric) = id.metric() {
         let marker = match metric {
-            mangodisk_core::system_resources::metrics::MetricId::Cpu => "C",
-            mangodisk_core::system_resources::metrics::MetricId::Gpu => "G",
-            mangodisk_core::system_resources::metrics::MetricId::Memory => "M",
-            mangodisk_core::system_resources::metrics::MetricId::Disk => "D",
+            strawberrydisk_core::system_resources::metrics::MetricId::Cpu => "C",
+            strawberrydisk_core::system_resources::metrics::MetricId::Gpu => "G",
+            strawberrydisk_core::system_resources::metrics::MetricId::Memory => "M",
+            strawberrydisk_core::system_resources::metrics::MetricId::Disk => "D",
             _ => {
                 if id == DisplayId::Upload {
                     "↑"
@@ -160,7 +160,7 @@ fn ensure(app: &tauri::AppHandle, id: DisplayId, labels: &labels::Labels) -> tau
     let tray = TrayIconBuilder::with_id(id.tray_id())
         .icon(icon)
         .icon_as_template(cfg!(target_os = "macos"))
-        .tooltip("MangoDisk")
+        .tooltip("StrawberryDisk")
         .menu(&menu(app, labels)?)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
@@ -322,7 +322,7 @@ fn render(
     // while hidden and apply the latest summary when that entry is shown again.
     if state.visible.contains(&DisplayId::App) && state.summary != summary {
         if let Some(tray) = app.tray_by_id(DisplayId::App.tray_id()) {
-            tray.set_tooltip(Some(format!("MangoDisk\n{summary}")))?;
+            tray.set_tooltip(Some(format!("StrawberryDisk\n{summary}")))?;
         }
         state.summary = summary.clone();
     }

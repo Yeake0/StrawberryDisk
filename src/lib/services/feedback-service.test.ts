@@ -61,8 +61,8 @@ describe('FeedbackService', () => {
 
     expect(invokeMock).toHaveBeenCalledWith('stage_feedback_attachment', bytes.buffer, {
       headers: {
-        'x-mangodisk-file-name': '5oiq5Zu-LnBuZw',
-        'x-mangodisk-mime-type': 'image/png',
+        'x-strawberrydisk-file-name': '5oiq5Zu-LnBuZw',
+        'x-strawberrydisk-mime-type': 'image/png',
       },
     });
   });

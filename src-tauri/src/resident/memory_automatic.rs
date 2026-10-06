@@ -1,11 +1,11 @@
 //! A sleeping desktop worker schedules actions without blocking native rendering or sampling.
 use super::memory_preferences::MemoryReleaseState;
-use mangodisk_core::system_resources::release_policy::ReleaseSchedule;
-use mangodisk_platform::system_resources::memory::{MemorySampler, MemorySource};
 use std::{
     sync::{atomic::Ordering, Arc},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
+use strawberrydisk_core::system_resources::release_policy::ReleaseSchedule;
+use strawberrydisk_platform::system_resources::memory::{MemorySampler, MemorySource};
 
 pub fn start(app: tauri::AppHandle, state: Arc<MemoryReleaseState>) {
     std::thread::spawn(move || {
@@ -38,7 +38,7 @@ pub fn start(app: tauri::AppHandle, state: Arc<MemoryReleaseState>) {
                     }
                     result => log::warn!(
                         "memory_release_automatic_skipped reason=sample_unavailable error={}",
-                        mangodisk_platform::diagnostics::text(&format!("{result:?}"))
+                        strawberrydisk_platform::diagnostics::text(&format!("{result:?}"))
                     ),
                 }
             }

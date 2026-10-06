@@ -6,7 +6,7 @@ use std::{
     time::Instant,
 };
 
-use mangodisk_core::{
+use strawberrydisk_core::{
     configure_application_paths, ApplicationPaths, ApplicationUninstallService,
     BaselineComparisonOptions, BenchmarkDatasetOptions, BenchmarkDatasetService,
     BenchmarkSourceInfo, CleanupBaselineComparisonService, CleanupBaselineOptions,
@@ -14,7 +14,7 @@ use mangodisk_core::{
     EngineBenchmarkComparisonService, EngineBenchmarkOptions, EngineBenchmarkService,
     APPLICATION_IDENTIFIER,
 };
-use mangodisk_platform::application_directories;
+use strawberrydisk_platform::application_directories;
 
 const BASELINE_FLAG: &str = "--cleanup-baseline";
 const COMPARISON_FLAG: &str = "--compare-cleanup-baselines";
@@ -62,13 +62,13 @@ struct EngineBenchmarkCliOptions {
 
 fn main() {
     if let Err(error) = run() {
-        eprintln!("MangoDisk repository task failed: {error}");
+        eprintln!("StrawberryDisk repository task failed: {error}");
         std::process::exit(1);
     }
 }
 
 /// Dispatches repository-only reporting and benchmark tasks without linking
-/// Tauri or starting a WebView. Product CLI behavior belongs to `mangodisk-cli`.
+/// Tauri or starting a WebView. Product CLI behavior belongs to `strawberrydisk-cli`.
 fn run() -> Result<(), String> {
     configure_storage()?;
     let arguments = env::args().skip(1).collect::<Vec<_>>();

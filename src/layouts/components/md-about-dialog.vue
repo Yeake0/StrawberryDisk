@@ -7,7 +7,7 @@ import MdDialogFooter from '@/components/custom/md-dialog-footer.vue';
 import MdDialogHeader from '@/components/custom/md-dialog-header.vue';
 import MdSafeRichText from '@/components/custom/md-safe-rich-text.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import MdIconMangodisk from '@/components/icons/md-icon-mangodisk.vue';
+import MdIconStrawberrydisk from '@/components/icons/md-icon-strawberrydisk.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -124,7 +124,7 @@ function downloadUpdate() {
     <MdDialogContent :class="{ 'is-update-focused': updateFocused }" :show-close="!closeLocked" size="standard">
       <MdDialogHeader class="about-dialog-header" :class="{ focused: updateFocused }" variant="brand">
         <span class="about-dialog-mark" aria-hidden="true">
-          <MdIconMangodisk :size="updateFocused ? 46 : 58" />
+          <MdIconStrawberrydisk :size="updateFocused ? 46 : 58" />
         </span>
         <div class="about-dialog-identity">
           <DialogTitle>{{ dialogTitle }}</DialogTitle>

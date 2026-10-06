@@ -1,6 +1,8 @@
 use crate::services::application_icon::{ApplicationIcon, ApplicationIconService};
 use crate::services::application_uninstall_catalog::ApplicationUninstallCatalogCache;
-use mangodisk_core::{
+use serde::Serialize;
+use std::time::Instant;
+use strawberrydisk_core::{
     ApplicationCloseBatchResult, ApplicationLeftoverPlanItem, ApplicationLeftoverResult,
     ApplicationLeftoverScanResult, ApplicationLeftoverService, ApplicationUninstallBatchPlan,
     ApplicationUninstallBatchPreparation, ApplicationUninstallBatchResult,
@@ -8,8 +10,6 @@ use mangodisk_core::{
     ApplicationUninstallIdentity, ApplicationUninstallScanResult, ApplicationUninstallService,
     CoreError,
 };
-use serde::Serialize;
-use std::time::Instant;
 use tauri::Manager;
 
 use super::error::{run_blocking, run_blocking_value, CommandResult};
@@ -213,7 +213,7 @@ fn open_installed_apps_settings() -> Result<(), CoreError> {
     tauri_plugin_opener::open_url("ms-settings:appsfeatures", None::<&str>).map_err(|error| {
         log::warn!(
             "windows_installed_apps_open_failed error={}",
-            mangodisk_platform::diagnostics::text(&error)
+            strawberrydisk_platform::diagnostics::text(&error)
         );
         CoreError::operation_failed("Windows installed apps settings could not be opened")
     })?;
@@ -265,6 +265,6 @@ pub fn log_application_uninstall_details(
         .iter()
         .find(|candidate| candidate.application_id == application_id)
     {
-        log::info!("application_uninstall_details_opened application_id={} application_name={} capability={:?} record_state={:?} system_kind={:?} reason={}", candidate.application_id, mangodisk_platform::diagnostics::text(&candidate.name), candidate.capability, candidate.record_state, candidate.system_kind, candidate.uninstall_diagnostic.map_or("none", |reason| reason.stable_code()));
+        log::info!("application_uninstall_details_opened application_id={} application_name={} capability={:?} record_state={:?} system_kind={:?} reason={}", candidate.application_id, strawberrydisk_platform::diagnostics::text(&candidate.name), candidate.capability, candidate.record_state, candidate.system_kind, candidate.uninstall_diagnostic.map_or("none", |reason| reason.stable_code()));
     }
 }

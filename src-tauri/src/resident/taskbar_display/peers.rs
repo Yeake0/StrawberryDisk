@@ -80,7 +80,7 @@ unsafe extern "system" fn visit(window: HWND, data: LPARAM) -> i32 {
     if class[..length]
         .iter()
         .copied()
-        .eq("MangoDiskTaskbarStatus".encode_utf16())
+        .eq("StrawberryDiskTaskbarStatus".encode_utf16())
     {
         return 1;
     }
@@ -369,17 +369,17 @@ mod tests {
                 super::super::position::Edge::Right,
             );
             assert!(!peers.blocks_reservation);
-            // Run with MangoDisk closed: this acceptance test owns a temporary
+            // Run with StrawberryDisk closed: this acceptance test owns a temporary
             // lease and restores it before returning, even if an assertion fails.
             assert!(
                 FindWindowExW(
                     parent,
                     std::ptr::null_mut(),
-                    w!("MangoDiskTaskbarStatus"),
+                    w!("StrawberryDiskTaskbarStatus"),
                     std::ptr::null()
                 )
                 .is_null(),
-                "close MangoDisk before this test"
+                "close StrawberryDisk before this test"
             );
             let (container, buttons) = super::super::hosting::task_list(parent).unwrap();
             let outer = super::super::hosting::client_bounds(container).unwrap();

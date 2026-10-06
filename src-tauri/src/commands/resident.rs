@@ -1,5 +1,5 @@
-use mangodisk_core::system_resources::metrics::MetricId;
 use std::sync::Arc;
+use strawberrydisk_core::system_resources::metrics::MetricId;
 
 use super::error::{into_command_result, CommandResult};
 use crate::resident::{
@@ -141,8 +141,10 @@ pub fn resident_quit(app: tauri::AppHandle) {
 pub async fn monitoring_release_memory(
     app: tauri::AppHandle,
     state: tauri::State<'_, Arc<ResidentState>>,
-) -> CommandResult<mangodisk_core::system_resources::release::MemoryReleaseResult> {
-    use mangodisk_core::system_resources::release::{MemoryReleaseResult, MemoryReleaseStatus};
+) -> CommandResult<strawberrydisk_core::system_resources::release::MemoryReleaseResult> {
+    use strawberrydisk_core::system_resources::release::{
+        MemoryReleaseResult, MemoryReleaseStatus,
+    };
     let result = tauri::async_runtime::spawn_blocking(move || {
         resident::memory_release::execute_configured(&app, false, None)
     })
@@ -156,9 +158,9 @@ pub async fn monitoring_release_memory(
 pub async fn monitoring_quit_application(
     state: tauri::State<'_, Arc<ResidentState>>,
     application_id: String,
-) -> CommandResult<mangodisk_core::ApplicationQuitStatus> {
+) -> CommandResult<strawberrydisk_core::ApplicationQuitStatus> {
     let result = super::error::run_blocking("monitoring_quit_application", move || {
-        mangodisk_core::request_running_application_quit(&application_id)
+        strawberrydisk_core::request_running_application_quit(&application_id)
     })
     .await;
     state.wake();
@@ -175,7 +177,7 @@ pub fn resident_get_display_status(
 #[tauri::command]
 pub fn memory_release_preferences(
     app: tauri::AppHandle,
-) -> CommandResult<mangodisk_core::system_resources::release_policy::ReleasePreferences> {
+) -> CommandResult<strawberrydisk_core::system_resources::release_policy::ReleasePreferences> {
     into_command_result(
         "memory_release_preferences",
         resident::memory_preferences::get(&app),
@@ -185,8 +187,8 @@ pub fn memory_release_preferences(
 #[tauri::command]
 pub async fn memory_release_save_preferences(
     app: tauri::AppHandle,
-    preferences: mangodisk_core::system_resources::release_policy::ReleasePreferences,
-) -> CommandResult<mangodisk_core::system_resources::release_policy::ReleasePreferences> {
+    preferences: strawberrydisk_core::system_resources::release_policy::ReleasePreferences,
+) -> CommandResult<strawberrydisk_core::system_resources::release_policy::ReleasePreferences> {
     super::error::run_blocking("memory_release_save_preferences", move || {
         resident::memory_preferences::save(&app, preferences)
     })
@@ -195,10 +197,11 @@ pub async fn memory_release_save_preferences(
 
 #[tauri::command]
 pub async fn memory_release_applications(
-) -> CommandResult<Vec<mangodisk_core::system_resources::release_policy::ExcludedApplication>> {
+) -> CommandResult<Vec<strawberrydisk_core::system_resources::release_policy::ExcludedApplication>>
+{
     super::error::run_blocking(
         "memory_release_applications",
-        mangodisk_core::system_resources::release_policy::running_applications,
+        strawberrydisk_core::system_resources::release_policy::running_applications,
     )
     .await
 }

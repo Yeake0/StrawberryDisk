@@ -4,7 +4,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 import MdIconAction from '@/components/custom/md-icon-action.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import MdIconMangodisk from '@/components/icons/md-icon-mangodisk.vue';
+import MdIconStrawberrydisk from '@/components/icons/md-icon-strawberrydisk.vue';
 import { APP_NAME } from '@/lib/models/application-shell';
 import { ICON_NAMES } from '@/lib/models/ui';
 import { ApplicationWindowService } from '@/lib/services/application-window-service';
@@ -60,7 +60,7 @@ function close() {
       :class="{ 'window-title--expanded': sidebarExpanded }"
     >
       <span data-tauri-drag-region class="window-title-icon">
-        <MdIconMangodisk :size="28" />
+        <MdIconStrawberrydisk :size="28" />
       </span>
       <strong data-tauri-drag-region :aria-hidden="!sidebarExpanded">{{ APP_NAME }}</strong>
     </div>

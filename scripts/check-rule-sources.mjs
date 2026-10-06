@@ -10,16 +10,16 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { extname, join, relative, resolve } from 'node:path';
 
 const projectRoot = resolve(import.meta.dirname, '..');
-const ruleRoot = join(projectRoot, 'src-tauri/crates/mangodisk-core/rules');
+const ruleRoot = join(projectRoot, 'src-tauri/crates/strawberrydisk-core/rules');
 const filesystemRuleRoot = join(ruleRoot, 'filesystem');
 const projectRuleRoot = join(ruleRoot, 'project-artifacts');
-const cleanupRoot = join(projectRoot, 'src-tauri/crates/mangodisk-core/src/cleanup');
+const cleanupRoot = join(projectRoot, 'src-tauri/crates/strawberrydisk-core/src/cleanup');
 const sourceFiles = [
   ...collectFiles(filesystemRuleRoot, new Set(['.toml'])),
   ...collectFiles(projectRuleRoot, new Set(['.toml'])),
   ...collectFiles(cleanupRoot, new Set(['.rs'])),
-  join(projectRoot, 'src-tauri/crates/mangodisk-core/build.rs'),
-  join(projectRoot, 'src-tauri/crates/mangodisk-core/src/history/service.rs'),
+  join(projectRoot, 'src-tauri/crates/strawberrydisk-core/build.rs'),
+  join(projectRoot, 'src-tauri/crates/strawberrydisk-core/src/history/service.rs'),
 ];
 const violations = [];
 const hanCharacter = /\p{Script=Han}/u;

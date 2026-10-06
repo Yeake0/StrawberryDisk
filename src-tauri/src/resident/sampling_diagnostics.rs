@@ -1,6 +1,6 @@
 //! Bounded query timings stay separated so cheap sensors cannot hide slow enumeration.
-use mangodisk_core::system_resources::metrics::MetricId;
 use std::collections::VecDeque;
+use strawberrydisk_core::system_resources::metrics::MetricId;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Query {

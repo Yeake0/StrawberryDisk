@@ -1,5 +1,5 @@
 /**
- * Enforces MangoDisk's shared visual language in project-owned frontend code.
+ * Enforces StrawberryDisk's shared visual language in project-owned frontend code.
  * Components must use semantic theme tokens, keep literal colors in theme
  * files, and avoid hover transforms that make controls visually unstable.
  *

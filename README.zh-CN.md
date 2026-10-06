@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="public/mangodisk.svg" width="40" alt="MangoDisk 应用图标"> MangoDisk-芒果磁盘清理
+  <img src="public/strawberrydisk.png" width="40" alt="StrawberryDisk 应用图标"> StrawberryDisk
 </h1>
 
 <p align="center">面向 <b>macOS</b>、<b>Windows</b> 和 <b>Linux</b> 的磁盘清理、空间分析与隐私保护工具</p>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/harry0703/MangoDisk/releases/latest"><img alt="最新版本" src="https://img.shields.io/github/v/release/harry0703/MangoDisk?display_name=tag&sort=semver"></a>
+  <a href="https://github.com/Yeake0/StrawberryDisk-updates/releases/latest"><img alt="最新版本" src="https://img.shields.io/github/v/release/Yeake0/StrawberryDisk-updates?display_name=tag&sort=semver"></a>
   <img alt="支持 macOS" src="https://img.shields.io/badge/macOS-supported-111827?logo=apple&logoColor=white">
   <img alt="支持 Windows" src="https://img.shields.io/badge/Windows-supported-2563eb?logo=windows&logoColor=white">
   <img alt="支持 Linux" src="https://img.shields.io/badge/Linux-supported-f59e0b?logo=linux&logoColor=white">
@@ -17,17 +17,7 @@
   <img alt="Rust Core" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
 </p>
 
-<p align="center">
-  <a href="https://mangodisk.app/zh">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/readme/zh-dark.jpg">
-      <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/readme/zh-light.jpg">
-      <img src="https://assets.mangodisk.app/images/readme/zh-light.jpg" width="1200" alt="MangoDisk 磁盘清理、空间分析、隐私保护与系统优化工具">
-    </picture>
-  </a>
-</p>
-
-## MangoDisk 能做什么
+## StrawberryDisk 能做什么
 
 > **存储空间**
 
@@ -109,114 +99,16 @@
 ## 安全与规则
 
 > [!IMPORTANT]
-> **MangoDisk 始终将数据安全置于清理效果之上。**
+> **StrawberryDisk 始终将数据安全置于清理效果之上。**
 > 所有清理规则和系统优化项只有在明确安全边界并通过真实系统验证后，才会纳入正式版本。
 
-MangoDisk 默认只读扫描。执行清理、删除、卸载或系统设置变更前，会先展示内容并由用户确认；操作结果会保留在历史记录中。
+StrawberryDisk 默认只读扫描。执行清理、删除、卸载或系统设置变更前，会先展示内容并由用户确认；操作结果会保留在历史记录中。
 
 系统优化仅执行内置且经过验证的设置项，不接受任意注册表路径、终端命令或脚本。更改后会重新读取系统状态；高风险、需要管理员权限或需要重启的项目会提前提示。
 
-清理规则由 MangoDisk 独立维护。第三方项目只用于提供线索，候选规则必须核对可靠来源、明确安全边界，并通过真实系统验证后才会收录。无法确认安全的内容不会加入规则库。
+清理规则由 StrawberryDisk 独立维护。第三方项目只用于提供线索，候选规则必须核对可靠来源、明确安全边界，并通过真实系统验证后才会收录。无法确认安全的内容不会加入规则库。
 
-完整规则库及修改记录均可审计、追溯：[查看 MangoDisk 清理规则库](https://github.com/harry0703/MangoDisk/tree/main/src-tauri/crates/mangodisk-core/rules)。
-
-## 界面预览
-
-<p align="center">
-  <strong>深度清理</strong><br>
-  <sub>集中找出系统、应用、开发工具和项目中的可清理内容，释放更多空间</sub>
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-01-deep-cleanup.jpg">
-    <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-01-deep-cleanup.jpg">
-    <img src="https://assets.mangodisk.app/images/screenshots/zh/light-01-deep-cleanup.jpg" width="1200" alt="MangoDisk 深度清理界面">
-  </picture>
-</p>
-
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <strong>大文件清理</strong><br>
-      <sub>快速锁定最占空间的文件，避免逐层翻找</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-02-large-file-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-02-large-file-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-02-large-file-cleanup.jpg" width="100%" alt="MangoDisk 大文件清理界面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>重复文件清理</strong><br>
-      <sub>安全清理重复副本，并确保每组至少保留一份</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-03-duplicate-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-03-duplicate-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-03-duplicate-cleanup.jpg" width="100%" alt="MangoDisk 重复文件清理界面">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>磁盘空间分析</strong><br>
-      <sub>直观看清空间去向，快速定位占用最多的内容</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-05-disk-space-analysis.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-05-disk-space-analysis.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-05-disk-space-analysis.jpg" width="100%" alt="MangoDisk 磁盘空间分析界面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>启动项管理</strong><br>
-      <sub>减少不必要的自启动程序，加快登录并降低后台占用</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-06-startup-items.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-06-startup-items.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-06-startup-items.jpg" width="100%" alt="MangoDisk 启动项管理界面">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>应用卸载与残留清理</strong><br>
-      <sub>卸载应用并清理关联残留，释放更多磁盘空间</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-04-app-uninstaller.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-04-app-uninstaller.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-04-app-uninstaller.jpg" width="100%" alt="MangoDisk 应用卸载界面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>系统优化</strong><br>
-      <sub>一键优化性能、隐私与使用体验，让系统运行更流畅</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-07-system-optimization.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-07-system-optimization.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-07-system-optimization.jpg" width="100%" alt="MangoDisk 系统优化界面">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>系统维护</strong><br>
-      <sub>快速解决常见系统问题，让电脑恢复正常</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-08-system-maintenance.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-08-system-maintenance.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-08-system-maintenance.jpg" width="100%" alt="MangoDisk 系统维护界面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-      <strong>隐私清理</strong><br>
-      <sub>减少活动痕迹留存，更好地保护日常隐私</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/zh/dark-09-privacy-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/zh/light-09-privacy-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/zh/light-09-privacy-cleanup.jpg" width="100%" alt="MangoDisk 隐私清理界面">
-      </picture>
-    </td>
-  </tr>
-</table>
+完整规则库及修改记录均可审计、追溯：[查看 StrawberryDisk 清理规则库](https://github.com/Yeake0/StrawberryDisk/tree/main/src-tauri/crates/strawberrydisk-core/rules)。
 
 ## 使用注意事项
 
@@ -228,113 +120,44 @@ MangoDisk 默认只读扫描。执行清理、删除、卸载或系统设置变�
 
 ## 桌面版
 
-安装包可从 [官网下载页](https://mangodisk.app/zh/download) 或 [GitHub Releases](https://github.com/harry0703/MangoDisk/releases/latest) 下载，选择对应系统的安装方式即可。
-
-### macOS
-
-**系统要求：** macOS 12.5 Monterey 或更高版本。
-
-**Homebrew 安装：**
-
-```sh
-brew install --cask harry0703/tap/mangodisk
-```
-
-**手动安装：** 从 [官网下载页](https://mangodisk.app/zh/download) 下载 DMG，打开后将 MangoDisk 拖入“应用程序”文件夹。
+安装包可从 [官网下载页](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) 或 [GitHub Releases](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) 下载，选择对应系统的安装方式即可。
 
 ### Windows
 
 **系统要求：** 64 位 Windows 10 或更高版本。
 
-**PowerShell 安装：**
-
-```powershell
-irm https://get.mangodisk.app | iex
-```
-
-**WinGet 安装（官方源）：**
-
-```powershell
-winget install --id MangoDisk.MangoDisk --exact --source winget
-```
-
-**手动安装：** 从 [官网下载页](https://mangodisk.app/zh/download) 下载 Windows 安装程序，按提示完成安装。
-
-### Linux
-
-**推荐系统：** Ubuntu 22.04 LTS 或更高版本，支持 x64 和 ARM64。
-
-提供 `.deb` 和 AppImage；其他 Linux 发行版的兼容性取决于系统库和桌面环境。
-
-**终端安装（Debian/Ubuntu）：** 自动识别架构并安装对应的最新版 `.deb` 包。
-
-```sh
-curl -fsSL https://get.mangodisk.app/linux | bash
-```
-
-**手动安装：** 从 [官网下载页](https://mangodisk.app/zh/download) 选择对应架构的安装包。
-
-- **Debian/Ubuntu**：安装对应架构的 `.deb` 包。
-- **其他发行版**：可尝试 AppImage，赋予执行权限后直接运行。
+**手动安装：** 从 [官网下载页](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) 下载 Windows 安装程序，按提示完成安装。
 
 ## 命令行版（CLI）
 
-适合在终端中使用或集成到脚本，与桌面版使用同一套安全清理引擎。
-
-### macOS
-
-**Homebrew 安装：**
-
-```sh
-brew install harry0703/tap/mangodisk-cli
-```
-
-### Windows
-
-**PowerShell 安装：**
-
-```powershell
-irm https://get.mangodisk.app/cli | iex
-```
-
-**WinGet 安装（官方源）：**
-
-```powershell
-winget install --id MangoDisk.CLI --exact --source winget
-```
-
-### Linux
-
-目前尚未提供独立 CLI 的预编译下载，可按下方的 [从源码构建](#从源码构建) 步骤自行构建。
-
 ### 使用示例
 
-安装完成后，如果暂时无法识别 `mangodisk`，请重新打开终端，然后检查版本：
+安装完成后，如果暂时无法识别 `strawberrydisk`，请重新打开终端，然后检查版本：
 
 ```sh
-mangodisk --version
+strawberrydisk --version
 ```
 
 常用命令：
 
 ```sh
 # 只扫描并展示可清理内容
-mangodisk clean
+strawberrydisk clean
 
 # 应用与桌面版一致的智能推荐
-mangodisk clean --apply
+strawberrydisk clean --apply
 
 # 预览全部可选内容，不实际删除
-mangodisk clean --apply --selection all --dry-run
+strawberrydisk clean --apply --selection all --dry-run
 
 # 输出便于脚本处理的 JSON
-mangodisk clean --format json --no-progress
+strawberrydisk clean --format json --no-progress
 ```
 
-`mangodisk clean` 默认只扫描，不会修改文件。非交互环境执行实际清理时，还必须传入 `--yes` 明确确认；完整选项请运行：
+`strawberrydisk clean` 默认只扫描，不会修改文件。非交互环境执行实际清理时，还必须传入 `--yes` 明确确认；完整选项请运行：
 
 ```sh
-mangodisk clean --help
+strawberrydisk clean --help
 ```
 
 ## 从源码构建
@@ -350,8 +173,8 @@ mangodisk clean --help
 ### 获取源码并启动桌面应用
 
 ```sh
-git clone https://github.com/harry0703/MangoDisk.git
-cd MangoDisk
+git clone https://github.com/Yeake0/StrawberryDisk.git
+cd StrawberryDisk
 pnpm install --frozen-lockfile
 pnpm tauri:dev
 ```
@@ -360,7 +183,7 @@ pnpm tauri:dev
 
 ```sh
 pnpm check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 ### 构建桌面安装包
@@ -375,7 +198,7 @@ pnpm tauri:build
 pnpm cli:build
 ```
 
-本地构建产物不包含 MangoDisk 正式发布流程提供的签名、公证和更新元数据，仅用于开发与验证。
+本地构建产物不包含 StrawberryDisk 正式发布流程提供的签名、公证和更新元数据，仅用于开发与验证。
 
 ## 参与贡献
 
@@ -383,13 +206,13 @@ pnpm cli:build
 [`CONTRIBUTING.md`](CONTRIBUTING.md) 和 [`AGENTS.md`](AGENTS.md)。
 
 常规清理覆盖优先使用经过构建期校验的声明式 TOML 规则。规则结构、安全约束和验证方式请参阅
-[`src-tauri/crates/mangodisk-core/rules/README.md`](src-tauri/crates/mangodisk-core/rules/README.md)。
+[`src-tauri/crates/strawberrydisk-core/rules/README.md`](src-tauri/crates/strawberrydisk-core/rules/README.md)。
 
 提交修改前，请至少运行：
 
 ```sh
 pnpm check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 发现安全问题时，请按照 [`SECURITY.md`](SECURITY.md) 通过 GitHub Security Advisories 私下报告，不要创建公开 Issue。
@@ -402,4 +225,4 @@ cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
 
 ## 许可证
 
-MangoDisk 基于 [GNU General Public License v3.0](https://github.com/harry0703/MangoDisk/blob/main/LICENSE) 开源。第三方组件继续遵循各自的许可证。
+StrawberryDisk 基于 [GNU General Public License v3.0](https://github.com/Yeake0/StrawberryDisk/blob/main/LICENSE) 开源。第三方组件继续遵循各自的许可证。

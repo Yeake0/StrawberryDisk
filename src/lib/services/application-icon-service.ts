@@ -17,8 +17,8 @@ export class ApplicationIconService {
   // Generic mode queries the OS by type without accessing these descriptor paths.
   // One stable request per platform shares FileIconService's cache and pending work.
   private static readonly fallbackRequests: Partial<Record<ApplicationUninstallPlatform, FileIconRequest>> = {
-    macosBundle: { path: '/.mangodisk-generic-application.app', kind: 'file', mode: 'generic' },
-    windowsRegistry: { path: 'C:\\.mangodisk-generic-application.exe', kind: 'file', mode: 'generic' },
+    macosBundle: { path: '/.strawberrydisk-generic-application.app', kind: 'file', mode: 'generic' },
+    windowsRegistry: { path: 'C:\\.strawberrydisk-generic-application.exe', kind: 'file', mode: 'generic' },
   };
   private static readonly batchSize = 32;
   private static readonly cache = new Map<string, string | null>();

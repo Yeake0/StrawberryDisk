@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n';
 import MdSwitch from '@/components/custom/md-switch.vue';
 import MdCheckbox from '@/components/custom/md-checkbox.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import MdIconMangodisk from '@/components/icons/md-icon-mangodisk.vue';
+import MdIconStrawberrydisk from '@/components/icons/md-icon-strawberrydisk.vue';
 import MdSettingsRow from '@/components/custom/md-settings-row.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -446,7 +446,7 @@ onBeforeUnmount(() => {
                 <TransitionGroup name="metric-sort" tag="div" class="metric-rows">
                   <div key="logo" class="status-item">
                     <span v-if="canReorder" class="logo-marker" aria-hidden="true">
-                      <MdIconMangodisk :size="18" />
+                      <MdIconStrawberrydisk :size="18" />
                     </span>
                     <label class="logo-label" for="status-app-icon">
                       <MdCheckbox
@@ -455,7 +455,7 @@ onBeforeUnmount(() => {
                         :disabled="selectionLocked(showIcon)"
                         @update:model-value="enableIcon($event === true)"
                       />
-                      <MdIconMangodisk v-if="!canReorder" :size="18" class="shrink-0" />
+                      <MdIconStrawberrydisk v-if="!canReorder" :size="18" class="shrink-0" />
                       {{ t('systemStatus.showIcon') }}
                     </label>
                   </div>

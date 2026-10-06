@@ -56,7 +56,7 @@ describe('ApplicationIconService', () => {
   });
 
   it('shares a native application-type fallback across concurrent and later rows', async () => {
-    const request = { path: '/.mangodisk-generic-application.app', kind: 'file', mode: 'generic' };
+    const request = { path: '/.strawberrydisk-generic-application.app', kind: 'file', mode: 'generic' };
     const dataUrl = 'data:image/png;base64,native-application';
     invokeMock.mockResolvedValue({
       assignments: [{ ...request, iconKey: 'ext:app' }],
@@ -75,7 +75,7 @@ describe('ApplicationIconService', () => {
   });
 
   it('shares one Windows default icon request across 50 concurrent rows and later visits', async () => {
-    const request = { path: 'C:\\.mangodisk-generic-application.exe', kind: 'file', mode: 'generic' };
+    const request = { path: 'C:\\.strawberrydisk-generic-application.exe', kind: 'file', mode: 'generic' };
     const dataUrl = 'data:image/png;base64,windows-default';
     invokeMock.mockResolvedValue({
       assignments: [{ ...request, iconKey: 'ext:exe' }],

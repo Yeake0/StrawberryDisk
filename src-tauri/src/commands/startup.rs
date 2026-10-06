@@ -1,4 +1,4 @@
-use mangodisk_core::{
+use strawberrydisk_core::{
     StartupCatalog, StartupChangePlan, StartupChangeResult, StartupChangeSelection, StartupService,
 };
 

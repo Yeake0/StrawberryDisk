@@ -39,7 +39,7 @@ const plan: StartupChangePlan = {
   skippedItems: [],
   requiresConfirmation: false,
 };
-const authorizationPrompt = 'MangoDisk needs administrator permission to change startup settings';
+const authorizationPrompt = 'StrawberryDisk needs administrator permission to change startup settings';
 
 describe('startup store', () => {
   beforeEach(() => {

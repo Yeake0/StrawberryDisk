@@ -1,9 +1,9 @@
 //! Shared text for native resident surfaces.
-use mangodisk_core::system_resources::{
+use serde::Serialize;
+use strawberrydisk_core::system_resources::{
     metrics::{MetricId, MetricStatus},
     readings::ResourceReadings,
 };
-use serde::Serialize;
 
 use crate::resident::preferences::ResidentPreferences;
 
@@ -289,7 +289,7 @@ pub fn entries(
                         .map(|value| {
                             format!(
                                 " · {}",
-                                mangodisk_platform::diagnostics::text(&value.adapter_name)
+                                strawberrydisk_platform::diagnostics::text(&value.adapter_name)
                             )
                         })
                         .unwrap_or_default(),
@@ -441,8 +441,8 @@ mod tests {
 
     #[test]
     fn disk_tooltips_use_the_shared_capacity_basis_precision_and_localized_explanation() {
-        use mangodisk_core::system_resources::{disk, metrics::MetricReading};
-        use mangodisk_platform::system_resources::disk::{ResourceVolume, VolumeCapacity};
+        use strawberrydisk_core::system_resources::{disk, metrics::MetricReading};
+        use strawberrydisk_platform::system_resources::disk::{ResourceVolume, VolumeCapacity};
         let value = disk::usage(
             ResourceVolume {
                 id: "test".into(),
@@ -517,7 +517,7 @@ mod tests {
     }
     #[test]
     fn invalid_ready_samples_use_the_unavailable_presentation() {
-        use mangodisk_core::system_resources::metrics::{CpuUsage, MetricReading};
+        use strawberrydisk_core::system_resources::metrics::{CpuUsage, MetricReading};
         let mut preferences = ResidentPreferences::default();
         for metric in &mut preferences.metrics {
             metric.enabled = metric.id == MetricId::Cpu;
@@ -543,7 +543,7 @@ mod tests {
     #[test]
     fn displayed_percentages_and_color_thresholds_use_the_same_rounding() {
         use super::super::usage_color::UsageTone;
-        use mangodisk_core::system_resources::metrics::{CpuUsage, MetricReading};
+        use strawberrydisk_core::system_resources::metrics::{CpuUsage, MetricReading};
         let preferences = ResidentPreferences::default();
         let labels = super::super::labels::Labels::for_locale("en-US");
         for (value, expected, tone) in [

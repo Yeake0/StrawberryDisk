@@ -209,8 +209,8 @@ mod tests {
 
     #[test]
     fn background_arguments_do_not_confuse_manual_launches_or_partial_matches() {
-        assert!(is_background_launch(["MangoDisk", "--background"]));
-        assert!(!is_background_launch(["MangoDisk"]));
+        assert!(is_background_launch(["StrawberryDisk", "--background"]));
+        assert!(!is_background_launch(["StrawberryDisk"]));
         assert!(!is_background_launch([
             "--background",
             "--background=false"

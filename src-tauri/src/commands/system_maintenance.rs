@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use mangodisk_core::{
+use strawberrydisk_core::{
     SystemMaintenanceCatalog, SystemMaintenanceExecutionRequest, SystemMaintenanceJob,
     SystemMaintenanceRuntimeState, SystemMaintenanceService,
 };

@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="public/mangodisk.svg" width="40" alt="MangoDisk アプリアイコン"> MangoDisk
+  <img src="public/strawberrydisk.png" width="40" alt="StrawberryDisk アプリアイコン"> StrawberryDisk
 </h1>
 
 <p align="center"><b>macOS</b>・<b>Windows</b>・<b>Linux</b> 向けのディスククリーンアップ・ストレージ分析・プライバシー保護ツール</p>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-<a href="https://github.com/harry0703/MangoDisk/releases/latest"><img alt="最新リリース" src="https://img.shields.io/github/v/release/harry0703/MangoDisk?display_name=tag&sort=semver"></a>
+<a href="https://github.com/Yeake0/StrawberryDisk-updates/releases/latest"><img alt="最新リリース" src="https://img.shields.io/github/v/release/Yeake0/StrawberryDisk-updates?display_name=tag&sort=semver"></a>
   <img alt="macOS 対応" src="https://img.shields.io/badge/macOS-supported-111827?logo=apple&logoColor=white">
   <img alt="Windows 対応" src="https://img.shields.io/badge/Windows-supported-2563eb?logo=windows&logoColor=white">
   <img alt="Linux 対応" src="https://img.shields.io/badge/Linux-supported-f59e0b?logo=linux&logoColor=white">
@@ -17,17 +17,7 @@
   <img alt="Rust Core" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
 </p>
 
-<p align="center">
-  <a href="https://mangodisk.app/ja">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/readme/ja-dark.jpg">
-      <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/readme/ja-light.jpg">
-      <img src="https://assets.mangodisk.app/images/readme/ja-light.jpg" width="1200" alt="MangoDisk のディスククリーンアップ、容量分析、プライバシー保護、システム最適化">
-    </picture>
-  </a>
-</p>
-
-## MangoDisk でできること
+## StrawberryDisk でできること
 
 > **ストレージ**
 
@@ -109,114 +99,16 @@ CPU やメモリの使用状況、通信速度、ディスクの動作状況を�
 ## 安全性とルール
 
 > [!IMPORTANT]
-> **MangoDisk は、空き容量の確保よりもデータの安全性を優先します。**
+> **StrawberryDisk は、空き容量の確保よりもデータの安全性を優先します。**
 > クリーンアップルールとシステム最適化項目は、安全な範囲を明確にし、実際のシステムで検証したものだけを製品版に採用しています。
 
-MangoDisk はデフォルトで読み取り専用のスキャンを行います。クリーンアップ、削除、アンインストール、システム設定の変更前に内容を表示し、ユーザーの確認を求めます。操作結果は履歴に保存されます。
+StrawberryDisk はデフォルトで読み取り専用のスキャンを行います。クリーンアップ、削除、アンインストール、システム設定の変更前に内容を表示し、ユーザーの確認を求めます。操作結果は履歴に保存されます。
 
 システム最適化では、内蔵の検証済み設定だけを使用します。任意のレジストリパス、ターミナルコマンド、スクリプトを実行することはありません。変更後は設定を再度読み取り、影響の大きい項目や管理者権限、再起動が必要な項目を事前にお知らせします。
 
-クリーンアップルールは MangoDisk が独自に管理しています。サードパーティ製プロジェクトは調査の手がかりとしてのみ参照し、信頼できる情報源、安全な範囲、実際のシステムでの動作を確認してから採用します。安全性を明確に確認できない内容はルールに含めません。
+クリーンアップルールは StrawberryDisk が独自に管理しています。サードパーティ製プロジェクトは調査の手がかりとしてのみ参照し、信頼できる情報源、安全な範囲、実際のシステムでの動作を確認してから採用します。安全性を明確に確認できない内容はルールに含めません。
 
-ルールライブラリと変更履歴はすべて公開されています：[MangoDisk のクリーンアップルールを見る](https://github.com/harry0703/MangoDisk/tree/main/src-tauri/crates/mangodisk-core/rules)。
-
-## スクリーンショット
-
-<p align="center">
-<strong>ディープクリーン</strong><br>
-<sub>システム、アプリ、開発ツール、プロジェクトのクリーンアップ対象をまとめて見つけ、空き容量を増やします</sub>
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-01-deep-cleanup.jpg">
-    <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-01-deep-cleanup.jpg">
-    <img src="https://assets.mangodisk.app/images/screenshots/ja/light-01-deep-cleanup.jpg" width="1200" alt="MangoDisk ディープクリーン画面">
-  </picture>
-</p>
-
-<table>
-  <tr>
-    <td width="50%" align="center">
-<strong>大容量ファイル</strong><br>
-<sub>フォルダーを一つずつたどらずに、容量を多く使うファイルを見つけます</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-02-large-file-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-02-large-file-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-02-large-file-cleanup.jpg" width="100%" alt="MangoDisk 大容量ファイル画面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-<strong>重複ファイル</strong><br>
-<sub>完全に同じファイルを安全に整理し、各グループに少なくとも 1 ファイルを残します</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-03-duplicate-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-03-duplicate-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-03-duplicate-cleanup.jpg" width="100%" alt="MangoDisk 重複ファイル画面">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-<strong>ディスク容量分析</strong><br>
-<sub>容量の使い道をひと目で把握し、サイズの大きいデータをすばやく見つけます</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-05-disk-space-analysis.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-05-disk-space-analysis.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-05-disk-space-analysis.jpg" width="100%" alt="MangoDisk ディスク容量分析画面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-<strong>スタートアップ項目の管理</strong><br>
-<sub>不要な自動起動を減らし、サインインを速くしてバックグラウンドの負荷を抑えます</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-06-startup-items.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-06-startup-items.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-06-startup-items.jpg" width="100%" alt="MangoDisk スタートアップ項目管理画面">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-<strong>アプリのアンインストールとクリーンアップ</strong><br>
-<sub>アプリと関連する残存ファイルをまとめて削除し、空き容量を増やします</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-04-app-uninstaller.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-04-app-uninstaller.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-04-app-uninstaller.jpg" width="100%" alt="MangoDisk アプリアンインストーラー画面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-<strong>システム最適化</strong><br>
-<sub>パフォーマンス、プライバシー、使いやすさをワンクリックで整えます</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-07-system-optimization.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-07-system-optimization.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-07-system-optimization.jpg" width="100%" alt="MangoDisk システム最適化画面">
-      </picture>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-<strong>システムメンテナンス</strong><br>
-<sub>よくあるシステムの問題をすばやく解消し、いつもの状態に戻します</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-08-system-maintenance.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-08-system-maintenance.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-08-system-maintenance.jpg" width="100%" alt="MangoDisk システムメンテナンス画面">
-      </picture>
-    </td>
-    <td width="50%" align="center">
-<strong>プライバシークリーンアップ</strong><br>
-<sub>不要な利用履歴を減らし、日々のプライバシーを守ります</sub><br><br>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://assets.mangodisk.app/images/screenshots/ja/dark-09-privacy-cleanup.jpg">
-        <source media="(prefers-color-scheme: light)" srcset="https://assets.mangodisk.app/images/screenshots/ja/light-09-privacy-cleanup.jpg">
-        <img src="https://assets.mangodisk.app/images/screenshots/ja/light-09-privacy-cleanup.jpg" width="100%" alt="MangoDisk プライバシークリーンアップ画面">
-      </picture>
-    </td>
-  </tr>
-</table>
+ルールライブラリと変更履歴はすべて公開されています：[StrawberryDisk のクリーンアップルールを見る](https://github.com/Yeake0/StrawberryDisk/tree/main/src-tauri/crates/strawberrydisk-core/rules)。
 
 ## ご利用前の注意事項
 
@@ -228,113 +120,44 @@ MangoDisk はデフォルトで読み取り専用のスキャンを行います�
 
 ## デスクトップ版
 
-[公式ダウンロードページ](https://mangodisk.app/ja/download) または [GitHub Releases](https://github.com/harry0703/MangoDisk/releases/latest) から、お使いの OS に合ったファイルをダウンロードし、以下の手順でインストールしてください。
-
-### macOS
-
-**動作環境：** macOS Monterey 12.5 以降。
-
-**Homebrew でインストール：**
-
-```sh
-brew install --cask harry0703/tap/mangodisk
-```
-
-**手動でインストール：** [公式ダウンロードページ](https://mangodisk.app/ja/download) から DMG をダウンロードして開き、MangoDisk を「アプリケーション」フォルダーにドラッグします。
+[公式ダウンロードページ](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) または [GitHub Releases](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) から、お使いの OS に合ったファイルをダウンロードし、以下の手順でインストールしてください。
 
 ### Windows
 
 **動作環境：** 64 ビット版 Windows 10 以降。
 
-**PowerShell でインストール：**
-
-```powershell
-irm https://get.mangodisk.app | iex
-```
-
-**WinGet でインストール（公式ソース）：**
-
-```powershell
-winget install --id MangoDisk.MangoDisk --exact --source winget
-```
-
-**手動でインストール：** [公式ダウンロードページ](https://mangodisk.app/ja/download) から Windows 用インストーラーをダウンロードし、画面の案内に従ってインストールします。
-
-### Linux
-
-**推奨環境：** Ubuntu 22.04 LTS 以降。x64 と ARM64 に対応しています。
-
-`.deb` パッケージと AppImage を提供しています。ほかの Linux ディストリビューションでの動作は、システムライブラリやデスクトップ環境によって異なります。
-
-**ターミナルからインストール（Debian/Ubuntu）：** アーキテクチャを自動判別し、対応する最新版の `.deb` パッケージをインストールします。
-
-```sh
-curl -fsSL https://get.mangodisk.app/linux | bash
-```
-
-**手動でインストール：** [公式ダウンロードページ](https://mangodisk.app/ja/download) で、お使いのアーキテクチャに合ったファイルを選んでください。
-
-- **Debian/Ubuntu**：アーキテクチャに合った `.deb` パッケージをインストールします。
-- **ほかのディストリビューション**：AppImage をお試しください。実行権限を付けてから起動してください。
+**手動でインストール：** [公式ダウンロードページ](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) から Windows 用インストーラーをダウンロードし、画面の案内に従ってインストールします。
 
 ## コマンドライン版（CLI）
 
-ターミナルでの操作やスクリプトへの組み込みに利用できます。デスクトップ版と同じ、安全性を重視したクリーンアップエンジンを使用しています。
-
-### macOS
-
-**Homebrew でインストール：**
-
-```sh
-brew install harry0703/tap/mangodisk-cli
-```
-
-### Windows
-
-**PowerShell でインストール：**
-
-```powershell
-irm https://get.mangodisk.app/cli | iex
-```
-
-**WinGet でインストール（公式ソース）：**
-
-```powershell
-winget install --id MangoDisk.CLI --exact --source winget
-```
-
-### Linux
-
-Linux 向けスタンドアロン版 CLI のビルド済みパッケージは、現在配布していません。下記の [ソースからビルド](#ソースからビルド) の手順でビルドできます。
-
 ### 使用例
 
-インストール後に `mangodisk` コマンドが見つからない場合は、新しいターミナルを開いてからバージョンを確認してください。
+インストール後に `strawberrydisk` コマンドが見つからない場合は、新しいターミナルを開いてからバージョンを確認してください。
 
 ```sh
-mangodisk --version
+strawberrydisk --version
 ```
 
 よく使うコマンド：
 
 ```sh
 # 変更を加えず、削除可能な内容をスキャンして表示
-mangodisk clean
+strawberrydisk clean
 
 # デスクトップ版と同じスマート選択を適用
-mangodisk clean --apply
+strawberrydisk clean --apply
 
 # ファイルを削除せず、選択可能な内容をすべてプレビュー
-mangodisk clean --apply --selection all --dry-run
+strawberrydisk clean --apply --selection all --dry-run
 
 # 機械処理しやすい JSON 形式で出力
-mangodisk clean --format json --no-progress
+strawberrydisk clean --format json --no-progress
 ```
 
-`mangodisk clean` は既定でスキャンのみを行い、ファイルを変更しません。非対話環境で実際にクリーンアップする場合は、明示的な確認として `--yes` も指定する必要があります。利用できるすべてのオプションは次のコマンドで確認できます。
+`strawberrydisk clean` は既定でスキャンのみを行い、ファイルを変更しません。非対話環境で実際にクリーンアップする場合は、明示的な確認として `--yes` も指定する必要があります。利用できるすべてのオプションは次のコマンドで確認できます。
 
 ```sh
-mangodisk clean --help
+strawberrydisk clean --help
 ```
 
 ## ソースからビルド
@@ -350,8 +173,8 @@ mangodisk clean --help
 ### ソースを取得してデスクトップアプリを実行
 
 ```sh
-git clone https://github.com/harry0703/MangoDisk.git
-cd MangoDisk
+git clone https://github.com/Yeake0/StrawberryDisk.git
+cd StrawberryDisk
 pnpm install --frozen-lockfile
 pnpm tauri:dev
 ```
@@ -360,7 +183,7 @@ pnpm tauri:dev
 
 ```sh
 pnpm check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 ### デスクトップインストーラーをビルド
@@ -375,19 +198,19 @@ pnpm tauri:build
 pnpm cli:build
 ```
 
-ローカルビルドには、MangoDisk の公式リリースで提供される署名、公証、アップデート用メタデータは含まれません。開発と検証にのみ使用してください。
+ローカルビルドには、StrawberryDisk の公式リリースで提供される署名、公証、アップデート用メタデータは含まれません。開発と検証にのみ使用してください。
 
 ## 貢献
 
 不具合報告、クリーンアップルール、修正、新機能の提案を歓迎します。作業を始める前に [`CONTRIBUTING.md`](CONTRIBUTING.md) と [`AGENTS.md`](AGENTS.md) をお読みください。
 
-通常のクリーンアップ対象は、ビルド時に検証される宣言的な TOML ルールとして追加してください。ルールスキーマ、セーフティ制約、検証手順については [`src-tauri/crates/mangodisk-core/rules/README.md`](src-tauri/crates/mangodisk-core/rules/README.md) を参照してください。
+通常のクリーンアップ対象は、ビルド時に検証される宣言的な TOML ルールとして追加してください。ルールスキーマ、セーフティ制約、検証手順については [`src-tauri/crates/strawberrydisk-core/rules/README.md`](src-tauri/crates/strawberrydisk-core/rules/README.md) を参照してください。
 
 変更を提出する前に、少なくとも次を実行してください:
 
 ```sh
 pnpm check
-cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
+cargo test --manifest-path src-tauri/Cargo.toml -p strawberrydisk-core
 ```
 
 セキュリティ上の問題は、[`SECURITY.md`](SECURITY.md) の案内に従って GitHub Security Advisories から非公開で報告してください。公開 Issue には投稿しないでください。
@@ -400,4 +223,4 @@ cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
 
 ## ライセンス
 
-MangoDisk は [GNU General Public License v3.0](https://github.com/harry0703/MangoDisk/blob/main/LICENSE) に基づくオープンソースソフトウェアです。サードパーティ製コンポーネントには、それぞれのライセンスが適用されます。
+StrawberryDisk は [GNU General Public License v3.0](https://github.com/Yeake0/StrawberryDisk/blob/main/LICENSE) に基づくオープンソースソフトウェアです。サードパーティ製コンポーネントには、それぞれのライセンスが適用されます。

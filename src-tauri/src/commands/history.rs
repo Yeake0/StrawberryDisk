@@ -1,4 +1,4 @@
-use mangodisk_core::{HistoryService, OperationRecord};
+use strawberrydisk_core::{HistoryService, OperationRecord};
 
 use super::error::{run_blocking, CommandResult};
 

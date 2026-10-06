@@ -2,11 +2,11 @@
 
 This directory contains reusable Rust capabilities:
 
-- `mangodisk-core` owns product domains, use cases, rules, indexing, cleanup,
+- `strawberrydisk-core` owns product domains, use cases, rules, indexing, cleanup,
   history, and reporting.
-- `mangodisk-platform` implements macOS and Windows contracts for volumes,
+- `strawberrydisk-platform` implements macOS and Windows contracts for volumes,
   paths, links, system exclusions, application inventory, and permanent deletion.
-- `mangodisk-cli` is a sibling adapter over Core use cases.
+- `strawberrydisk-cli` is a sibling adapter over Core use cases.
 
 The Tauri crate only assembles the application, converts command arguments,
 and forwards progress events. It does not own platform policy or scanning
@@ -14,8 +14,8 @@ behavior.
 
 ## HTTP clients
 
-Application HTTP clients use `mangodisk_core::http_client::builder()` to send
-the shared `MangoDisk/<version> (<OS> <OS version>; <architecture>)` user agent.
+Application HTTP clients use `strawberrydisk_core::http_client::builder()` to send
+the shared `StrawberryDisk/<version> (<OS> <OS version>; <architecture>)` user agent.
 The application version comes from the workspace; basic system identity comes
 from Platform and is cached for the process lifetime. Missing OS versions use
 `unknown`; native version labels are bounded and made safe for HTTP comments.
@@ -77,7 +77,7 @@ validating that change in accounting semantics. Include WOF compression in scan
 regression fixtures; conventional NTFS compression does not cover this case.
 
 The `storage_scan_benchmark` Core example measures an existing read-only fixture
-in `analysis`, `large`, or `duplicates` mode. Set `MANGODISK_BENCHMARK_STATE_ROOT`
+in `analysis`, `large`, or `duplicates` mode. Set `STRAWBERRYDISK_BENCHMARK_STATE_ROOT`
 to a separate state directory and build the example in release mode. Preserve
 baseline and candidate executables, run them as the same ordinary user, alternate
 their order, discard warmups, and compare repeated medians together with counts,
@@ -99,7 +99,7 @@ result assembly can parallelize uncached direct-file usage queries; reopened lis
 retain live queries. Cancellation disconnects queues and joins workers before
 returning. If worker creation fails before dispatch, analysis uses serial traversal.
 
-For repeatable experiments, `MANGODISK_WINDOWS_ANALYSIS_WORKERS=1..16` overrides
+For repeatable experiments, `STRAWBERRYDISK_WINDOWS_ANALYSIS_WORKERS=1..16` overrides
 the analysis fallback's worker count. Invalid values log a warning and use automatic
 selection. Automatic selection keeps HDD, network, removable, and unknown device limits
 conservative. SSD analysis uses up to four workers on ARM64 and twice available

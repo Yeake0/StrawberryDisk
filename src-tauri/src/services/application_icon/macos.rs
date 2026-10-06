@@ -313,7 +313,7 @@ fn normalize_apple_png(icon_path: &Path) -> Option<Vec<u8>> {
         .as_nanos();
     let sequence = NORMALIZATION_SEQUENCE.fetch_add(1, Ordering::Relaxed);
     let temporary_directory = env::temp_dir().join(format!(
-        "mangodisk-icon-normalize-{}-{nonce}-{sequence}",
+        "strawberrydisk-icon-normalize-{}-{nonce}-{sequence}",
         std::process::id()
     ));
     fs::create_dir(&temporary_directory).ok()?;
@@ -350,7 +350,7 @@ mod tests {
             .expect("system clock must follow the Unix epoch")
             .as_nanos();
         std::env::temp_dir().join(format!(
-            "mangodisk-icon-{name}-{}-{nonce}",
+            "strawberrydisk-icon-{name}-{}-{nonce}",
             std::process::id()
         ))
     }
@@ -477,7 +477,7 @@ mod tests {
             .expect("system clock must follow the Unix epoch")
             .as_nanos();
         let cache_root = std::env::temp_dir().join(format!(
-            "mangodisk-real-icon-cache-{}-{nonce}",
+            "strawberrydisk-real-icon-cache-{}-{nonce}",
             std::process::id()
         ));
 

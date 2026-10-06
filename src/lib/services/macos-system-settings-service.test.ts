@@ -15,7 +15,7 @@ vi.mock('@tauri-apps/plugin-log', () => ({ info: nativeInfo, error: nativeError,
 
 const artifact: StartupArtifact = {
   itemId: 'mock-login-record',
-  displayName: 'MangoDisk Startup Demo',
+  displayName: 'StrawberryDisk Startup Demo',
   sourceId: 'macos.background_tasks',
   sourceKind: 'backgroundTask',
   scope: 'currentUser',

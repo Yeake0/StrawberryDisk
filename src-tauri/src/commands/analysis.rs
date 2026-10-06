@@ -1,8 +1,8 @@
-use mangodisk_core::{
+use strawberrydisk_core::{
     AnalysisRemainderPage, AnalysisRemainderRequest, AnalysisResult, AnalysisScanMode,
     AnalysisService,
 };
-use mangodisk_core::{ScanExclusionOptions, ScanNameExclusion};
+use strawberrydisk_core::{ScanExclusionOptions, ScanNameExclusion};
 
 use crate::events;
 

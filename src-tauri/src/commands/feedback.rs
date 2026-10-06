@@ -8,8 +8,8 @@ use crate::services::feedback::{
 
 use super::error::{into_command_result, run_blocking, CommandResult};
 
-const FILE_NAME_HEADER: &str = "x-mangodisk-file-name";
-const MIME_TYPE_HEADER: &str = "x-mangodisk-mime-type";
+const FILE_NAME_HEADER: &str = "x-strawberrydisk-file-name";
+const MIME_TYPE_HEADER: &str = "x-strawberrydisk-mime-type";
 
 #[tauri::command]
 pub async fn stage_feedback_attachment(

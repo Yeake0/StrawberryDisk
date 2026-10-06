@@ -162,7 +162,7 @@ fn native_grayscale_preserves_alpha_colors_and_field_fit_across_dpi() {
                             run.bounds.width()
                         );
                     }
-                    if let Ok(directory) = std::env::var("MANGODISK_TEXT_EVIDENCE") {
+                    if let Ok(directory) = std::env::var("STRAWBERRYDISK_TEXT_EVIDENCE") {
                         std::fs::create_dir_all(&directory).unwrap();
                         let bg = if foreground[0] < 128 {
                             [225, 238, 246]

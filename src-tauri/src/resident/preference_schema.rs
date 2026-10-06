@@ -1,6 +1,6 @@
 //! Versioned user preferences. Unknown or malformed persisted data is never overwritten.
-use mangodisk_core::system_resources::metrics::MetricId;
 use serde::{Deserialize, Serialize};
+use strawberrydisk_core::system_resources::metrics::MetricId;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

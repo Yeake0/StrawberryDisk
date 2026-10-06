@@ -1,4 +1,4 @@
-name: Monitor Original MangoDisk
+name: Monitor upstream changes
 
 on:
   schedule:
@@ -41,10 +41,10 @@ jobs:
         shell: bash
         run: |
           existing="$(gh issue list --state open --limit 100 --json number,title \
-            --jq '.[] | select(.title == "Review upstream MangoDisk updates") | .number' | head -n 1)"
+            --jq '.[] | select(.title == "Review upstream source updates") | .number' | head -n 1)"
           if [ -n "$existing" ]; then
             exit 0
           fi
           gh issue create \
-            --title 'Review upstream MangoDisk updates' \
+            --title 'Review upstream source updates' \
             --body "The original repository has new commits through $ORIGINAL_COMMIT. Run scripts/prepare-upstream-update.ps1 from a clean main branch, resolve any conflicts, run the required checks, and review the result before merging and publishing a signed release."

@@ -1,20 +1,20 @@
 {
-  "name": "mangodisk",
+  "name": "strawberrydisk",
   "private": true,
-  "version": "1.1.8",
+  "version": "1.1.9",
   "author": {
     "name": "harry0703",
     "email": "harry0703@hotmail.com",
     "url": "https://github.com/harry0703"
   },
   "license": "GPL-3.0-only",
-  "homepage": "https://mangodisk.app",
+  "homepage": "https://github.com/Yeake0/StrawberryDisk",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/harry0703/MangoDisk.git"
+    "url": "git+https://github.com/Yeake0/StrawberryDisk.git"
   },
   "bugs": {
-    "url": "https://github.com/harry0703/MangoDisk/issues"
+    "url": "https://github.com/Yeake0/StrawberryDisk/issues"
   },
   "type": "module",
   "scripts": {
@@ -41,8 +41,8 @@
     "tauri:build": "tauri build",
     "tauri:build:check": "tauri build --no-bundle",
     "tauri:build:linux": "bash scripts/build-linux-bundles.sh",
-    "cli:build": "cargo build --release -p mangodisk-cli",
-    "cli:test": "cargo test -p mangodisk-cli",
+    "cli:build": "cargo build --release -p strawberrydisk-cli",
+    "cli:test": "cargo test -p strawberrydisk-cli",
     "baseline:cleanup": "cargo run --manifest-path src-tauri/xtask/Cargo.toml --release -- --cleanup-baseline",
     "baseline:compare": "cargo run --manifest-path src-tauri/xtask/Cargo.toml --release -- --compare-cleanup-baselines",
     "benchmark:dataset": "cargo run --manifest-path src-tauri/xtask/Cargo.toml --release -- --generate-benchmark-dataset",

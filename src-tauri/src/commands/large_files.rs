@@ -1,5 +1,5 @@
-use mangodisk_core::{LargeFileScanMode, LargeFileService, LargeFilesResult};
-use mangodisk_core::{ScanExclusionOptions, ScanNameExclusion};
+use strawberrydisk_core::{LargeFileScanMode, LargeFileService, LargeFilesResult};
+use strawberrydisk_core::{ScanExclusionOptions, ScanNameExclusion};
 
 use crate::events;
 

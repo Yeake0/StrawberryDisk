@@ -25,7 +25,7 @@ impl Failure {
                     }
                 })
         });
-        let diagnostic = mangodisk_platform::diagnostics::text(error);
+        let diagnostic = strawberrydisk_platform::diagnostics::text(error);
         log::warn!(
             "resident_operation_failed stage={stage} io_kind={:?} os_code={:?} error={}",
             io.map(std::io::Error::kind),
