@@ -1,0 +1,97 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "StrawberryDisk",
+  "version": "1.1.9",
+  "identifier": "app.strawberrydisk.desktop",
+  "mainBinaryName": "StrawberryDisk",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "enableGTKAppId": true,
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost; font-src 'self' data:; img-src 'self' asset: http://asset.localhost data: blob:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'",
+      "devCsp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost ws://127.0.0.1:1420; font-src 'self' data:; img-src 'self' asset: http://asset.localhost data: blob:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'"
+    },
+    "windows": [
+      {
+        "label": "main",
+        "create": false,
+        "title": "StrawberryDisk",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 1000,
+        "minHeight": 700,
+        "center": true,
+        "visible": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": {
+          "x": 14,
+          "y": 16
+        }
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "publisher": "StrawberryDisk",
+    "homepage": "https://github.com/Yeake0/StrawberryDisk",
+    "copyright": "Copyright © 2026 StrawberryDisk contributors",
+    "license": "GPL-3.0-only",
+    "createUpdaterArtifacts": true,
+    "targets": ["nsis", "appimage"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "minimumWebview2Version": "111.0.1661.62",
+      "nsis": {
+        "displayLanguageSelector": false,
+        "headerImage": "icons/nsis/installer-header.bmp",
+        "installerIcon": "icons/icon.ico",
+        "installerHooks": "nsis/installer-hooks.nsh",
+        "installMode": "currentUser",
+        "languages": [
+          "English",
+          "French",
+          "German",
+          "Italian",
+          "Swedish",
+          "Dutch",
+          "SpanishInternational",
+          "Portuguese",
+          "PortugueseBR",
+          "Norwegian",
+          "Turkish",
+          "Japanese",
+          "SimpChinese",
+          "TradChinese",
+          "Korean",
+          "Russian"
+        ],
+        "sidebarImage": "icons/nsis/installer-sidebar.bmp",
+        "uninstallerHeaderImage": "icons/nsis/installer-header.bmp",
+        "uninstallerIcon": "icons/icon.ico"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY4N0Y3RUEyMzgzMzAwMzkKUldRNUFETTRvbjUvK0V6VVFJRlgyRTFRSndCeGVyTnhTd3VKT2dQNTk0dUNzMDZFa3JNZ3RiMXUK",
+      "endpoints": [
+        "https://github.com/Yeake0/StrawberryDisk-updates/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  }
+}

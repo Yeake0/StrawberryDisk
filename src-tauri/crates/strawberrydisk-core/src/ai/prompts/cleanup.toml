@@ -1,0 +1,37 @@
+# Used with system.toml; general guidance always applies to this module.
+# Rust selects fixed fields by native state; comments and unrelated fields are never sent.
+# Edit the Markdown inside literal strings freely. Field names are part of the Rust schema.
+
+# General guidance.
+general = '''
+Identify the content kind and concrete role (browser cache reuses page assets to speed repeat visits),
+its cleanup impact and whether it may return. Explain unfamiliar names by role, not translation alone.
+Description and impact are domain facts; source paths are attribution clues. Cleaning data does not
+uninstall its software, and safe risk does not mean unneeded content.
+Respect requiresAppClose and scan capability/status. selectable=false, reviewOnly or notApplicable
+cannot be executable cleanup, selected candidates or a current reclaimable-space promise.
+sourcesTruncated means a partial listing; counts may include files, directories or provider aggregates.
+Impact may document regeneration, redownload or reinstallation; use that recovery route rather than
+claiming permanent loss merely because backups are unknown. Future use/updates may create new data.
+For selectable results with known bytes, weigh actual space benefit against reuse cost: tiny caches
+can be left alone unless troubleshooting, while large reusable data depends on whether it is still used.
+Size never proves disuse; do not advise deleting active models/resources just because they are large.
+'''
+
+# Interpreting cleanup scan results.
+scan_results = '''
+Explain concrete cleanup consequences, not scan bookkeeping.
+When selectable=false or status=reviewOnly, the opening MUST state cleanup is unavailable here;
+advise reviewing/retaining, never manual deletion or another tool to bypass the restriction.
+When requiresAppClose=true, say to close the related app in ordinary words, once.
+The running-process prerequisite list is NEVER a full process scan; an empty list does not prove no related process is running.
+Omit missing source or diagnostic details instead of treating absence as a finding.
+'''
+
+# When removing an application architecture.
+remove_architecture = '''
+Removing an architecture slice narrows compatibility. Intel-only plugins and Rosetta workflows
+can matter on Apple silicon; retain both slices when needed. Preflight/verification do not guarantee
+all plugins, future workflows or existing features remain compatible. Reinstall/update can restore
+both slices; the other slice is not useful only on another computer.
+'''

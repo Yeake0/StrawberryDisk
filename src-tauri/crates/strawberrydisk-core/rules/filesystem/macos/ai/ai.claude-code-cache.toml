@@ -1,0 +1,36 @@
+# Claude Code keeps prompts, transcripts, plugin installations, and personal
+# configuration elsewhere. Only the documented refreshable changelog is
+# selected from its cache directory.
+id = "ai.claude-code-cache"
+schema_version = 3
+rule_version = 1
+platform = "macos"
+category = "ai"
+risk = "safe"
+default_selected = false
+recommended_selected = true
+required_stopped_processes = []
+
+[[applicability]]
+kind = "anyRootExists"
+
+[[roots]]
+template = "${home}/.claude/cache"
+
+[matcher]
+kind = "allOf"
+items = [
+  { kind = "nameEquals", values = ["changelog.md"] },
+  { kind = "maxDepth", depth = 1 },
+]
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = false
+
+[verification]
+lifecycle = "verified"
+evidence = "Claude Code documents cache/changelog.md as refreshable release notes; macOS 2.1.261 reproduced it. History, transcripts, downloads, plugins, credentials, and settings remain excluded"
+verified_at = "2026-09-26"
+verified_platform = "macos"
+references = ["https://code.claude.com/docs/en/claude-directory"]

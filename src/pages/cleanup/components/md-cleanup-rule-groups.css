@@ -1,0 +1,281 @@
+@reference "@assets/main.css";
+
+.detail-list {
+  min-height: 0;
+}
+
+.cleanup-details {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.cleanup-details.empty {
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+}
+
+.cleanup-empty-icon {
+  @apply text-primary;
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 7px;
+  border-radius: 50%;
+  background: var(--surface-primary-subtle);
+}
+
+.cleanup-details.empty strong {
+  @apply text-foreground;
+  font-size: var(--font-content-empty-title);
+  font-weight: 600;
+}
+
+.cleanup-details.empty small {
+  @apply text-muted-foreground;
+  max-width: 520px;
+  font-size: var(--font-content-body);
+  line-height: 1.625;
+}
+
+.detail-warning {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  border-bottom-width: 1px;
+  padding: 8px 16px;
+  font-size: 11px;
+}
+
+.detail-warning {
+  @apply text-warning-foreground;
+  border-color: var(--border-subtle);
+  background: var(--surface-warning-subtle);
+}
+
+.detail-list-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-anchor: none;
+  padding: 0 8px 8px;
+}
+
+.rule-card {
+  min-width: 0;
+  overflow-anchor: none;
+}
+
+.rule-card.requires-elevation .rule-summary {
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 6px;
+}
+
+.rule-card.requires-elevation :deep(.result-item-value) {
+  min-width: 118px;
+}
+
+.privileged-scan-button {
+  min-width: 104px;
+  padding-inline: 10px;
+}
+
+.privileged-scan-spinner {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+}
+
+.rule-details {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 10px 8px;
+}
+
+.rule-description {
+  @apply text-foreground;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.rule-detail-note {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 6px;
+  @apply text-muted-foreground;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.rule-detail-note svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.rule-detail-note.impact svg,
+.rule-detail-note.warning svg {
+  @apply text-warning-foreground;
+}
+
+.source-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--layout-result-row-height);
+  padding-block: 4px;
+  transition: background-color 0.16s ease;
+}
+
+.source-row.with-artwork {
+  grid-template-columns: 20px 38px minmax(0, 1fr) auto;
+}
+
+.application-list-content {
+  padding-top: 4px;
+}
+
+.application-row {
+  display: grid;
+  min-width: 0;
+  min-height: 50px;
+  grid-template-columns: 20px 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border-radius: calc(var(--radius) - 5px);
+  padding-block: 3px;
+  transition: background-color 0.16s ease;
+}
+
+.rule-card :deep(.hierarchy-items::before) {
+  width: 1px;
+  @apply bg-border/65;
+}
+
+.application-row:last-child {
+  border-bottom: 0;
+}
+
+.application-row:has(input:disabled) {
+  @apply bg-muted/35;
+  opacity: 0.72;
+}
+
+.application-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.application-primary,
+.source-primary {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.application-primary .application-main,
+.source-primary .source-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.source-actions {
+  position: absolute;
+  right: 0;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.14s ease;
+}
+
+.source-row:is(:hover, :has(:focus-visible)) .source-actions,
+.application-row:is(:hover, :has(:focus-visible)) .source-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.source-row:is(:hover, :has(:focus-visible)) .source-main,
+.application-row:is(:hover, :has(:focus-visible)) .application-main {
+  padding-right: 32px;
+}
+
+.application-main strong,
+.application-main small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.application-main strong {
+  font-size: 13px;
+}
+
+.application-main small {
+  @apply text-muted-foreground;
+  font-size: 10px;
+}
+
+.application-size {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.source-row:last-child {
+  border-bottom: 0;
+}
+
+.source-row:has(input:disabled) {
+  @apply bg-muted/35;
+  opacity: 0.72;
+}
+
+.source-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.source-main small {
+  @apply text-muted-foreground;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.source-row > strong {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.empty-detail {
+  @apply text-muted-foreground;
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.empty-detail small {
+  max-width: 360px;
+}

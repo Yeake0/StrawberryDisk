@@ -1,0 +1,38 @@
+id = "system.darwin-user-cache"
+schema_version = 3
+rule_version = 2
+platform = "macos"
+category = "system"
+risk = "safe"
+default_selected = true
+required_stopped_processes = []
+
+[[applicability]]
+kind = "anyRootExists"
+
+[[roots]]
+template = "${darwin_user_cache}"
+
+[matcher]
+kind = "allOf"
+items = [
+  { kind = "olderThan", days = 7 },
+  { kind = "not", item = { kind = "extensionIn", values = ["db", "sqlite", "sqlite3", "plist"] } },
+  # System daemon sandbox containers (com.apple.*.Sandbox, ShortcutsSandboxCache,
+  # QuickLook thumbnailcache) deny stat and enumeration even with Full Disk
+  # Access. SIP protects them from user-space deletion, so they are excluded
+  # from selection instead of being reported as cleanup failures. The Apple
+  # prefix keeps third-party containers that merely share the suffix selectable.
+  { kind = "not", item = { kind = "nameGlob", values = ["com.apple.*.Sandbox", "ShortcutsSandboxCache", "com.apple.QuickLook.thumbnailcache"] } },
+]
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = false
+
+[verification]
+lifecycle = "verified"
+evidence = "The root is the OS-resolved per-user Darwin cache; the seven-day age gate preserves recent entries, and SIP-protected sandbox containers are excluded because user-space deletion cannot stat or remove them"
+verified_at = "2026-07-18"
+verified_platform = "macos"
+references = ["https://developer.apple.com/documentation/foundation/using-the-file-system-effectively"]

@@ -1,0 +1,87 @@
+# WeCom profiles, messages, files, and mini-program data remain under its
+# sandbox container and are intentionally excluded. Only fixed CEF cache leaves
+# and the standard bundle cache are treated as rebuildable.
+id = "app.wecom-cache"
+schema_version = 3
+rule_version = 3
+platform = "macos"
+category = "application"
+risk = "safe"
+default_selected = false
+recommended_selected = true
+required_stopped_processes = ["WeCom", "WXWork", "企业微信", "WeComAgent", "wecom-agent"]
+
+[[applicability]]
+kind = "anyOf"
+items = [
+  { kind = "applicationInstalled", identifiers = ["com.tencent.WeWorkMac", "WeCom"] },
+  { kind = "anyRootExists" },
+]
+
+[[roots]]
+template = "${user_library}/Caches/com.tencent.WeWorkMac"
+
+# WeCom's CEF profile sits in its sandbox Documents directory beside account
+# and message storage. Only explicit global rendering-cache leaves are owned.
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/Cache"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/Code Cache"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/GPUCache"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/DawnCache"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/DawnGraphiteCache"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/DawnWebGPUCache"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/GrShaderCache"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/GraphiteDawnCache"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/ShaderCache"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/Shared Dictionary/cache"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/Service Worker/CacheStorage"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache/component_crx_cache"
+
+# CEF profiles use Default or a dynamic account name. Appending only fixed
+# cache suffixes keeps their cookies, history, IndexedDB, storage, and Service
+# Worker registration/script state outside the cleanup boundary.
+[[roots]]
+template = "${user_library}/Containers/com.tencent.WeWorkMac/Data/Documents/cefcache"
+kind = "childDirectories"
+child_prefixes = ["wew_"]
+child_names = ["Default"]
+suffixes = ["Cache", "Code Cache", "GPUCache", "DawnCache", "DawnGraphiteCache", "DawnWebGPUCache", "GrShaderCache", "GraphiteDawnCache", "Shared Dictionary/cache", "Service Worker/CacheStorage"]
+
+[matcher]
+kind = "all"
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = true
+
+[verification]
+lifecycle = "verified"
+evidence = "WeCom 5.0.0 verified global/account CEF caches; signed 5.0.11 verified Default caches. Real cleanup preserved profile/configuration hashes and app restart. Only fixed cache leaves are included; messages, cookies, databases and storage remain excluded"
+verified_at = "2026-09-19"
+verified_platform = "macos"
+references = [
+  "https://apps.apple.com/app/id1189898970?mt=12",
+  "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md",
+]

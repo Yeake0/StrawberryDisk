@@ -1,0 +1,59 @@
+# Used with system.toml; general guidance always applies to this module.
+# Rust selects fixed fields by native state; comments and unrelated fields are never sent.
+# Edit the Markdown inside literal strings freely. Field names are part of the Rust schema.
+
+# General guidance.
+general = '''
+Introduce the named OS feature and concrete uses, then the setting's narrower scope and tradeoffs.
+Disabling its tips is not disabling the feature. Explain unchanged functions only within the supplied
+scope; do not invent benefits, other settings or which third-party software changed it.
+recommended means a scanned difference from the target, not personalized advice. selectionKind=custom
+requires manual choice, not proof selection happened. status is scanned state; pendingTarget is an
+unapplied draft; null means no draft.
+Restore defaults is not necessarily restore the previous value. hasRecordedOriginalValue describes
+saved history, not backup policy, reversibility or whether future changes save originals; omit absent
+history unless actually restoring. Do not narrate absent drafts or scan bookkeeping.
+Respect privileges and requiresRestart only for pending/new changes: Windows true requires computer
+restart, not sign-out/app restart. macOS may need component reopening or signing in again; require full
+reboot only if explicitly described. No guaranteed speed, space savings or universal benefit.
+'''
+
+# When the target setting is active and no change is pending.
+active = '''
+Observed fact: this behavior is ALREADY active, with no pending change.
+Opening MUST say already active. Bullet 1: current purpose. Bullet 2: CURRENT tradeoff.
+Bullet 3: conditional KEEP advice. Omit all activation/restart steps and saved-value history;
+never claim no backup or irreversibility. Discuss choosing a different setting only conditionally.
+'''
+
+# When the target setting is inactive and no change is pending.
+inactive = '''
+Observed fact: the target differs from the scanned state, with no pending change.
+Opening: explain the feature's identity and this setting's scope.
+Effects are hypothetical: NEVER say "not yet selected/applied", "unchanged" or describe a draft.
+Advice: feature-related choice and reason, no selection/application steps, scan bookkeeping or
+recommendation policy.
+'''
+
+# When restoring defaults is selected but not applied.
+restore_defaults = '''
+Observed fact: restoring OS defaults is selected but NOT applied; state this in the opening.
+This draft restores defaults, not the optimization title. Exact defaults are not supplied: never name,
+guess or assume the opposite of the title, nor equate them with the user's recorded previous value.
+Bullet 1: setting's scope. Bullet 2: restoring unspecified OS defaults and relevant activation steps.
+Bullet 3: apply only if OS defaults are wanted, not advice to apply the title's optimization.
+'''
+
+# When optimization is selected but not applied.
+apply_optimization = '''
+Observed fact: the option's target is selected but NOT applied; state this in the opening.
+Native state is unchanged. Explain what applying WOULD do, not a completed change.
+'''
+
+# When the setting is unavailable.
+unavailable = '''
+This option is unavailable in the current scan.
+Do not recommend applying it here; explain the provided diagnostic without inventing a missing
+application, policy or permission cause.
+Advise leaving it unchanged here; never suggest another tool or OS settings to bypass this restriction.
+'''

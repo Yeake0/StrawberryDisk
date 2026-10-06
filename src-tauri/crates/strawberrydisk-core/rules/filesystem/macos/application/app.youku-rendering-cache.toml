@@ -1,0 +1,47 @@
+# Youku keeps offline .ykv downloads and their task list outside these
+# disposable renderer and image cache leaves.
+id = "app.youku-rendering-cache"
+schema_version = 3
+rule_version = 1
+platform = "macos"
+category = "application"
+risk = "safe"
+default_selected = false
+recommended_selected = true
+required_stopped_processes = ["优酷"]
+
+[[applicability]]
+kind = "anyOf"
+items = [
+  { kind = "applicationInstalled", identifiers = ["com.youku.mac", "优酷"] },
+  { kind = "anyRootExists" },
+]
+
+[[roots]]
+template = "${user_library}/Containers/com.youku.mac/Data/Library/Application Support/youku-app/Cache"
+
+[[roots]]
+template = "${user_library}/Containers/com.youku.mac/Data/Library/Application Support/youku-app/Code Cache"
+
+[[roots]]
+template = "${user_library}/Containers/com.youku.mac/Data/Library/Application Support/youku-app/GPUCache"
+
+[[roots]]
+template = "${user_library}/Containers/com.youku.mac/Data/local_caches/image"
+
+[[roots]]
+template = "${user_library}/Containers/com.youku.mac/Data/local_caches/v2/image"
+
+[matcher]
+kind = "all"
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = true
+
+[verification]
+lifecycle = "verified"
+evidence = "Youku 9.5.4 generated these renderer and downloaded image cache leaves independently of its offline .ykv files, download task list, cookies, IndexedDB, and local storage"
+verified_at = "2026-09-26"
+verified_platform = "macos"
+references = ["https://pd.youku.com/"]

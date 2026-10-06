@@ -1,0 +1,50 @@
+name: Monitor upstream changes
+
+on:
+  schedule:
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the private source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Compare with the original repository
+        id: upstream
+        shell: bash
+        run: |
+          git fetch https://github.com/harry0703/MangoDisk.git main
+          original_commit="$(git rev-parse FETCH_HEAD)"
+          echo "commit=$original_commit" >> "$GITHUB_OUTPUT"
+          if git merge-base --is-ancestor "$original_commit" HEAD; then
+            echo 'has_changes=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'has_changes=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      # An issue requests review; applying upstream code automatically could
+      # overwrite local behavior or skip required Windows safety validation.
+      - name: Notify about upstream changes
+        if: steps.upstream.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ORIGINAL_COMMIT: ${{ steps.upstream.outputs.commit }}
+        shell: bash
+        run: |
+          existing="$(gh issue list --state open --limit 100 --json number,title \
+            --jq '.[] | select(.title == "Review upstream source updates") | .number' | head -n 1)"
+          if [ -n "$existing" ]; then
+            exit 0
+          fi
+          gh issue create \
+            --title 'Review upstream source updates' \
+            --body "The original repository has new commits through $ORIGINAL_COMMIT. Run scripts/prepare-upstream-update.ps1 from a clean main branch, resolve any conflicts, run the required checks, and review the result before merging and publishing a signed release."

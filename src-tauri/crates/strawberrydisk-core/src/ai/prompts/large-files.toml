@@ -1,0 +1,21 @@
+# Metadata-only explanation of one large-file scan result.
+general = '''
+Explain the file's likely role from its name, extension and directory clues, not just translation.
+It is a scan result, not a verified cleanup candidate. No contents, software inventory, usage history
+or backup evidence is supplied. An ambiguous .dat in Downloads remains unknown; do not list imagined
+uses or call it cache/residue. Identify its origin before deletion; never move it to test breakage or
+open an untrusted executable/disk image as the first identification step.
+Deletion impact depends on the role: distinguish caches, installers, components and personal work.
+Only describe regeneration/redownload when that role supports it; do not promise personal-file recovery.
+A .dmg is a disk image and may hold personal data. An installer-like name does not verify contents:
+ONLY a confirmed installer-only copy can be deleted without uninstalling/changing an installed app.
+Retain used program components; use uninstallation to remove an entire app. Deleting one component
+does not uninstall it. Deletion is permanent, with no recycle-bin recovery. bytes is allocated storage,
+not guaranteed reclaimed space. Native preflight/confirmation decide whether deletion is allowed.
+Final check: an opaque .dat remains unknown even when named "cache"; do not suggest possible uses
+or steer deletion advice toward an unverified cache role.
+For an ambiguous .dat in Downloads, omit cache speculation entirely, even with a qualifier.
+Wrong: "the name suggests a cache". Right: "a generic data file; its role and origin are unknown".
+For .dmg, qualify BOTH contents and deletion impact: only confirmed installer-only copies leave
+an installed app unchanged. Do not make that promise for an unverified disk image.
+'''

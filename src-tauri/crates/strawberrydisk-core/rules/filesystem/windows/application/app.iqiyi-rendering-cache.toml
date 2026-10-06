@@ -1,0 +1,44 @@
+# iQIYI's WebView profile contains login and storage state; do not clear it.
+id = "app.iqiyi-rendering-cache"
+schema_version = 3
+rule_version = 1
+platform = "windows"
+category = "application"
+risk = "safe"
+default_selected = false
+recommended_selected = true
+required_stopped_processes = ["QyClient.exe", "QyPlayer.exe", "QyFragment.exe", "QyKernel.exe"]
+
+[[applicability]]
+kind = "anyOf"
+items = [
+  { kind = "applicationInstalled", identifiers = ["iQIYI", "IQIYI Video", "爱奇艺"] },
+  { kind = "anyRootExists" },
+]
+
+[[roots]]
+template = "${roaming_app_data}/IQIYI Video/EdgeWebView/UserData/EBWebView"
+kind = "childDirectories"
+child_names = ["Default"]
+suffixes = ["Cache", "Code Cache", "GPUCache", "DawnCache", "DawnGraphiteCache", "DawnWebGPUCache", "GrShaderCache", "GraphiteDawnCache", "Shared Dictionary/cache"]
+
+[[roots]]
+template = "${roaming_app_data}/IQIYI Video/LStyle/cache"
+
+[[roots]]
+template = "${roaming_app_data}/IQIYI Video/LStyle/qtplog"
+verified_rebuildable = true
+
+[matcher]
+kind = "all"
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = true
+
+[verification]
+lifecycle = "verified"
+evidence = "iQIYI 14.9.5.10287 generated these renderer and diagnostic cache leaves outside its .qsv offline download, catalog, settings, account state, and app assets on Windows 11"
+verified_at = "2026-09-26"
+verified_platform = "windows"
+references = ["https://www.iqiyi.com/app/pc.html"]

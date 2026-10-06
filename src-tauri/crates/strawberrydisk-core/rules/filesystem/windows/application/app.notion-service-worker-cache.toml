@@ -1,0 +1,40 @@
+# Notion's persistent offline page records remain in notion.db. This rule
+# selects only the renderer partition's Service Worker response cache; it may
+# need network access to repopulate after cleanup.
+id = "app.notion-service-worker-cache"
+schema_version = 3
+rule_version = 1
+platform = "windows"
+category = "application"
+risk = "recoverable"
+default_selected = false
+recommended_selected = true
+required_stopped_processes = ["Notion.exe"]
+
+[[applicability]]
+kind = "anyRootExists"
+
+[[roots]]
+template = "${roaming_app_data}/Notion/Partitions"
+kind = "childDirectories"
+include_all_children = true
+suffixes = ["Service Worker/CacheStorage"]
+verified_rebuildable = true
+
+[matcher]
+kind = "all"
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = true
+
+[verification]
+lifecycle = "verified"
+evidence = "Notion 7.35.1 created a Service Worker partition beside notion.db. Only response caches are selected; offline records, scripts, account data, and browser storage remain excluded. Responses may need re-download"
+verified_at = "2026-09-26"
+verified_platform = "windows"
+references = [
+  "https://www.notion.com/blog/how-we-made-notion-available-offline",
+  "https://www.notion.com/help/use-pages-offline",
+  "https://www.electronjs.org/docs/latest/api/session",
+]

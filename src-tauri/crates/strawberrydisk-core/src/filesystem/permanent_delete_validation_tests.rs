@@ -1,0 +1,597 @@
+use std::{io::Write, sync::Mutex};
+
+use super::*;
+
+fn fixture() -> tempfile::TempDir {
+    tempfile::Builder::new()
+        .prefix("strawberrydisk-delete-validation-")
+        .tempdir()
+        .expect("create a disposable deletion fixture")
+}
+
+fn staging_count(parent: &Path) -> usize {
+    fs::read_dir(parent)
+        .expect("inspect staging remnants")
+        .filter_map(Result::ok)
+        .filter(|entry| {
+            entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".strawberrydisk-delete-")
+        })
+        .count()
+}
+
+#[test]
+fn successful_deletion_removes_file_and_staging_directory() {
+    let sandbox = fixture();
+    let path = sandbox.path().join("payload.bin");
+    fs::write(&path, b"payload").unwrap();
+    let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+    delete_path_permanently(prepared, 7, 1).unwrap();
+    assert!(!path.exists());
+    assert_eq!(staging_count(sandbox.path()), 0);
+}
+
+#[test]
+fn successful_rollback_reports_the_restored_item() {
+    let sandbox = fixture();
+    let path = sandbox.path().join("directory");
+    fs::create_dir(&path).unwrap();
+    let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+    fs::write(path.join("concurrent.bin"), b"keep").unwrap();
+    let error = delete_empty_directory_permanently(prepared).unwrap_err();
+    assert!(!error.is_partial());
+    assert!(error.remaining_was_restored());
+    assert_eq!(fs::read(path.join("concurrent.bin")).unwrap(), b"keep");
+    assert_eq!(staging_count(sandbox.path()), 0);
+}
+
+struct BenchmarkLogger(Mutex<Option<std::io::BufWriter<fs::File>>>);
+
+impl log::Log for BenchmarkLogger {
+    fn enabled(&self, metadata: &log::Metadata<'_>) -> bool {
+        metadata.level() <= log::Level::Info
+    }
+
+    fn log(&self, record: &log::Record<'_>) {
+        if self.enabled(record.metadata()) {
+            if let Some(output) = self.0.lock().unwrap().as_mut() {
+                writeln!(output, "{} {}", record.level(), record.args()).unwrap();
+            }
+        }
+    }
+
+    fn flush(&self) {
+        if let Some(output) = self.0.lock().unwrap().as_mut() {
+            output.flush().unwrap();
+        }
+    }
+}
+
+static BENCHMARK_LOGGER: BenchmarkLogger = BenchmarkLogger(Mutex::new(None));
+
+/// Run alone with `--ignored --exact --nocapture --test-threads=1`.
+/// Set TEMP/TMP to a disposable volume to exercise its real filesystem driver.
+/// Fixture creation and cleanup are excluded; production info/warning logging is enabled.
+#[test]
+#[ignore = "bounded permanent-delete filesystem and logging benchmark"]
+fn benchmark_permanent_delete_filesystem() {
+    let log_path = std::env::var_os("STRAWBERRYDISK_DELETE_BENCHMARK_LOG")
+        .expect("provide a diagnostic log outside the disposable fixture");
+    *BENCHMARK_LOGGER.0.lock().unwrap() = Some(std::io::BufWriter::new(
+        fs::File::create(log_path).expect("create benchmark diagnostics"),
+    ));
+    log::set_logger(&BENCHMARK_LOGGER).expect("run the benchmark in its own test process");
+    log::set_max_level(log::LevelFilter::Info);
+
+    for run in 0..6 {
+        for (workload, operations, file_count, file_bytes, retain_root) in [
+            ("zero_byte_file", 100, 1, 0, false),
+            ("small_file", 100, 1, 4_096, false),
+            ("large_file", 8, 1, 1_048_576, false),
+            ("directory_64", 8, 64, 32, false),
+            ("directory_600", 2, 600, 32, false),
+            ("retain_directory_64", 8, 64, 32, true),
+        ] {
+            let sandbox = fixture();
+            let payload = vec![42_u8; file_bytes];
+            let mut paths = Vec::new();
+            for index in 0..operations {
+                let path = sandbox.path().join(format!("item-{index:04}"));
+                if file_count == 1 {
+                    fs::write(&path, &payload).unwrap();
+                } else {
+                    fs::create_dir(&path).unwrap();
+                    if retain_root {
+                        fs::create_dir(path.join("preexisting-empty")).unwrap();
+                    }
+                    for child in 0..file_count {
+                        fs::write(path.join(format!("{child:04}.bin")), &payload).unwrap();
+                    }
+                }
+                paths.push(path);
+            }
+            let mut elapsed_us = 0_u128;
+            let mut completed = 0;
+            let mut failed = 0;
+            let mut restored = 0;
+            for path in &paths {
+                let started = Instant::now();
+                let result = prepare_path_for_permanent_delete(path).and_then(|prepared| {
+                    if retain_root {
+                        delete_directory_contents_permanently_with_cancellation(prepared, &|| false)
+                            .map(|_| ())
+                    } else {
+                        delete_path_permanently(
+                            prepared,
+                            (file_count * file_bytes) as u64,
+                            file_count as u64,
+                        )
+                    }
+                });
+                elapsed_us += started.elapsed().as_micros();
+                match result {
+                    Ok(_) => {
+                        completed += 1;
+                        if retain_root {
+                            assert_eq!(fs::read_dir(path).unwrap().count(), 1);
+                            assert_eq!(
+                                fs::read_dir(path.join("preexisting-empty"))
+                                    .unwrap()
+                                    .count(),
+                                0
+                            );
+                        } else {
+                            assert!(!path.exists());
+                        }
+                    }
+                    Err(_) => {
+                        failed += 1;
+                        if path.exists() {
+                            restored += 1;
+                            let content = if file_count == 1 {
+                                path.clone()
+                            } else {
+                                path.join("0000.bin")
+                            };
+                            assert_eq!(fs::read(content).unwrap(), payload);
+                        }
+                    }
+                }
+            }
+            log::Log::flush(&BENCHMARK_LOGGER);
+            println!(
+                "delete_benchmark {}",
+                serde_json::json!({
+                    "run": run, "warmup": run == 0, "workload": workload,
+                    "operations": operations, "elapsed_us": elapsed_us,
+                    "completed": completed, "failed": failed, "visible_after_failure": restored,
+                    "staging_remnants": staging_count(sandbox.path())
+                })
+            );
+        }
+    }
+    log::Log::flush(&BENCHMARK_LOGGER);
+    *BENCHMARK_LOGGER.0.lock().unwrap() = None;
+}
+
+#[test]
+fn replacement_with_matching_size_and_timestamp_is_preserved() {
+    let sandbox = fixture();
+    let path = sandbox.path().join("candidate.bin");
+    let original = sandbox.path().join("original.bin");
+    fs::write(&path, b"original").unwrap();
+    let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+    let modified = prepared.metadata().modified().unwrap();
+    fs::rename(&path, &original).unwrap();
+    fs::write(&path, b"replaced").unwrap();
+    fs::File::options()
+        .write(true)
+        .open(&path)
+        .unwrap()
+        .set_times(fs::FileTimes::new().set_modified(modified))
+        .unwrap();
+    assert_eq!(
+        fs::metadata(&path).unwrap().len(),
+        prepared.metadata().len()
+    );
+    assert_eq!(
+        modified_ms(&fs::metadata(&path).unwrap()),
+        modified_ms(prepared.metadata())
+    );
+    let error = delete_path_permanently(prepared, 8, 1).unwrap_err();
+    assert_eq!(error.reason(), Some(CoreErrorReason::ItemChanged));
+    assert_eq!(fs::read(&path).unwrap(), b"replaced");
+    assert_eq!(fs::read(&original).unwrap(), b"original");
+    assert_eq!(staging_count(sandbox.path()), 0);
+}
+
+#[test]
+fn nested_unicode_directory_deletion_removes_only_the_target() {
+    let sandbox = fixture();
+    let mut parent = sandbox.path().to_path_buf();
+    for index in 0..10 {
+        parent = parent.join(format!("nested-directory-segment-{index:03}"));
+    }
+    fs::create_dir_all(&parent).unwrap();
+    let path = parent.join("\u{8d44}\u{6e90}-\u{1f642}");
+    fs::create_dir(&path).unwrap();
+    fs::write(path.join("\u{96f6}\u{5b57}\u{8282}.txt"), b"").unwrap();
+    fs::write(parent.join("keep.bin"), b"keep").unwrap();
+    let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+    let outcome =
+        delete_directory_tree_permanently_with_cancellation(prepared, 0, 1, &|| false).unwrap();
+    assert_eq!(outcome.affected_item_count(), 1);
+    assert_eq!(outcome.released_bytes(), 0);
+    assert!(!path.exists());
+    assert_eq!(fs::read(parent.join("keep.bin")).unwrap(), b"keep");
+    assert_eq!(staging_count(&parent), 0);
+}
+
+#[test]
+fn staged_identity_query_failure_is_not_reported_as_replacement() {
+    let sandbox = fixture();
+    let path = sandbox.path().join("original.bin");
+    fs::write(&path, b"keep").unwrap();
+    let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+    let error = verify_staged_identity(&prepared, &sandbox.path().join("missing"), "before_remove")
+        .unwrap_err();
+    assert_eq!(error.native_code, Some(2));
+    assert_ne!(error.reason(), Some(CoreErrorReason::ItemChanged));
+    assert!(!error.to_string().contains("replaced"));
+    assert_eq!(fs::read(&path).unwrap(), b"keep");
+}
+
+#[test]
+fn staged_identity_matches_the_pinned_object_after_cross_directory_move() {
+    let sandbox = fixture();
+    for directory in [false, true] {
+        let path = sandbox.path().join("original");
+        if directory {
+            fs::create_dir(&path).unwrap();
+        } else {
+            fs::write(&path, b"keep").unwrap();
+        }
+        let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+        let captured = prepared.identity();
+        let stage = create_staging_directory(sandbox.path()).unwrap();
+        let staged = stage.join("target");
+        fs::rename(&path, &staged).unwrap();
+        verify_staged_identity(&prepared, &staged, "before_remove").unwrap();
+        assert_eq!(
+            prepared.identity(),
+            captured,
+            "scan authorization must keep its original capture"
+        );
+        fs::rename(&staged, &path).unwrap();
+        drop(prepared);
+        if directory {
+            fs::remove_dir(&path).unwrap();
+        } else {
+            fs::remove_file(&path).unwrap();
+        }
+        fs::remove_dir(stage).unwrap();
+    }
+}
+
+#[test]
+fn cancellation_before_removal_restores_without_reporting_partial_deletion() {
+    let sandbox = fixture();
+    let path = sandbox.path().join("directory");
+    fs::create_dir(&path).unwrap();
+    fs::write(path.join("zero.bin"), b"").unwrap();
+    let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+    let error =
+        delete_directory_tree_permanently_with_cancellation(prepared, 0, 1, &|| true).unwrap_err();
+    assert!(!error.is_partial());
+    assert!(error.remaining_was_restored());
+    assert_eq!(error.affected_item_count(), 0);
+    assert!(path.join("zero.bin").exists());
+    assert_eq!(staging_count(sandbox.path()), 0);
+}
+
+#[cfg(windows)]
+#[test]
+fn readonly_file_deletion_reports_its_actual_outcome() {
+    let sandbox = fixture();
+    let path = sandbox.path().join("readonly.bin");
+    fs::write(&path, b"keep").unwrap();
+    let original_permissions = fs::metadata(&path).unwrap().permissions();
+    let mut permissions = original_permissions.clone();
+    permissions.set_readonly(true);
+    fs::set_permissions(&path, permissions.clone()).unwrap();
+    let result = prepare_path_for_permanent_delete(&path)
+        .and_then(|prepared| delete_path_permanently(prepared, 4, 1));
+    match result {
+        Ok(()) => assert!(!path.exists()),
+        Err(error) => {
+            fs::set_permissions(&path, original_permissions).unwrap();
+            assert_eq!(error.native_code, Some(5));
+            assert_eq!(error.reason(), Some(CoreErrorReason::AccessDeniedOrBusy));
+            assert_eq!(fs::read(&path).unwrap(), b"keep");
+        }
+    }
+    assert_eq!(staging_count(sandbox.path()), 0);
+}
+
+#[cfg(windows)]
+#[test]
+fn locked_child_failure_restores_directory_and_preserves_native_error() {
+    use std::os::windows::fs::OpenOptionsExt;
+    let sandbox = fixture();
+    let path = sandbox.path().join("directory");
+    fs::create_dir(&path).unwrap();
+    let child = path.join("locked.bin");
+    fs::write(&child, b"keep").unwrap();
+    let locked = fs::OpenOptions::new()
+        .read(true)
+        .share_mode(0)
+        .open(&child)
+        .unwrap();
+    let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+    let error = delete_path_permanently(prepared, 4, 1).unwrap_err();
+    assert!(matches!(error.native_code, Some(5 | 32)));
+    assert!(matches!(
+        error.reason(),
+        Some(CoreErrorReason::ResourceBusy | CoreErrorReason::AccessDeniedOrBusy)
+    ));
+    assert!(path.exists());
+    drop(locked);
+    assert_eq!(fs::read(&child).unwrap(), b"keep");
+    assert_eq!(staging_count(sandbox.path()), 0);
+}
+
+fn staged_fixture_target(parent: &Path) -> PathBuf {
+    fs::read_dir(parent)
+        .unwrap()
+        .filter_map(Result::ok)
+        .find(|entry| {
+            entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".strawberrydisk-delete-")
+        })
+        .expect("the cancellation callback runs after atomic staging")
+        .path()
+        .join("target")
+}
+
+#[test]
+fn cancellation_after_zero_byte_removal_restores_accurate_partial_counts() {
+    let sandbox = fixture();
+    let path = sandbox.path().join("directory");
+    fs::create_dir(&path).unwrap();
+    for index in 0..3 {
+        fs::write(path.join(format!("{index}.bin")), b"").unwrap();
+    }
+    let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+    let error = delete_directory_tree_permanently_with_cancellation(prepared, 0, 3, &|| {
+        fs::read_dir(staged_fixture_target(sandbox.path()))
+            .unwrap()
+            .count()
+            < 3
+    })
+    .unwrap_err();
+    assert!(error.is_partial());
+    assert!(error.remaining_was_restored());
+    assert_eq!(error.released_bytes(), 0);
+    assert_eq!(error.affected_item_count(), 1);
+    assert_eq!(fs::read_dir(&path).unwrap().count(), 2);
+    assert_eq!(staging_count(sandbox.path()), 0);
+}
+
+#[test]
+fn recovery_conflict_preserves_new_path_and_staged_remainder() {
+    let sandbox = fixture();
+    let path = sandbox.path().join("directory");
+    fs::create_dir(&path).unwrap();
+    fs::write(path.join("original.bin"), b"original").unwrap();
+    let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+    let error = delete_directory_tree_permanently_with_cancellation(prepared, 8, 1, &|| {
+        fs::create_dir(&path).unwrap();
+        fs::write(path.join("replacement.bin"), b"replaced").unwrap();
+        true
+    })
+    .unwrap_err();
+    assert!(error.is_partial());
+    assert!(!error.remaining_was_restored());
+    assert_eq!(fs::read(path.join("replacement.bin")).unwrap(), b"replaced");
+    assert_eq!(
+        fs::read(staged_fixture_target(sandbox.path()).join("original.bin")).unwrap(),
+        b"original"
+    );
+}
+
+#[test]
+fn recovery_rejects_a_replacement_in_staging() {
+    let sandbox = fixture();
+    let path = sandbox.path().join("directory");
+    let moved = sandbox.path().join("moved-original");
+    fs::create_dir(&path).unwrap();
+    fs::write(path.join("original.bin"), b"original").unwrap();
+    let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+    let error = delete_directory_tree_permanently_with_cancellation(prepared, 8, 1, &|| {
+        let staged = staged_fixture_target(sandbox.path());
+        fs::rename(&staged, &moved).unwrap();
+        fs::create_dir(&staged).unwrap();
+        fs::write(staged.join("replacement.bin"), b"replaced").unwrap();
+        true
+    })
+    .unwrap_err();
+    assert_eq!(error.reason(), Some(CoreErrorReason::ItemChanged));
+    assert!(error.is_partial());
+    assert!(!error.remaining_was_restored());
+    assert_eq!(error.observed_or_estimated_files(), Some(0));
+    assert!(!path.exists());
+    assert_eq!(fs::read(moved.join("original.bin")).unwrap(), b"original");
+    assert_eq!(
+        fs::read(staged_fixture_target(sandbox.path()).join("replacement.bin")).unwrap(),
+        b"replaced"
+    );
+}
+
+#[cfg(windows)]
+#[test]
+#[ignore = "real NTFS ACL denial; run with TEMP/TMP on NTFS"]
+fn ntfs_access_denial_preserves_the_target() {
+    use std::process::Command;
+    struct DeniedFixture(PathBuf);
+    impl Drop for DeniedFixture {
+        fn drop(&mut self) {
+            let result = Command::new("icacls")
+                .arg(&self.0)
+                .args(["/remove:d", "*S-1-1-0"])
+                .output();
+            assert!(
+                result.is_ok_and(|output| output.status.success()),
+                "restore the disposable fixture ACL"
+            );
+        }
+    }
+    let sandbox = fixture();
+    let path = sandbox.path().join("denied.bin");
+    fs::write(&path, b"keep").unwrap();
+    let output = Command::new("icacls")
+        .arg(&path)
+        .args(["/deny", "*S-1-1-0:(D)"])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "deny deletion only on the disposable file"
+    );
+    let file_guard = DeniedFixture(path.clone());
+    let output = Command::new("icacls")
+        .arg(sandbox.path())
+        .args(["/deny", "*S-1-1-0:(DC)"])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "deny delete-child only on the disposable parent"
+    );
+    let parent_guard = DeniedFixture(sandbox.path().to_path_buf());
+    let result = prepare_path_for_permanent_delete(&path)
+        .and_then(|prepared| delete_path_permanently(prepared, 4, 1));
+    drop(parent_guard);
+    drop(file_guard);
+    let error = result.expect_err("an explicit deletion ACL denial must stop deletion");
+    assert_eq!(error.native_code, Some(5));
+    assert_eq!(error.reason(), Some(CoreErrorReason::AccessDeniedOrBusy));
+    assert_eq!(fs::read(&path).unwrap(), b"keep");
+    assert_eq!(staging_count(sandbox.path()), 0);
+}
+
+#[test]
+#[ignore = "production failure diagnostics; run alone in its own process"]
+fn validate_permanent_delete_failure_diagnostics() {
+    let log_path = PathBuf::from(std::env::var_os("STRAWBERRYDISK_DELETE_BENCHMARK_LOG").unwrap());
+    *BENCHMARK_LOGGER.0.lock().unwrap() = Some(std::io::BufWriter::new(
+        fs::File::create(&log_path).unwrap(),
+    ));
+    log::set_logger(&BENCHMARK_LOGGER).unwrap();
+    log::set_max_level(log::LevelFilter::Info);
+    replacement_with_matching_size_and_timestamp_is_preserved();
+    staged_identity_query_failure_is_not_reported_as_replacement();
+    recovery_conflict_preserves_new_path_and_staged_remainder();
+    recovery_rejects_a_replacement_in_staging();
+    #[cfg(windows)]
+    locked_child_failure_restores_directory_and_preserves_native_error();
+    log::Log::flush(&BENCHMARK_LOGGER);
+    let diagnostic = fs::read_to_string(log_path).unwrap();
+    assert!(diagnostic.contains("permanent_delete_identity_mismatch"));
+    assert!(diagnostic.contains("pinned_id=") && diagnostic.contains("staged_id="));
+    assert!(diagnostic.contains("identity_source=staged_path native_code=Some(2)"));
+    assert!(diagnostic.contains("stage=restore outcome=completed remaining_restored=true"));
+    assert!(diagnostic.contains("permanent_delete_rollback_failed"));
+    assert!(diagnostic.contains("permanent_delete_recovery_blocked"));
+    assert!(diagnostic.contains("outcome=failed partial=false"));
+    assert!(
+        !diagnostic.contains("original.bin\" content=")
+            && !diagnostic.contains("replaced content=")
+    );
+    #[cfg(windows)]
+    assert!(
+        diagnostic.contains("native_code=Some(32)") || diagnostic.contains("native_code=Some(5)")
+    );
+    *BENCHMARK_LOGGER.0.lock().unwrap() = None;
+}
+
+/// Isolates identity-query overhead from rename, unlink, indexing, and fixture creation.
+/// Alternate both checks on the same staged object to reduce filesystem-cache bias.
+#[test]
+#[ignore = "paired cached-versus-live identity query benchmark"]
+fn benchmark_staged_identity_queries() {
+    let sandbox = fixture();
+    let path = sandbox.path().join("payload.bin");
+    fs::write(&path, b"payload").unwrap();
+    let prepared = prepare_path_for_permanent_delete(&path).unwrap();
+    let staging = create_staging_directory(sandbox.path()).unwrap();
+    let staged = staging.join("target");
+    fs::rename(&path, &staged).unwrap();
+    for run in 0..11 {
+        for live in if run % 2 == 0 {
+            [false, true]
+        } else {
+            [true, false]
+        } {
+            let started = Instant::now();
+            let mut matched = 0;
+            for _ in 0..1_000 {
+                matched += usize::from(if live {
+                    verify_staged_identity(&prepared, &staged, "before_remove").is_ok()
+                } else {
+                    cached_staged_identity_matches(&prepared, &staged)
+                });
+            }
+            let elapsed_us = started.elapsed().as_micros();
+            if live {
+                assert_eq!(matched, 1_000);
+            }
+            println!(
+                "identity_benchmark {}",
+                serde_json::json!({
+                    "run": run, "warmup": run == 0, "live": live,
+                    "queries": 1_000, "matched": matched, "elapsed_us": elapsed_us
+                })
+            );
+        }
+    }
+}
+
+// Keep the pre-fix query sequence explicit so later production optimizations
+// cannot silently change the benchmark's cached-identity control.
+fn cached_staged_identity_matches(target: &PreparedPermanentDelete, staged: &Path) -> bool {
+    #[cfg(windows)]
+    {
+        let handle = open_identity_handle(staged).unwrap();
+        let metadata = handle.metadata().unwrap();
+        !current_platform().is_link_like(&metadata)
+            && handle_identity(&handle).is_ok_and(|identity| identity == target.identity)
+    }
+    #[cfg(unix)]
+    physical_path_identity(staged).is_ok_and(|identity| identity == target.identity)
+}
+
+#[cfg(windows)]
+#[test]
+#[ignore = "native reparse-point fixture; run on NTFS with a regular desktop token"]
+fn ntfs_native_identity_query_rejects_junction() {
+    let sandbox = fixture();
+    let real = sandbox.path().join("real");
+    let junction = sandbox.path().join("junction");
+    fs::create_dir(&real).unwrap();
+    fs::write(real.join("keep.bin"), b"keep").unwrap();
+    let output = std::process::Command::new("cmd.exe")
+        .args(["/C", "mklink", "/J"])
+        .arg(&junction)
+        .arg(&real)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "create a disposable NTFS junction");
+    let error = physical_path_identity(&junction).unwrap_err();
+    assert!(error.to_string().contains("link or reparse point"));
+    assert_eq!(fs::read(real.join("keep.bin")).unwrap(), b"keep");
+    fs::remove_dir(junction).unwrap();
+}

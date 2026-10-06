@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "memory-settings-capability",
+  "description": "Memory release settings, appearance, events and window lifecycle",
+  "windows": ["memory-settings"],
+  "permissions": ["core:default", "core:window:allow-close", "core:window:allow-show", "core:window:allow-set-focus", "log:allow-log", "os:allow-platform", "store:default"]
+}

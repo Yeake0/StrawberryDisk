@@ -1,0 +1,196 @@
+/* Both exclusion editors share one interaction contract inside the parent dialog. */
+.scan-exclusions :is(.exclusion-toolbar, .name-toolbar) {
+  display: flex;
+  flex: none;
+  min-height: 30px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.scan-exclusions :is(.exclusion-toolbar, .name-toolbar) p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: var(--font-content-meta);
+}
+
+.scan-exclusions .exclusion-add-button {
+  flex: none;
+  height: 30px;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  box-shadow: none;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.scan-exclusions :is(.exclusion-drop-zone, .name-list) {
+  min-height: 0;
+  flex: 1;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.scan-exclusions :is(.exclusion-drop-zone, .name-list).empty {
+  border-style: dashed;
+}
+
+.scan-exclusions :is(.exclusion-list, .name-list) {
+  overflow-y: auto;
+}
+
+.scan-exclusions :is(.exclusion-row, .name-row) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 10px 14px;
+  transition: background-color 150ms ease;
+}
+
+.scan-exclusions :is(.exclusion-row, .name-row) + :is(.exclusion-row, .name-row) {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.scan-exclusions :is(.exclusion-row, .name-row):focus-within {
+  background: var(--surface-muted-subtle);
+}
+
+.scan-exclusions .exclusion-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.scan-exclusions .exclusion-row-actions .icon-action {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  transition:
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.scan-exclusions .exclusion-row-actions .icon-action[aria-disabled='true'] {
+  opacity: 0.45;
+}
+
+.scan-exclusions .exclusion-row-actions .icon-action:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.scan-exclusions :is(.exclusion-path, .name-value) {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: var(--font-content-body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scan-exclusions :is(.exclusion-scopes, .name-scopes) {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
+.scan-exclusions .exclusion-scope-item {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.scan-exclusions :is(.exclusion-scope, .name-scopes label) {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted-foreground);
+  font-size: var(--font-content-meta);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.scan-exclusions :is(.exclusion-scope, .name-scopes label):has(button:disabled) {
+  cursor: not-allowed;
+}
+
+.scan-exclusions :is(.exclusion-empty-action, .name-empty) {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  cursor: pointer;
+  border-radius: inherit;
+  color: var(--muted-foreground);
+  text-align: center;
+  transition: background-color 150ms ease;
+}
+
+.scan-exclusions :is(.exclusion-empty-action, .name-empty):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -3px;
+}
+
+.scan-exclusions :is(.exclusion-empty-action, .name-empty):disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.scan-exclusions :is(.exclusion-empty-action, .name-empty) strong {
+  color: var(--primary);
+  font-size: var(--font-content-body);
+  font-weight: 500;
+}
+
+/* Semantic surfaces also work on WebKit versions without color-mix(). */
+@media (hover: hover) {
+  .scan-exclusions .exclusion-add-button:hover:not(:disabled) {
+    border-color: var(--border-subtle);
+    background: var(--surface-muted-subtle);
+    color: var(--foreground);
+  }
+
+  .scan-exclusions :is(.exclusion-row, .name-row):hover {
+    background: var(--surface-muted-subtle);
+  }
+
+  .scan-exclusions .exclusion-row-actions .icon-action:not([aria-disabled='true']):hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  .scan-exclusions .exclusion-row-actions .icon-action.destructive:not([aria-disabled='true']):hover {
+    background: var(--surface-destructive-subtle);
+    color: var(--destructive);
+  }
+
+  .scan-exclusions :is(.exclusion-empty-action, .name-empty):hover:not(:disabled) {
+    background: var(--surface-primary-subtle);
+  }
+}

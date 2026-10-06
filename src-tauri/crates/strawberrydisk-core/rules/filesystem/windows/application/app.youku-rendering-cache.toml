@@ -1,0 +1,55 @@
+# Downloaded .ykv videos and data.json are deliberately outside these leaves.
+id = "app.youku-rendering-cache"
+schema_version = 3
+rule_version = 1
+platform = "windows"
+category = "application"
+risk = "safe"
+default_selected = false
+recommended_selected = true
+required_stopped_processes = ["YOUKU.exe", "YoukuNplayer.exe"]
+
+[[applicability]]
+kind = "anyOf"
+items = [
+  { kind = "applicationInstalled", identifiers = ["Youku", "优酷"] },
+  { kind = "anyRootExists" },
+]
+
+[[roots]]
+template = "${roaming_app_data}/youku-app-arm/Cache"
+
+[[roots]]
+template = "${roaming_app_data}/youku-app-arm/Code Cache"
+
+[[roots]]
+template = "${roaming_app_data}/youku-app-arm/GPUCache"
+
+[[roots]]
+template = "${roaming_app_data}/youku-app-arm/DawnGraphiteCache"
+
+[[roots]]
+template = "${roaming_app_data}/youku-app-arm/DawnWebGPUCache"
+
+[[roots]]
+template = "${roaming_app_data}/youku-app-arm/local_caches/image"
+
+[[roots]]
+template = "${roaming_app_data}/youku-app-arm/local_caches/v2/image"
+
+[[roots]]
+template = "${roaming_app_data}/youku-app-arm/logs"
+
+[matcher]
+kind = "all"
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = true
+
+[verification]
+lifecycle = "verified"
+evidence = "Youku 9.4.72.1001 created Chromium and thumbnail caches in its roaming profile while the .ykv download and task catalog remained in separate paths on Windows 11"
+verified_at = "2026-09-26"
+verified_platform = "windows"
+references = ["https://pd.youku.com/"]
