@@ -5,7 +5,7 @@
 <p align="center">Limpeza de disco, análise de armazenamento e proteção da privacidade para <b>macOS</b>, <b>Windows</b> e <b>Linux</b></p>
 
 <p align="center">
-  Português (Brasil) · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.ru.md">Русский</a>
+  Português (Brasil) · <a href="README.en.md">English</a>
 </p>
 
 <p align="center">
