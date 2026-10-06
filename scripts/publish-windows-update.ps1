@@ -82,7 +82,16 @@ git archive --format=zip --output=$sourceArchivePath $localCommit
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $sourceArchivePath -PathType Leaf)) {
     throw 'Could not archive the exact source commit for this release.'
 }
-$manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $manifestPath -Encoding utf8
+$manifestJson = $manifest | ConvertTo-Json -Depth 5
+[System.IO.File]::WriteAllText(
+    $manifestPath,
+    $manifestJson + [Environment]::NewLine,
+    [System.Text.UTF8Encoding]::new($false)
+)
+$manifestBytes = [System.IO.File]::ReadAllBytes($manifestPath)
+if ($manifestBytes.Length -eq 0 -or $manifestBytes[0] -ne [byte][char]'{') {
+    throw 'The update manifest must be UTF-8 JSON without a byte order mark.'
+}
 @"
 $ReleaseNotes
 
