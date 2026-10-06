@@ -296,6 +296,9 @@
     "authorizationPrompt": "StrawberryDisk 需要管理员权限才能执行此项系统维护",
     "rescan": "重新检查",
     "filterCategory": "筛选维护类别",
+    "searchPlaceholder": "搜索维护任务",
+    "searchEmpty": "没有匹配的维护任务",
+    "searchEmptyDescription": "请尝试其他名称或描述",
     "executeOne": "执行",
     "executingOne": "执行中",
     "retryOne": "重试",
@@ -493,6 +496,9 @@
     "rescan": "重新检查",
     "restorePrevious": "恢复优化前设置",
     "filterCategory": "筛选优化类别",
+    "searchPlaceholder": "搜索优化设置",
+    "searchEmpty": "没有匹配的设置",
+    "searchEmptyDescription": "请尝试其他名称或描述",
     "pendingEmpty": {
       "title": "没有待应用更改",
       "description": "选择推荐方案或调整设置开关后，更改会显示在这里"

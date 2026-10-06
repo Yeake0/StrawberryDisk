@@ -296,6 +296,9 @@
     "authorizationPrompt": "StrawberryDisk needs administrator permission to run this maintenance task",
     "rescan": "Check Again",
     "filterCategory": "Filter maintenance categories",
+    "searchPlaceholder": "Search maintenance tasks",
+    "searchEmpty": "No matching maintenance tasks",
+    "searchEmptyDescription": "Try another name or description",
     "executeOne": "Run",
     "executingOne": "Running",
     "retryOne": "Retry",
@@ -493,6 +496,9 @@
     "rescan": "Check Again",
     "restorePrevious": "Restore Previous Settings",
     "filterCategory": "Filter optimization categories",
+    "searchPlaceholder": "Search optimization settings",
+    "searchEmpty": "No matching settings",
+    "searchEmptyDescription": "Try another name or description",
     "pendingEmpty": {
       "title": "No pending changes",
       "description": "Choose a preset or adjust switches to collect changes here"

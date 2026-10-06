@@ -296,6 +296,9 @@
     "authorizationPrompt": "このメンテナンスを実行するには、StrawberryDisk に管理者権限が必要です",
     "rescan": "再確認",
     "filterCategory": "メンテナンスのカテゴリを絞り込む",
+    "searchPlaceholder": "保守を検索",
+    "searchEmpty": "結果なし",
+    "searchEmptyDescription": "別の語句で検索",
     "executeOne": "実行",
     "executingOne": "実行中",
     "retryOne": "再試行",
@@ -493,6 +496,9 @@
     "rescan": "再確認",
     "restorePrevious": "最適化前の設定に戻す",
     "filterCategory": "最適化カテゴリを絞り込む",
+    "searchPlaceholder": "設定を検索",
+    "searchEmpty": "結果なし",
+    "searchEmptyDescription": "別の語句で検索",
     "pendingEmpty": {
       "title": "適用待ちの変更はありません",
       "description": "プリセットを選ぶかスイッチを調整すると、変更がここに表示されます"

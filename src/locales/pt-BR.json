@@ -296,6 +296,9 @@
     "authorizationPrompt": "O StrawberryDisk precisa de permissão de administrador para executar esta tarefa de manutenção",
     "rescan": "Verificar Novamente",
     "filterCategory": "Filtrar categorias de manutenção",
+    "searchPlaceholder": "Pesquisar tarefas de manutenção",
+    "searchEmpty": "Nenhuma tarefa de manutenção encontrada",
+    "searchEmptyDescription": "Tente outro nome ou descrição",
     "executeOne": "Executar",
     "executingOne": "Executando",
     "retryOne": "Tentar novamente",
@@ -493,6 +496,9 @@
     "rescan": "Verificar novamente",
     "restorePrevious": "Restaurar configurações anteriores",
     "filterCategory": "Categorias de otimização de filtros",
+    "searchPlaceholder": "Pesquisar configurações de otimização",
+    "searchEmpty": "Nenhuma configuração encontrada",
+    "searchEmptyDescription": "Tente outro nome ou descrição",
     "pendingEmpty": {
       "title": "Nenhuma alteração pendente",
       "description": "Escolha um preset ou ajuste os interruptores para coletar mudanças aqui"

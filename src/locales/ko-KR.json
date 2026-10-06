@@ -296,6 +296,9 @@
     "authorizationPrompt": "이 유지 관리 작업을 실행하려면 StrawberryDisk에 관리자 권한이 필요합니다",
     "rescan": "다시 확인",
     "filterCategory": "유지 관리 카테고리 필터",
+    "searchPlaceholder": "유지 관리 항목 검색",
+    "searchEmpty": "일치하는 유지 관리 항목이 없습니다",
+    "searchEmptyDescription": "다른 이름이나 설명으로 검색하세요",
     "executeOne": "실행",
     "executingOne": "실행 중",
     "retryOne": "다시 시도",
@@ -493,6 +496,9 @@
     "rescan": "다시 확인",
     "restorePrevious": "이전 설정 복원",
     "filterCategory": "최적화 카테고리 필터",
+    "searchPlaceholder": "최적화 설정 검색",
+    "searchEmpty": "일치하는 설정이 없습니다",
+    "searchEmptyDescription": "다른 이름이나 설명으로 검색하세요",
     "pendingEmpty": {
       "title": "대기 중인 변경 없음",
       "description": "프리셋을 선택하거나 스위치를 조정하면 변경 사항이 여기에 모입니다"

@@ -17,6 +17,7 @@ import MdAiWorkspace from '@/layouts/components/md-ai-workspace.vue';
 import { useAiStore } from '@/stores/ai-store';
 import MdPageShell from '@/components/custom/md-page-shell.vue';
 import MdResultFilterToolbar from '@/components/custom/md-result-filter-toolbar.vue';
+import MdResultSearch from '@/components/custom/md-result-search.vue';
 import MdResultWorkspace from '@/components/custom/md-result-workspace.vue';
 import MdStatusBadge from '@/components/custom/md-status-badge.vue';
 import MdSwitch from '@/components/custom/md-switch.vue';
@@ -47,6 +48,7 @@ const executionRequested = ref(false);
 type OptimizationCategoryFilter = 'pending' | 'all' | SystemSettingCategory;
 
 const activeCategory = ref<OptimizationCategoryFilter>('all');
+const query = ref('');
 const optimizationScroll = ref<InstanceType<typeof MdCatalogList> | null>(null);
 const riskDialogOpen = ref(false);
 const draftNoticeShown = ref(false);
@@ -80,9 +82,16 @@ const visibleItems = computed(() =>
     ) {
       return false;
     }
-    return true;
+    const search = query.value.trim().toLocaleLowerCase(locale.value);
+    return (
+      !search ||
+      [itemMessage(item, 'name'), itemMessage(item, 'description')].some(value =>
+        value.toLocaleLowerCase(locale.value).includes(search)
+      )
+    );
   })
 );
+watch(query, () => optimizationScroll.value?.scrollTo({ top: 0 }));
 const categoryOptions = computed(() => [
   {
     value: 'pending',
@@ -335,15 +344,22 @@ watch(
             :accessibility-label="t('systemOptimization.filterCategory')"
             @update:model-value="updateCategory"
           />
+          <template #aside>
+            <MdResultSearch v-model="query" :placeholder="t('systemOptimization.searchPlaceholder')" />
+          </template>
         </MdResultFilterToolbar>
       </template>
 
       <MdCatalogList ref="optimizationScroll">
         <MdEmptyState
           v-if="!visibleItems.length"
-          :icon-name="ICON_NAMES.systemOptimization"
-          :title="t('systemOptimization.pendingEmpty.title')"
-          :description="t('systemOptimization.pendingEmpty.description')"
+          :icon-name="query.trim() ? ICON_NAMES.search : ICON_NAMES.systemOptimization"
+          :title="query.trim() ? t('systemOptimization.searchEmpty') : t('systemOptimization.pendingEmpty.title')"
+          :description="
+            query.trim()
+              ? t('systemOptimization.searchEmptyDescription')
+              : t('systemOptimization.pendingEmpty.description')
+          "
           compact
         />
         <section v-else>

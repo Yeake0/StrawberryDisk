@@ -17,6 +17,7 @@ import MdAiWorkspace from '@/layouts/components/md-ai-workspace.vue';
 import { useAiStore } from '@/stores/ai-store';
 import MdPageShell from '@/components/custom/md-page-shell.vue';
 import MdResultFilterToolbar from '@/components/custom/md-result-filter-toolbar.vue';
+import MdResultSearch from '@/components/custom/md-result-search.vue';
 import MdResultWorkspace from '@/components/custom/md-result-workspace.vue';
 import MdSpinner from '@/components/custom/md-spinner.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
@@ -36,6 +37,7 @@ const store = useSystemMaintenanceStore();
 type MaintenanceFilter = 'all' | 'recommended' | SystemMaintenanceCategory;
 
 const activeCategory = ref<MaintenanceFilter>('all');
+const query = ref('');
 const maintenanceScroll = ref<InstanceType<typeof MdCatalogList> | null>(null);
 const confirmationOpen = ref(false);
 const pendingExecutionId = ref<string | null>(null);
@@ -46,10 +48,23 @@ const categories: SystemMaintenanceCategory[] = ['systemRepair', 'searchAndInter
 const busy = computed(() => store.scanning || store.executing);
 const visibleItems = computed(() =>
   (store.catalog?.items ?? []).filter(item => {
-    if (activeCategory.value === 'recommended') return item.status === 'recommended';
-    return activeCategory.value === 'all' || item.category === activeCategory.value;
+    if (activeCategory.value === 'recommended' && item.status !== 'recommended') return false;
+    if (
+      activeCategory.value !== 'recommended' &&
+      activeCategory.value !== 'all' &&
+      item.category !== activeCategory.value
+    )
+      return false;
+    const search = query.value.trim().toLocaleLowerCase(locale.value);
+    return (
+      !search ||
+      [itemMessage(item, 'name'), itemMessage(item, 'description')].some(value =>
+        value.toLocaleLowerCase(locale.value).includes(search)
+      )
+    );
   })
 );
+watch(query, () => maintenanceScroll.value?.scrollTo({ top: 0 }));
 const pendingExecutionItem = computed(
   () => store.catalog?.items.find(item => item.taskId === pendingExecutionId.value) ?? null
 );
@@ -271,15 +286,20 @@ watch(
             :accessibility-label="t('systemMaintenance.filterCategory')"
             @update:model-value="updateCategory"
           />
+          <template #aside>
+            <MdResultSearch v-model="query" :placeholder="t('systemMaintenance.searchPlaceholder')" />
+          </template>
         </MdResultFilterToolbar>
       </template>
 
       <MdCatalogList ref="maintenanceScroll">
         <MdEmptyState
           v-if="!visibleItems.length"
-          :icon-name="ICON_NAMES.systemMaintenance"
-          :title="t('systemMaintenance.empty.title')"
-          :description="t('systemMaintenance.empty.description')"
+          :icon-name="query.trim() ? ICON_NAMES.search : ICON_NAMES.systemMaintenance"
+          :title="query.trim() ? t('systemMaintenance.searchEmpty') : t('systemMaintenance.empty.title')"
+          :description="
+            query.trim() ? t('systemMaintenance.searchEmptyDescription') : t('systemMaintenance.empty.description')
+          "
           compact
         />
         <section v-else>

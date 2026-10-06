@@ -296,6 +296,9 @@
     "authorizationPrompt": "StrawberryDisk bu bakım görevini çalıştırmak için yönetici iznine ihtiyaç duyuyor",
     "rescan": "Yeniden kontrol et",
     "filterCategory": "Bakım kategorilerini filtrele",
+    "searchPlaceholder": "Bakım görevlerini ara",
+    "searchEmpty": "Eşleşen bakım görevi bulunamadı",
+    "searchEmptyDescription": "Başka bir ad veya açıklama deneyin",
     "executeOne": "Çalıştır",
     "executingOne": "Çalışıyor",
     "retryOne": "Tekrar dene",
@@ -493,6 +496,9 @@
     "rescan": "Yeniden kontrol et",
     "restorePrevious": "Önceki ayarları geri yükle",
     "filterCategory": "İyileştirme kategorilerini filtrele",
+    "searchPlaceholder": "Optimizasyon ayarlarını ara",
+    "searchEmpty": "Eşleşen ayar bulunamadı",
+    "searchEmptyDescription": "Başka bir ad veya açıklama deneyin",
     "pendingEmpty": {
       "title": "Bekleyen değişiklik yok",
       "description": "Değişiklikleri burada toplamak için bir hazır profil seçin veya anahtarları ayarlayın"
