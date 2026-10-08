@@ -1,0 +1,36 @@
+# Claude Code keeps prompts, transcripts, plugin installations, and personal
+# configuration elsewhere. Only the documented refreshable changelog is
+# selected from its cache directory.
+id = "ai.claude-code-cache"
+schema_version = 3
+rule_version = 1
+platform = "windows"
+category = "ai"
+risk = "safe"
+default_selected = false
+recommended_selected = true
+required_stopped_processes = []
+
+[[applicability]]
+kind = "anyRootExists"
+
+[[roots]]
+template = "${home}/.claude/cache"
+
+[matcher]
+kind = "allOf"
+items = [
+  { kind = "nameEquals", values = ["changelog.md"] },
+  { kind = "maxDepth", depth = 1 },
+]
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = false
+
+[verification]
+lifecycle = "verified"
+evidence = "Claude Code documents USERPROFILE/.claude/cache/changelog.md as refreshable release notes. A fixture at that path was removed with Windows 2.1.268 installed, preserving CLI settings and backups; the unauthenticated CLI did not generate a real changelog"
+verified_at = "2026-09-26"
+verified_platform = "windows"
+references = ["https://code.claude.com/docs/en/claude-directory"]

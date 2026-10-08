@@ -1,0 +1,43 @@
+# Crashpad keeps pending reports beside active upload state and attachments.
+# Limit cleanup to stale, direct report files so no sibling database state or
+# nested attachment data can enter the rule through recursive traversal.
+id = "app.codex-diagnostic-cache"
+schema_version = 3
+rule_version = 1
+platform = "macos"
+category = "application"
+risk = "safe"
+default_selected = true
+required_stopped_processes = ["Codex", "ChatGPT"]
+
+[[applicability]]
+kind = "anyOf"
+items = [
+  { kind = "applicationInstalled", identifiers = ["com.openai.codex", "Codex"] },
+  { kind = "anyRootExists" },
+]
+
+[[roots]]
+template = "${application_support}/Codex/Crashpad/pending"
+
+[matcher]
+kind = "allOf"
+items = [
+  { kind = "olderThan", days = 7 },
+  { kind = "maxDepth", depth = 1 },
+  { kind = "extensionIn", values = ["dmp", "json", "meta"] },
+]
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = true
+
+[verification]
+lifecycle = "verified"
+evidence = "Crashpad defines pending reports as completed writes awaiting processing or upload. A real Codex queue reproduced direct report files; only seven-day-old report extensions are selected, excluding settings, attachments, recent reports, and user data"
+verified_at = "2026-09-05"
+verified_platform = "macos"
+references = [
+  "https://chromium.googlesource.com/crashpad/crashpad/+/main/client/crash_report_database.h",
+  "https://chromium.googlesource.com/crashpad/crashpad/+/main/tools/crashpad_database_util.md",
+]

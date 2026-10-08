@@ -1,0 +1,87 @@
+name: Cross-platform Check
+
+on:
+  # Pull requests must prove both platform adapters before review can merge a
+  # filesystem or protocol change. Manual runs remain available for release
+  # diagnostics and infrastructure verification.
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-22.04, ubuntu-22.04-arm]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      # Tauri 2 on Linux links against WebKitGTK 4.1 and the GTK tray/taskbar
+      # indicator headers. They must exist before any Rust target compiles.
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            libxdo-dev \
+            build-essential \
+            curl wget file xdg-utils binutils python3 \
+            patchelf
+
+      - name: Install pnpm
+        # pnpm/action-setup reads the packageManager field from package.json.
+        # Keeping one version source prevents configuration drift.
+        uses: pnpm/action-setup@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          # Use the current LTS release so local and CI builds share a stable
+          # runtime rather than adopting a Current release early.
+          node-version: 24
+          cache: pnpm
+
+      # Reuse compiled Rust dependencies across runs of the same pull request.
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run static checks
+        run: pnpm check
+
+      - name: Run Rust tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml --workspace
+
+      # A no-bundle build covers Vite, Tauri configuration, Rust linking, and
+      # the Windows WebView2 or macOS WebKit host without producing installers.
+      - name: Verify native Tauri build
+        run: pnpm tauri:build:check
+
+      # Build and inspect Linux bundles on pull requests as well as manual runs
+      # so packaging regressions cannot pass the normal cross-platform check.
+      - name: Build Linux compatibility bundles
+        if: runner.os == 'Linux'
+        run: pnpm tauri:build:linux
+
+      - name: Retain Linux compatibility bundles
+        if: runner.os == 'Linux' && github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-ubuntu-22.04-${{ runner.arch }}-bundles
+          path: |
+            target/release/bundle/deb/*.deb
+            target/release/bundle/appimage/*.AppImage
+          retention-days: 7
+          compression-level: 0

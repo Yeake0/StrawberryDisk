@@ -1,0 +1,192 @@
+[
+  {
+    "schemaVersion": 2,
+    "platform": "macos",
+    "title": "Browser cache",
+    "description": "Generated cache",
+    "subject": {
+      "module": "cleanup",
+      "impact": "Rebuilt on next use",
+      "bytes": 20,
+      "itemCount": 1,
+      "requiresAppClose": true,
+      "scan": {
+        "ruleId": "browser.cache",
+        "risk": "safe",
+        "status": "found",
+        "available": true,
+        "selectable": true,
+        "runningProcesses": [],
+        "sources": [],
+        "sourceCount": 0,
+        "sourcesTruncated": false
+      }
+    }
+  },
+  {
+    "schemaVersion": 2,
+    "platform": "windows",
+    "title": "Browser · Cookies",
+    "description": "",
+    "subject": {
+      "module": "privacy",
+      "kind": "cookies",
+      "impact": "signOut",
+      "capability": "ready",
+      "recommendation": "manual",
+      "timeRange": "allTime",
+      "itemCount": 3,
+      "estimatedBytes": 128,
+      "requiresBrowserClose": true,
+      "synchronizationMayPropagate": true
+    }
+  },
+  {
+    "schemaVersion": 2,
+    "platform": "windows",
+    "title": "Fixture service",
+    "description": "",
+    "subject": {
+      "module": "startup",
+      "entries": [
+        {
+          "name": "Fixture service",
+          "identity": {
+            "applicationName": "",
+            "publisher": "",
+            "executableName": "",
+            "executablePath": "/private/program",
+            "configurationPath": "/private/config",
+            "description": "Fixture description",
+            "version": "",
+            "trust": "unknown"
+          },
+          "sourceKind": "service",
+          "triggers": ["boot"],
+          "configuredState": "disabled",
+          "runtimeState": "running",
+          "controlCapability": "systemManaged",
+          "diagnostics": [],
+          "removalSupported": false
+        }
+      ],
+      "omittedCount": 0
+    }
+  },
+  {
+    "schemaVersion": 2,
+    "platform": "windows",
+    "title": "Visual effects",
+    "description": "Reduce interface animations",
+    "subject": {
+      "module": "systemOptimization",
+      "selectionKind": "oneClick",
+      "diagnostic": null,
+      "status": "recommended",
+      "riskLevel": "standard",
+      "hasRecordedOriginalValue": false,
+      "requiresRestart": true,
+      "requiresElevation": false,
+      "pendingTarget": "optimized"
+    }
+  },
+  {
+    "schemaVersion": 2,
+    "platform": "macos",
+    "title": "Rebuild search index",
+    "description": "Rebuild the system search index",
+    "subject": {
+      "module": "systemMaintenance",
+      "taskId": "macos.maintenance.spotlight-index",
+      "status": "available",
+      "riskLevel": "caution",
+      "requiresRestart": false,
+      "requiresElevation": true,
+      "estimatedDurationSeconds": 60,
+      "diagnostic": null
+    }
+  },
+  {
+    "schemaVersion": 2,
+    "platform": "macos",
+    "title": "installer.dmg",
+    "description": "",
+    "subject": {
+      "module": "largeFiles",
+      "file": {
+        "name": "installer.dmg",
+        "path": "/Users/Example/Downloads/installer.dmg",
+        "bytes": 104857600,
+        "modifiedAtMs": null
+      }
+    }
+  },
+  {
+    "schemaVersion": 2,
+    "platform": "macos",
+    "title": "report.pdf",
+    "description": "",
+    "subject": {
+      "module": "duplicateFiles",
+      "kind": "file",
+      "target": {
+        "file": {
+          "name": "report.pdf",
+          "path": "/Users/Example/Downloads/report.pdf",
+          "bytes": 1048576,
+          "modifiedAtMs": null
+        },
+        "deletePolicy": "cleanable"
+      },
+      "otherCopies": [
+        {
+          "file": {
+            "name": "report.pdf",
+            "path": "/Users/Example/Documents/report.pdf",
+            "bytes": 1048576,
+            "modifiedAtMs": null
+          },
+          "deletePolicy": "protected"
+        }
+      ],
+      "omittedCount": 0
+    }
+  },
+  {
+    "schemaVersion": 2,
+    "platform": "macos",
+    "title": "Example Writer",
+    "description": "",
+    "subject": {
+      "module": "applicationUninstall",
+      "platform": "macosBundle",
+      "publisher": "Example",
+      "version": "1.0",
+      "applicationPath": "/Applications/Example Writer.app",
+      "capability": "ready",
+      "recordState": "installed",
+      "systemKind": "unclassified",
+      "installerKind": null,
+      "executionMode": null,
+      "associatedDataComplete": false,
+      "executionSupported": true,
+      "catalogActionable": true,
+      "recordRemovalAvailable": false,
+      "selectionKind": "default",
+      "components": [
+        {
+          "kind": "applicationBinary",
+          "risk": "required",
+          "bytes": 104857600,
+          "selected": true
+        },
+        {
+          "kind": "applicationSupport",
+          "risk": "userData",
+          "bytes": 1024,
+          "selected": false
+        }
+      ]
+    }
+  }
+]

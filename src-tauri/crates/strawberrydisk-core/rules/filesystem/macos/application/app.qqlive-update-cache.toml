@@ -1,0 +1,37 @@
+# QQLive's Upgrade directory contains a downloaded installer and an extracted
+# update app. Removing it cancels the pending update but preserves the current
+# installed app, offline videos, download catalog, and account data.
+id = "app.qqlive-update-cache"
+schema_version = 3
+rule_version = 1
+platform = "macos"
+category = "application"
+risk = "recoverable"
+default_selected = false
+recommended_selected = false
+required_stopped_processes = ["QQLive"]
+
+[[applicability]]
+kind = "anyOf"
+items = [
+  { kind = "applicationInstalled", identifiers = ["com.tencent.tenvideo", "QQLive"] },
+  { kind = "anyRootExists" },
+]
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.tenvideo/Data/Library/Application Support/Upgrade"
+verified_rebuildable = true
+
+[matcher]
+kind = "all"
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = true
+
+[verification]
+lifecycle = "verified"
+evidence = "QQLive 2.165.0 deleted a 1.13 GB pending 2.183.0 update; the installed app and offline videos remained. Restart automatically redownloaded the update, so reclaim is temporary"
+verified_at = "2026-09-26"
+verified_platform = "macos"
+references = ["https://v.qq.com/download.html"]

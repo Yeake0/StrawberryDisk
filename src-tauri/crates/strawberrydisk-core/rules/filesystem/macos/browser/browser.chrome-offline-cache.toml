@@ -1,0 +1,38 @@
+id = "browser.chrome-offline-cache"
+schema_version = 3
+rule_version = 2
+platform = "macos"
+category = "browser"
+risk = "recoverable"
+default_selected = false
+recommended_selected = true
+required_stopped_processes = ["Google Chrome"]
+
+[[applicability]]
+kind = "anyOf"
+items = [
+  { kind = "applicationInstalled", identifiers = ["com.google.Chrome", "Google Chrome"] },
+  { kind = "anyRootExists" },
+]
+
+[[roots]]
+template = "${application_support}/Google/Chrome"
+verified_rebuildable = true
+kind = "childDirectories"
+child_names = ["Default", "Guest Profile", "System Profile"]
+child_prefixes = ["Profile "]
+suffixes = ["Service Worker/CacheStorage"]
+
+[matcher]
+kind = "all"
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = true
+
+[verification]
+lifecycle = "verified"
+evidence = "The rule selects only Service Worker CacheStorage below discovered Chrome profiles; service worker registration metadata and scripts, extensions, cookies, history, passwords, bookmarks, Local Storage, and IndexedDB are preserved"
+verified_at = "2026-09-04"
+verified_platform = "macos"
+references = ["https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md", "https://chromium.googlesource.com/chromium/src/+/HEAD/content/browser/service_worker/"]

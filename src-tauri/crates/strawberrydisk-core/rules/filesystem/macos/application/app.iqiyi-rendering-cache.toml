@@ -1,0 +1,35 @@
+# The sandbox's Foundation cache is separate from iQIYI's offline .qsv
+# downloads, download catalog, and WebKit account storage.
+id = "app.iqiyi-rendering-cache"
+schema_version = 3
+rule_version = 1
+platform = "macos"
+category = "application"
+risk = "safe"
+default_selected = false
+recommended_selected = true
+required_stopped_processes = ["qiyimac"]
+
+[[applicability]]
+kind = "anyOf"
+items = [
+  { kind = "applicationInstalled", identifiers = ["com.iqiyi.player", "爱奇艺"] },
+  { kind = "anyRootExists" },
+]
+
+[[roots]]
+template = "${user_library}/Containers/com.iqiyi.player/Data/Library/Caches/com.iqiyi.player"
+
+[matcher]
+kind = "all"
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = true
+
+[verification]
+lifecycle = "verified"
+evidence = "iQIYI 17.9.0 created Foundation fsCachedData in its sandbox Library/Caches; offline .qsv files, the download catalog, account data, and WebKit storage are outside this root"
+verified_at = "2026-09-26"
+verified_platform = "macos"
+references = ["https://help.iqiyi.com/q4LchN1g/questionInfo/1862.html"]

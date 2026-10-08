@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "create": false,
+        "title": "StrawberryDisk",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 1000,
+        "minHeight": 700,
+        "center": true,
+        "visible": false,
+        "decorations": false
+      }
+    ]
+  },
+  "bundle": {
+    "icon": [
+      "icons/windows/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "installerIcon": "icons/windows/icon.ico",
+        "uninstallerIcon": "icons/windows/icon.ico"
+      }
+    }
+  }
+}

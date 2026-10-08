@@ -1,0 +1,35 @@
+# Keep recent reports and every non-log file beside the diagnostic leaves.
+id = "app.wechat-diagnostic-cache"
+schema_version = 3
+rule_version = 1
+platform = "macos"
+category = "application"
+risk = "safe"
+default_selected = false
+recommended_selected = true
+required_stopped_processes = ["WeChat", "WeChatAppEx"]
+
+[[applicability]]
+kind = "anyRootExists"
+
+[[roots]]
+template = "${user_library}/Containers/com.tencent.xinWeChat/Data/Documents/app_data/log"
+
+[matcher]
+kind = "allOf"
+items = [
+  { kind = "olderThan", days = 7 },
+  { kind = "extensionIn", values = ["xlog", "log"] },
+  { kind = "maxDepth", depth = 3 },
+]
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = true
+
+[verification]
+lifecycle = "verified"
+evidence = "Signed WeChat stores dated Mars xlog diagnostic files in this isolated log root; only log files older than seven days are selected. Recent logs, messages, account databases, mini-programs and browser state are excluded"
+verified_at = "2026-09-19"
+verified_platform = "macos"
+references = ["https://github.com/Tencent/mars/tree/master/mars/xlog", "https://weixin.qq.com/"]

@@ -1,0 +1,51 @@
+# Both WebView profiles also contain account and component state. Only their
+# fixed disposable renderer leaves, image thumbnails, and diagnostics are used.
+id = "app.qqlive-rendering-cache"
+schema_version = 3
+rule_version = 1
+platform = "windows"
+category = "application"
+risk = "safe"
+default_selected = false
+recommended_selected = true
+required_stopped_processes = ["QQLive.exe", "QQLiveService.exe", "QQLiveLCService.exe"]
+
+[[applicability]]
+kind = "anyOf"
+items = [
+  { kind = "applicationInstalled", identifiers = ["Tencent Video", "QQLive", "腾讯视频"] },
+  { kind = "anyRootExists" },
+]
+
+[[roots]]
+template = "${roaming_app_data}/Tencent/QQLive/Webkit3/Cache/EBWebView"
+kind = "childDirectories"
+child_names = ["Default"]
+suffixes = ["Cache", "Code Cache", "GPUCache", "DawnCache", "DawnGraphiteCache", "DawnWebGPUCache", "GrShaderCache", "GraphiteDawnCache", "Shared Dictionary/cache"]
+
+[[roots]]
+template = "${roaming_app_data}/Tencent/QQLive/Webkit3/Cache_pac/EBWebView"
+kind = "childDirectories"
+child_names = ["Default"]
+suffixes = ["Cache", "Code Cache", "GPUCache", "DawnCache", "DawnGraphiteCache", "DawnWebGPUCache", "GrShaderCache", "GraphiteDawnCache", "Shared Dictionary/cache"]
+
+[[roots]]
+template = "${roaming_app_data}/Tencent/QQLive/image_vn"
+verified_rebuildable = true
+
+[[roots]]
+template = "${roaming_app_data}/Tencent/QQLive/Log"
+
+[matcher]
+kind = "all"
+
+[execution]
+kind = "deleteMatchingContents"
+requires_app_close = true
+
+[verification]
+lifecycle = "verified"
+evidence = "Tencent Video 11.185.3274.0 generated the selected WebView leaves, thumbnails, and logs separately from offline HLS media, download catalog, account state, and runtime components on Windows 11"
+verified_at = "2026-09-26"
+verified_platform = "windows"
+references = ["https://v.qq.com/download.html"]
