@@ -114,7 +114,7 @@ A biblioteca completa de regras e seu histórico de revisões podem ser consulta
 
 ## Capturas de tela
 
-As capturas abaixo preservam o conteúdo da interface original em inglês, com a identidade visual do StrawberryDisk. Elas podem diferir da versão atual do aplicativo.
+As imagens abaixo foram adaptadas para português do Brasil a partir das capturas da interface. Elas podem diferir da versão atual do aplicativo.
 
 <p align="center">
   <strong>Limpeza profunda</strong><br>
@@ -122,7 +122,7 @@ As capturas abaixo preservam o conteúdo da interface original em inglês, com a
 </p>
 
 <p align="center">
-  <img src="docs/images/readme/strawberrydisk-01-deep-cleanup.jpg" width="1200" alt="Tela de Limpeza profunda do StrawberryDisk">
+  <img src="docs/images/readme/strawberrydisk-01-deep-cleanup-pt.png" width="1200" alt="Tela de Limpeza profunda do StrawberryDisk">
 </p>
 
 <table>
@@ -130,48 +130,48 @@ As capturas abaixo preservam o conteúdo da interface original em inglês, com a
     <td width="50%" align="center">
       <strong>Limpeza de arquivos grandes</strong><br>
       <sub>Encontre os arquivos que mais ocupam espaço sem vasculhar pastas</sub><br><br>
-      <img src="docs/images/readme/strawberrydisk-02-large-file-cleanup.jpg" width="100%" alt="Tela de Limpeza de arquivos grandes do StrawberryDisk">
+      <img src="docs/images/readme/strawberrydisk-02-large-file-cleanup-pt.png" width="100%" alt="Tela de Limpeza de arquivos grandes do StrawberryDisk">
     </td>
     <td width="50%" align="center">
       <strong>Limpeza de arquivos duplicados</strong><br>
       <sub>Remova duplicatas exatas com segurança, mantendo pelo menos uma cópia</sub><br><br>
-      <img src="docs/images/readme/strawberrydisk-03-duplicate-cleanup.jpg" width="100%" alt="Tela de Limpeza de arquivos duplicados do StrawberryDisk">
+      <img src="docs/images/readme/strawberrydisk-03-duplicate-cleanup-pt.png" width="100%" alt="Tela de Limpeza de arquivos duplicados do StrawberryDisk">
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
       <strong>Análise do espaço em disco</strong><br>
       <sub>Veja o que ocupa espaço e encontre rapidamente os maiores arquivos e pastas</sub><br><br>
-      <img src="docs/images/readme/strawberrydisk-05-disk-space-analysis.jpg" width="100%" alt="Tela de Análise do espaço em disco do StrawberryDisk">
+      <img src="docs/images/readme/strawberrydisk-05-disk-space-analysis-pt.png" width="100%" alt="Tela de Análise do espaço em disco do StrawberryDisk">
     </td>
     <td width="50%" align="center">
       <strong>Gerenciamento de itens de inicialização</strong><br>
       <sub>Reduza programas desnecessários na inicialização e a atividade em segundo plano</sub><br><br>
-      <img src="docs/images/readme/strawberrydisk-06-startup-items.jpg" width="100%" alt="Tela de Itens de inicialização do StrawberryDisk">
+      <img src="docs/images/readme/strawberrydisk-06-startup-items-pt.png" width="100%" alt="Tela de Itens de inicialização do StrawberryDisk">
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
       <strong>Desinstalação e limpeza de aplicativos</strong><br>
       <sub>Desinstale aplicativos e remova resíduos relacionados para recuperar espaço</sub><br><br>
-      <img src="docs/images/readme/strawberrydisk-04-app-uninstaller.jpg" width="100%" alt="Tela de Desinstalação de aplicativos do StrawberryDisk">
+      <img src="docs/images/readme/strawberrydisk-04-app-uninstaller-pt.png" width="100%" alt="Tela de Desinstalação de aplicativos do StrawberryDisk">
     </td>
     <td width="50%" align="center">
       <strong>Otimização do sistema</strong><br>
       <sub>Ajuste desempenho, privacidade e usabilidade com um clique</sub><br><br>
-      <img src="docs/images/readme/strawberrydisk-07-system-optimization.jpg" width="100%" alt="Tela de Otimização do sistema do StrawberryDisk">
+      <img src="docs/images/readme/strawberrydisk-07-system-optimization-pt.png" width="100%" alt="Tela de Otimização do sistema do StrawberryDisk">
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
       <strong>Manutenção do sistema</strong><br>
       <sub>Corrija problemas comuns e volte a usar o computador normalmente</sub><br><br>
-      <img src="docs/images/readme/strawberrydisk-08-system-maintenance.jpg" width="100%" alt="Tela de Manutenção do sistema do StrawberryDisk">
+      <img src="docs/images/readme/strawberrydisk-08-system-maintenance-pt.png" width="100%" alt="Tela de Manutenção do sistema do StrawberryDisk">
     </td>
     <td width="50%" align="center">
       <strong>Limpeza de privacidade</strong><br>
       <sub>Deixe menos rastros de atividade e proteja sua privacidade</sub><br><br>
-      <img src="docs/images/readme/strawberrydisk-09-privacy-cleanup.jpg" width="100%" alt="Tela de Limpeza de privacidade do StrawberryDisk">
+      <img src="docs/images/readme/strawberrydisk-09-privacy-cleanup-pt.png" width="100%" alt="Tela de Limpeza de privacidade do StrawberryDisk">
     </td>
   </tr>
 </table>
