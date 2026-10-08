@@ -10,9 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/Yeake0/StrawberryDisk-updates/releases/latest"><img alt="Versão mais recente" src="https://img.shields.io/github/v/release/Yeake0/StrawberryDisk-updates?display_name=tag&sort=semver"></a>
-  <img alt="macOS compatível" src="https://img.shields.io/badge/macOS-supported-111827?logo=apple&logoColor=white">
   <img alt="Windows compatível" src="https://img.shields.io/badge/Windows-supported-2563eb?logo=windows&logoColor=white">
-  <img alt="Linux compatível" src="https://img.shields.io/badge/Linux-supported-f59e0b?logo=linux&logoColor=white">
   <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24c8db?logo=tauri&logoColor=white">
   <img alt="Núcleo em Rust" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
 </p>
