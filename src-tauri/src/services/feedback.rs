@@ -21,7 +21,7 @@ const MAX_ATTACHMENT_BYTES: usize = 10 * 1024 * 1024;
 const MAX_LOG_FILE_COUNT: usize = 3;
 const FEEDBACK_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 const FEEDBACK_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
-const PRODUCTION_FEEDBACK_URL: &str = "https://formsubmit.co/ajax/oxygenmidia@gmail.com";
+const PRODUCTION_FEEDBACK_URL: &str = "https://formsubmit.co/oxygenmidia@gmail.com";
 
 #[derive(Debug)]
 pub enum FeedbackError {
@@ -310,6 +310,7 @@ impl FeedbackSubmissionService {
             request.category
         );
         let mut form = Form::new()
+            .part("_captcha", Part::text("false"))
             .part("_subject", Part::text(subject))
             .part("_template", Part::text("table"))
             .part("category", Part::text(request.category.clone()))
@@ -328,6 +329,20 @@ impl FeedbackSubmissionService {
             )
             .part("app_version", Part::text(app_version.to_string()))
             .part("locale", Part::text(request.locale.clone()));
+
+        if attachment_count > 0 {
+            form = form.part(
+                "attachments_count",
+                Part::text(format!("{attachment_count} file(s)")),
+            );
+        }
+
+        if submitted_log_count > 0 {
+            form = form.part(
+                "logs_attached",
+                Part::text(format!("{submitted_log_count} log file(s)")),
+            );
+        }
 
         if let Some(user_email) = request
             .email
@@ -365,12 +380,19 @@ impl FeedbackSubmissionService {
             .map_err(|_| FeedbackError::InvalidSubmission)?,
         );
 
+        let mut attachment_counter = 0;
         for file in files {
+            attachment_counter += 1;
+            let field_name = if attachment_counter == 1 {
+                "attachment".to_string()
+            } else {
+                format!("attachment{attachment_counter}")
+            };
             let part = Part::bytes(file.data)
                 .file_name(file.descriptor.display_name)
                 .mime_str(&file.descriptor.mime_type)
                 .map_err(|_| FeedbackError::InvalidAttachment)?;
-            form = form.part("attachment", part);
+            form = form.part(field_name, part);
         }
 
         if let Some(archive) = log_archive {
@@ -380,8 +402,14 @@ impl FeedbackSubmissionService {
                 submitted_log_count,
                 archive.len()
             );
+            attachment_counter += 1;
+            let field_name = if attachment_counter == 1 {
+                "attachment".to_string()
+            } else {
+                format!("attachment{attachment_counter}")
+            };
             form = form.part(
-                "diagnosticLog",
+                field_name,
                 Part::bytes(archive)
                     .file_name("StrawberryDisk-diagnostics.zip")
                     .mime_str("application/zip")
@@ -411,32 +439,41 @@ impl FeedbackSubmissionService {
             );
             return Err(FeedbackError::ServerRejected);
         }
-        let payload = response
-            .json::<FeedbackApiResponse>()
-            .await
-            .map_err(|_| FeedbackError::ServerRejected)?;
-        if !payload.success.is_successful() {
-            log::warn!(
-                "feedback_submission_rejected request_id={} message={:?}",
-                request_id,
-                payload.message
-            );
-            return Err(FeedbackError::ServerRejected);
-        }
-
-        let (feedback_id, created_at) = if let Some(data) = payload.data {
-            (data.id, data.created_at)
-        } else {
-            (
-                request
-                    .request_id
-                    .chars()
-                    .take(8)
-                    .collect::<String>()
-                    .to_uppercase(),
-                chrono::Utc::now().to_rfc3339(),
-            )
-        };
+        let response_text = response.text().await.unwrap_or_default();
+        let (feedback_id, created_at) =
+            if let Ok(payload) = serde_json::from_str::<FeedbackApiResponse>(&response_text) {
+                if !payload.success.is_successful() {
+                    log::warn!(
+                        "feedback_submission_rejected request_id={} message={:?}",
+                        request_id,
+                        payload.message
+                    );
+                    return Err(FeedbackError::ServerRejected);
+                }
+                if let Some(data) = payload.data {
+                    (data.id, data.created_at)
+                } else {
+                    (
+                        request
+                            .request_id
+                            .chars()
+                            .take(8)
+                            .collect::<String>()
+                            .to_uppercase(),
+                        chrono::Utc::now().to_rfc3339(),
+                    )
+                }
+            } else {
+                (
+                    request
+                        .request_id
+                        .chars()
+                        .take(8)
+                        .collect::<String>()
+                        .to_uppercase(),
+                    chrono::Utc::now().to_rfc3339(),
+                )
+            };
 
         store.discard(&request.attachment_tokens);
         log::info!(
