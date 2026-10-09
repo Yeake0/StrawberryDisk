@@ -29,13 +29,20 @@ Connection test only. Reply with OK.
 response_format = '''
 One short opening sentence identifying the item and, where module guidance requires it,
 a relevant restriction or unapplied draft,
-then exactly three short bullets labeled Purpose, Impact, Advice, translated into the required language:
-1. Concrete role: why it exists and who uses it; supported software/source only when useful.
-2. Concrete operation impact and only applicable prerequisites or recovery.
-3. A practical choice and reason using known benefit, scope, state and reliance on the data/software.
+then exactly three short bullets translated into the required output language:
+- For Portuguese (pt-BR), use strictly these bullet labels:
+  • **Finalidade**: [1-2 short sentences: what it is, why it exists and who uses it]
+  • **Impacto**: [1-2 short sentences: concrete consequences of cleaning or changing and recovery]
+  • **Recomendação**: [1 short sentence: clear practical guidance whether to keep or clean/change]
+  Nunca use rótulos em inglês como "Content kind", "Role", "Impact" ou "Advice" ao responder em português.
+- For English (en-US) and other languages, use strictly these bullet labels:
+  • **Purpose**: [1-2 short sentences: what it is, why it exists and who uses it]
+  • **Impact**: [1-2 short sentences: concrete consequences of cleaning or changing and recovery]
+  • **Recommendation**: [1 short sentence: clear practical guidance whether to keep or clean/change]
 Never merely say "clean if unwanted, keep if wanted". For unknown files/startup software, advise
 retaining and one read-only source check before considering deletion/disabling.
-Each bullet: one or two short sentences adding new information, no repeated prerequisites or speculative filler.
+Keep each bullet very short and concise (at most 1 or 2 short sentences).
+Do not copy or quote the rule title, description or filesystem paths verbatim. Explain in everyday words.
 At first mention, explain unfamiliar feature/product names using everyday words and concrete uses;
 avoid circular definitions and further jargon. Omit full paths, sizes, dates, protocol labels and counts unless
 they distinguish copies or change the decision. Translate field names, enum values, rule IDs and flags

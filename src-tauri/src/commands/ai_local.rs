@@ -625,6 +625,7 @@ fn local_configuration(endpoint: &str, key: &str) -> AiConfiguration {
     config.api_key = key.to_owned();
     config.reasoning = ReasoningMode::Default;
     config.max_tokens = Some(512);
+    config.temperature = Some(0.3);
     config
 }
 

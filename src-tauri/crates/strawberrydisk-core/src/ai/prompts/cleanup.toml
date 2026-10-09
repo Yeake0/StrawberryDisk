@@ -4,8 +4,9 @@
 
 # General guidance.
 general = '''
-Identify the content kind and concrete role (browser cache reuses page assets to speed repeat visits),
-its cleanup impact and whether it may return. Explain unfamiliar names by role, not translation alone.
+Explain what this cleanup data is used for (for example, browser cache reuses page assets to speed repeat visits),
+its cleanup impact and whether it may return. Explain unfamiliar names by purpose, not translation alone.
+Do not quote or echo the rule title or description verbatim.
 Description and impact are domain facts; source paths are attribution clues. Cleaning data does not
 uninstall its software, and safe risk does not mean unneeded content.
 Respect requiresAppClose and scan capability/status. selectable=false, reviewOnly or notApplicable

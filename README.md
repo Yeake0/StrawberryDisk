@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Yeake0/StrawberryDisk-updates/releases/latest"><img alt="Versão mais recente" src="https://img.shields.io/github/v/release/Yeake0/StrawberryDisk-updates?display_name=tag&sort=semver"></a>
+  <a href="https://github.com/Yeake0/StrawberryDisk/releases/latest"><img alt="Versão mais recente" src="https://img.shields.io/github/v/release/Yeake0/StrawberryDisk?display_name=tag&sort=semver"></a>
   <img alt="Windows compatível" src="https://img.shields.io/badge/Windows-supported-2563eb?logo=windows&logoColor=white">
   <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24c8db?logo=tauri&logoColor=white">
   <img alt="Núcleo em Rust" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
@@ -188,13 +188,13 @@ As imagens abaixo foram adaptadas para português do Brasil a partir das captura
 
 O aplicativo oferece interface em português (Brasil) e inglês. Preferências salvas em outros idiomas passam para inglês após a atualização, sem alterar as demais configurações.
 
-Baixe o instalador do StrawberryDisk para Windows x64 em [GitHub Releases](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest).
+Baixe o instalador do StrawberryDisk para Windows x64 em [GitHub Releases](https://github.com/Yeake0/StrawberryDisk/releases/latest).
 
 ### Windows
 
 **Requisitos:** Windows 10 de 64 bits ou posterior.
 
-**Instalação manual:** baixe o instalador para Windows na [página oficial](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) e siga as instruções na tela.
+**Instalação manual:** baixe o instalador para Windows na [página oficial](https://github.com/Yeake0/StrawberryDisk/releases/latest) e siga as instruções na tela.
 
 ## Linha de comando (CLI)
 
@@ -234,13 +234,13 @@ strawberrydisk clean --help
 
 ### Atualizações desta versão pessoal
 
-O repositório de desenvolvimento desta versão permanece privado. Os instaladores, o código-fonte correspondente a cada versão publicada e os metadados de atualização para Windows x64 ficam em [StrawberryDisk-updates](https://github.com/Yeake0/StrawberryDisk-updates). O botão de atualização consulta esse canal e instala somente versões assinadas com a chave desta versão pessoal. Ele não instala diretamente os executáveis do projeto original.
+Os instaladores, o código-fonte correspondente a cada versão publicada e os metadados de atualização para Windows x64 ficam disponíveis nas [Releases do StrawberryDisk](https://github.com/Yeake0/StrawberryDisk/releases). O botão de atualização consulta esse canal e instala somente versões assinadas com a chave desta versão pessoal. Ele não instala diretamente os executáveis do projeto original.
 
 Não reutilize os nomes anteriores dos repositórios no GitHub: os redirecionamentos desses endereços permitem que instalações antigas encontrem o canal de atualização.
 
 Para incorporar mudanças do projeto original, execute `scripts/prepare-upstream-update.ps1` em uma `main` limpa. O script compara o último commit importado em [`.upstream-source`](.upstream-source) com a versão atual, aplica as diferenças em uma branch de integração e cria um único commit no histórico do StrawberryDisk. Revise o resultado, resolva eventuais conflitos e execute as verificações obrigatórias antes de avançar a `main` e publicar um novo instalador. O histórico anterior à criação desta `main` está no branch `archive/pre-independent-main`; os avisos de origem estão em [`NOTICE.md`](NOTICE.md). O monitor semanal abre uma issue quando encontra mudanças no projeto original.
 
-Antes de cada publicação, aumente a versão em `Cargo.toml`, `package.json` e `src-tauri/tauri.conf.json`. Gere o instalador com `createUpdaterArtifacts` habilitado e `TAURI_SIGNING_PRIVATE_KEY` apontando para a chave privada em `.local/updater.key`. Depois de enviar o commit correspondente ao repositório privado, execute `scripts/publish-windows-update.ps1`. O script publica o instalador, a assinatura, o `latest.json` e um ZIP do código-fonte extraído do mesmo commit no canal público. Faça uma cópia segura da chave privada; sem ela, os aplicativos já instalados não aceitarão novas atualizações desse canal.
+Antes de cada publicação, aumente a versão em `Cargo.toml`, `package.json` e `src-tauri/tauri.conf.json`. Gere o instalador com `createUpdaterArtifacts` habilitado e `TAURI_SIGNING_PRIVATE_KEY` apontando para a chave privada em `.local/updater.key`. Depois de enviar o commit correspondente ao repositório, execute `scripts/publish-windows-update.ps1`. O script publica o instalador, a assinatura, o `latest.json` e um ZIP do código-fonte extraído do mesmo commit no canal público de releases. Faça uma cópia segura da chave privada; sem ela, os aplicativos já instalados não aceitarão novas atualizações desse canal.
 
 A versão 1.1.6 foi distribuída antes da criação desse canal e ainda confia na chave do projeto original. É necessário instalar manualmente uma vez a versão 1.1.7 desta versão pessoal; a partir dela, o botão poderá receber as versões seguintes. Alterar futuramente o nome exibido do aplicativo não exige mudar seu identificador interno. Mantê-lo preserva o caminho de atualização e os dados existentes.
 

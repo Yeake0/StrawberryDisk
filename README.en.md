@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Yeake0/StrawberryDisk-updates/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Yeake0/StrawberryDisk-updates?display_name=tag&sort=semver"></a>
+  <a href="https://github.com/Yeake0/StrawberryDisk/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Yeake0/StrawberryDisk?display_name=tag&sort=semver"></a>
   <img alt="Windows supported" src="https://img.shields.io/badge/Windows-supported-2563eb?logo=windows&logoColor=white">
   <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24c8db?logo=tauri&logoColor=white">
   <img alt="Rust Core" src="https://img.shields.io/badge/core-Rust-b7410e?logo=rust&logoColor=white">
@@ -188,7 +188,7 @@ These screenshots show the original interface and may differ from the current St
 
 The app supports Brazilian Portuguese and English. Saved preferences for other languages fall back to English after updating without changing other settings.
 
-Download the [Windows x64 installer](https://github.com/Yeake0/StrawberryDisk-updates/releases/latest) from the public update channel. The corresponding source archive is included with each release. This fork does not currently publish macOS or Linux installers; you can build them from source on a compatible system.
+Download the [Windows x64 installer](https://github.com/Yeake0/StrawberryDisk/releases/latest) from the public update channel. The corresponding source archive is included with each release. This fork does not currently publish macOS or Linux installers; you can build them from source on a compatible system.
 
 ## Command Line (CLI)
 
@@ -228,7 +228,7 @@ strawberrydisk clean --help
 
 ### Updates for This Fork
 
-The development repository is currently private. Windows x64 installers, update metadata, and the corresponding source archive for each published release are available in [StrawberryDisk-updates](https://github.com/Yeake0/StrawberryDisk-updates). The in-app updater uses this channel and accepts only packages signed with this fork's update key; it does not install binaries from the original project.
+Windows x64 installers, update metadata, and the corresponding source archive for each published release are available in [StrawberryDisk Releases](https://github.com/Yeake0/StrawberryDisk/releases). The in-app updater uses this channel and accepts only packages signed with this fork's update key; it does not install binaries from the original project.
 
 Do not reuse the repositories' former GitHub names. Their redirects keep the old update URLs working for existing installations.
 

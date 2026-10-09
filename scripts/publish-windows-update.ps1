@@ -18,7 +18,7 @@ if ((Get-Content -LiteralPath 'package.json' -Raw | ConvertFrom-Json).version -n
 }
 
 $tag = "v$version"
-$updatesRepo = 'Yeake0/StrawberryDisk-updates'
+$updatesRepo = 'Yeake0/StrawberryDisk'
 $sourceRepo = 'Yeake0/StrawberryDisk'
 $expectedEndpoint = "https://github.com/$updatesRepo/releases/latest/download/latest.json"
 if (@($config.plugins.updater.endpoints).Count -ne 1 -or $config.plugins.updater.endpoints[0] -ne $expectedEndpoint) {

@@ -73,7 +73,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY4N0Y3RUEyMzgzMzAwMzkKUldRNUFETTRvbjUvK0V6VVFJRlgyRTFRSndCeGVyTnhTd3VKT2dQNTk0dUNzMDZFa3JNZ3RiMXUK",
       "endpoints": [
-        "https://github.com/Yeake0/StrawberryDisk-updates/releases/latest/download/latest.json"
+        "https://github.com/Yeake0/StrawberryDisk/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"
