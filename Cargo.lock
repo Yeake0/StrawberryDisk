@@ -4158,7 +4158,7 @@ checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
 name = "strawberrydisk"
-version = "1.1.10"
+version = "1.1.11"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -4202,7 +4202,7 @@ dependencies = [
 
 [[package]]
 name = "strawberrydisk-cli"
-version = "1.1.10"
+version = "1.1.11"
 dependencies = [
  "clap",
  "ctrlc",
@@ -4216,7 +4216,7 @@ dependencies = [
 
 [[package]]
 name = "strawberrydisk-core"
-version = "1.1.10"
+version = "1.1.11"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -4244,7 +4244,7 @@ dependencies = [
 
 [[package]]
 name = "strawberrydisk-platform"
-version = "1.1.10"
+version = "1.1.11"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -6343,7 +6343,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "1.1.10"
+version = "1.1.11"
 dependencies = [
  "blake3",
  "serde_json",
