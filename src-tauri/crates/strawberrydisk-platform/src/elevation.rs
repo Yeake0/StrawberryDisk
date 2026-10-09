@@ -40,7 +40,7 @@ use crate::{PlatformError, PlatformErrorCode, PlatformResult};
 use protocol::{read_message, write_message, Request, Response, PROTOCOL};
 pub(crate) use protocol::{LaunchRequest, RejectionReason, UninstallRequest};
 
-const FLAG: &str = "--mangodisk-elevation-helper-v1";
+const FLAG: &str = "--strawberrydisk-elevation-helper-v1";
 const START_TIMEOUT: Duration = Duration::from_secs(120);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 static SESSION: OnceLock<Mutex<Option<Session>>> = OnceLock::new();
@@ -618,7 +618,7 @@ mod tests {
         for arguments in [
             vec![
                 "StrawberryDisk".into(),
-                "--mangodisk-elevation-helper-v0".into(),
+                "--strawberrydisk-elevation-helper-v0".into(),
             ],
             vec![
                 "StrawberryDisk".into(),

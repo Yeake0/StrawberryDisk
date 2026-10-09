@@ -16,8 +16,8 @@ use super::MacOsPlatform;
 
 const OSASCRIPT_PATH: &str = "/usr/bin/osascript";
 const AUTHORIZATION_SCRIPT: &str = include_str!("privileged_uninstall.applescript");
-const SUCCESS_RESPONSE: &str = "mangodisk-privileged-remove-v1:completed";
-const ERROR_RESPONSE_PREFIX: &str = "mangodisk-privileged-remove-v1:error:";
+const SUCCESS_RESPONSE: &str = "strawberrydisk-privileged-remove-v1:completed";
+const ERROR_RESPONSE_PREFIX: &str = "strawberrydisk-privileged-remove-v1:error:";
 const USER_CANCELLED_APPLESCRIPT_ERROR: i32 = -128;
 const ITEM_CHANGED_SHELL_STATUS: i32 = 42;
 const RECOVERY_REQUIRED_SHELL_STATUS: i32 = 45;
@@ -321,15 +321,15 @@ mod tests {
     #[test]
     fn command_response_preserves_cancel_change_and_recovery_states() {
         assert_eq!(
-            parse_command_response("mangodisk-privileged-remove-v1:error:-128"),
+            parse_command_response("strawberrydisk-privileged-remove-v1:error:-128"),
             PrivilegedCommandResponse::UserCancelled
         );
         assert_eq!(
-            parse_command_response("mangodisk-privileged-remove-v1:error:42"),
+            parse_command_response("strawberrydisk-privileged-remove-v1:error:42"),
             PrivilegedCommandResponse::ItemChanged
         );
         assert_eq!(
-            parse_command_response("mangodisk-privileged-remove-v1:error:45"),
+            parse_command_response("strawberrydisk-privileged-remove-v1:error:45"),
             PrivilegedCommandResponse::RecoveryRequired
         );
     }

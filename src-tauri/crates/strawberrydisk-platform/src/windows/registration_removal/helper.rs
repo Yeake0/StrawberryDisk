@@ -5,7 +5,7 @@ use windows_sys::Win32::{
     System::Threading::{GetExitCodeProcess, WaitForSingleObject, INFINITE},
 };
 
-pub(crate) const FLAG: &str = "--mangodisk-application-record-helper-v1";
+pub(crate) const FLAG: &str = "--strawberrydisk-application-record-helper-v1";
 
 /// The privileged boundary accepts only a redacted application ID and a full registry snapshot
 /// digest. It discovers machine uninstall keys itself and revalidates the selected registry tree.

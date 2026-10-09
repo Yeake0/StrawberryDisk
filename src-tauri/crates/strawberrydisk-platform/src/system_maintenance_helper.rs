@@ -26,9 +26,9 @@ pub(crate) mod step_diagnostics;
 
 use step_diagnostics::{log_step_diagnostics, MaintenanceStepDiagnostic};
 
-pub(crate) const HELPER_FLAG: &str = "--mangodisk-system-maintenance-helper-v4";
+pub(crate) const HELPER_FLAG: &str = "--strawberrydisk-system-maintenance-helper-v4";
 // The helper always comes from the running executable; reject mismatched schemas.
-const PROTOCOL: &str = "mangodisk-system-maintenance-helper-v4";
+const PROTOCOL: &str = "strawberrydisk-system-maintenance-helper-v4";
 const HELPER_START_TIMEOUT: Duration = Duration::from_secs(120);
 const HELPER_POLL_INTERVAL: Duration = Duration::from_millis(50);
 // Up to 32 steps can carry bounded failure text in the final response.
@@ -1189,7 +1189,7 @@ mod tests {
     fn previous_protocol_cannot_authorize_a_task() {
         let token = "a".repeat(64);
         assert!(validate_request(
-            "mangodisk-system-maintenance-helper-v3",
+            "strawberrydisk-system-maintenance-helper-v3",
             &token,
             1,
             0,

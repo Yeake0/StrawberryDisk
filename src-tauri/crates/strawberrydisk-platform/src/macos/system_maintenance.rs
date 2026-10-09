@@ -20,8 +20,8 @@ const USER_PERMISSIONS: &str = "macos.maintenance.user-permissions";
 const LEGACY_OVERRIDES: &str = "macos.maintenance.legacy-overrides";
 const STARTUP_DISK: &str = "macos.maintenance.startup-disk";
 const DNS_CACHE: &str = "macos.maintenance.dns-cache";
-const ADMIN_SUCCESS_RESPONSE: &str = "mangodisk-maintenance-v1:success";
-const ADMIN_ERROR_RESPONSE_PREFIX: &str = "mangodisk-maintenance-v1:error:";
+const ADMIN_SUCCESS_RESPONSE: &str = "strawberrydisk-maintenance-v1:success";
+const ADMIN_ERROR_RESPONSE_PREFIX: &str = "strawberrydisk-maintenance-v1:error:";
 const USER_CANCELLED_APPLESCRIPT_ERROR: i32 = -128;
 
 const SUPPORTED_TASKS: &[&str] = &[
@@ -62,9 +62,9 @@ try
     else
         do shell script maintenanceCommand with prompt promptText with administrator privileges
     end if
-    return "mangodisk-maintenance-v1:success"
+    return "strawberrydisk-maintenance-v1:success"
 on error errorMessage number errorNumber
-    return "mangodisk-maintenance-v1:error:" & errorNumber
+    return "strawberrydisk-maintenance-v1:error:" & errorNumber
 end try
 end run"#;
 
@@ -777,11 +777,11 @@ mod tests {
             AdministratorResponse::Completed
         );
         assert_eq!(
-            parse_administrator_response("mangodisk-maintenance-v1:error:-128\n"),
+            parse_administrator_response("strawberrydisk-maintenance-v1:error:-128\n"),
             AdministratorResponse::UserCancelled
         );
         assert_eq!(
-            parse_administrator_response("mangodisk-maintenance-v1:error:1"),
+            parse_administrator_response("strawberrydisk-maintenance-v1:error:1"),
             AdministratorResponse::Failed(Some(1))
         );
         assert_eq!(

@@ -6,7 +6,7 @@ use std::{
 };
 use windows_sys::Win32::Foundation::ERROR_INVALID_PARAMETER;
 
-pub(super) const PROTOCOL: &str = "mangodisk-elevation-v1";
+pub(super) const PROTOCOL: &str = "strawberrydisk-elevation-v1";
 const MAX_MESSAGE_BYTES: usize = 64 * 1024;
 
 /// Capability arguments are data, never an executable/command line selected by a client.

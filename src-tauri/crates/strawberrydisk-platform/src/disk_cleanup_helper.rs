@@ -21,8 +21,8 @@ use crate::{
     WindowsDiskCleanupExecutionStatus, WindowsDiskCleanupKind,
 };
 
-pub(crate) const HELPER_FLAG: &str = "--mangodisk-disk-cleanup-helper-v2";
-const PROTOCOL: &str = "mangodisk-disk-cleanup-helper-v2";
+pub(crate) const HELPER_FLAG: &str = "--strawberrydisk-disk-cleanup-helper-v2";
+const PROTOCOL: &str = "strawberrydisk-disk-cleanup-helper-v2";
 const MAX_RESPONSE_BYTES: usize = 16 * 1024;
 const ESTIMATE_RESPONSE_TIMEOUT: Duration = Duration::from_secs(15 * 60);
 const EXECUTION_WAIT_LOG_INTERVAL: Duration = Duration::from_secs(5 * 60);

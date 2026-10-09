@@ -16,8 +16,8 @@ use crate::{
     PlatformStartupDesiredState,
 };
 
-pub(crate) const HELPER_FLAG: &str = "--mangodisk-startup-helper-v4";
-const PROTOCOL: &str = "mangodisk-startup-helper-v4";
+pub(crate) const HELPER_FLAG: &str = "--strawberrydisk-startup-helper-v4";
+const PROTOCOL: &str = "strawberrydisk-startup-helper-v4";
 const MAX_MESSAGE_BYTES: u64 = 1024 * 1024;
 const MAX_BATCH_ITEMS: usize = 128;
 const HELPER_SUCCESS_EXIT_CODE: i32 = 0;
@@ -903,7 +903,7 @@ mod tests {
         assert_eq!(
             run_startup_helper_mode([
                 OsString::from("StrawberryDisk"),
-                OsString::from("--mangodisk-startup-helper-v2")
+                OsString::from("--strawberrydisk-startup-helper-v2")
             ]),
             Some(HELPER_FAILURE_EXIT_CODE)
         );
@@ -1015,7 +1015,7 @@ mod tests {
         let nonce = unique_nonce();
         let paths = message_paths(&nonce).unwrap();
         let request = HelperRequest {
-            protocol: "mangodisk-startup-helper-v3".to_string(),
+            protocol: "strawberrydisk-startup-helper-v3".to_string(),
             nonce,
             items: Vec::new(),
             #[cfg(target_os = "macos")]
@@ -1086,7 +1086,7 @@ mod tests {
             serde_json::from_slice(&encoded).expect("helper request must deserialize");
         let dispatch = helper_dispatch_items(&decoded.items);
 
-        assert_eq!(decoded.protocol, "mangodisk-startup-helper-v4");
+        assert_eq!(decoded.protocol, "strawberrydisk-startup-helper-v4");
         assert_eq!(dispatch.len(), 2);
         assert_eq!(dispatch[0].provider_item_id, "first");
         assert_eq!(

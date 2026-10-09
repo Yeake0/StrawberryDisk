@@ -18,8 +18,8 @@ use crate::{
     PlatformSystemSettingChangeRequest, PlatformSystemSettingChangeResult,
 };
 
-pub(crate) const HELPER_FLAG: &str = "--mangodisk-system-settings-helper-v2";
-const PROTOCOL: &str = "mangodisk-system-settings-helper-v2";
+pub(crate) const HELPER_FLAG: &str = "--strawberrydisk-system-settings-helper-v2";
+const PROTOCOL: &str = "strawberrydisk-system-settings-helper-v2";
 const MAX_MESSAGE_BYTES: u64 = 1024 * 1024;
 const MAX_BATCH_ITEMS: usize = 256;
 const HELPER_SUCCESS_EXIT_CODE: i32 = 0;

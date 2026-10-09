@@ -31,7 +31,7 @@ const metadata = {
   version: '1.1.0',
   body: 'Release notes',
   date: '2026-07-31T00:00:00Z',
-  rawJson: { url: 'https://mangodisk.app/api/updates/1.1.0/windows/x86_64/download?distribution=portable' },
+  rawJson: { url: 'https://strawberrydisk.app/api/updates/1.1.0/windows/x86_64/download?distribution=portable' },
 };
 
 describe('AppUpdateService', () => {

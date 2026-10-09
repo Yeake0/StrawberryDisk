@@ -316,7 +316,7 @@ describe('app update store', () => {
       version: '1.1.0',
       notes: 'Improvements',
       action: APP_UPDATE_ACTION_IDS.manualDownload,
-      manualDownloadUrl: 'https://mangodisk.app/api/updates/1.1.0/windows/x86_64/download?distribution=portable',
+      manualDownloadUrl: 'https://strawberrydisk.app/api/updates/1.1.0/windows/x86_64/download?distribution=portable',
     });
     const automaticDownload = vi.spyOn(AppUpdateService, 'download');
     const open = vi.spyOn(LinkService, 'open').mockResolvedValue();
@@ -329,7 +329,7 @@ describe('app update store', () => {
     expect(store.distribution).toBe(APP_DISTRIBUTION_IDS.portable);
     expect(automaticDownload).not.toHaveBeenCalled();
     expect(open).toHaveBeenCalledWith(
-      'https://mangodisk.app/api/updates/1.1.0/windows/x86_64/download?distribution=portable'
+      'https://strawberrydisk.app/api/updates/1.1.0/windows/x86_64/download?distribution=portable'
     );
     expect(store.status).toBe(APP_UPDATE_STATUS_IDS.available);
   });

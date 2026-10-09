@@ -126,7 +126,7 @@ export class AppUpdateService {
     const url = new URL(rawUrl);
     const expectedPath = `/api/updates/${encodeURIComponent(update.version)}/windows/x86_64/download`;
     if (
-      url.origin !== 'https://mangodisk.app' ||
+      url.origin !== 'https://strawberrydisk.app' ||
       url.pathname !== expectedPath ||
       url.searchParams.size !== 1 ||
       url.searchParams.get('distribution') !== APP_DISTRIBUTION_IDS.portable ||

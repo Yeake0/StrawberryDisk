@@ -5,7 +5,7 @@ on run argv
   set requestPath to item 2 of argv
   set responsePath to item 3 of argv
   set promptText to item 4 of argv
-  set helperCommand to quoted form of helperPath & " --mangodisk-startup-helper-v4 " & quoted form of requestPath & " " & quoted form of responsePath
+  set helperCommand to quoted form of helperPath & " --strawberrydisk-startup-helper-v4 " & quoted form of requestPath & " " & quoted form of responsePath
 
   if promptText is "" then
     do shell script helperCommand with administrator privileges

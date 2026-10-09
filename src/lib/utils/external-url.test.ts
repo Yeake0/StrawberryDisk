@@ -4,8 +4,8 @@ import { normalizeExternalUrl } from '@/lib/utils/external-url';
 
 describe('normalizeExternalUrl', () => {
   it('accepts web and email links', () => {
-    expect(normalizeExternalUrl('https://github.com/harry0703/mangodisk')).toBe(
-      'https://github.com/harry0703/mangodisk'
+    expect(normalizeExternalUrl('https://github.com/Yeake0/StrawberryDisk')).toBe(
+      'https://github.com/Yeake0/StrawberryDisk'
     );
     expect(normalizeExternalUrl('http://example.com/releases')).toBe('http://example.com/releases');
     expect(normalizeExternalUrl('mailto:support@example.com')).toBe('mailto:support@example.com');

@@ -5,13 +5,13 @@ it('encodes optional collected metadata without inventing missing fields', () =>
   const metadata = { locale: 'fr-FR', distribution: 'installed' as const };
   expect(clientRequestHeaders(metadata)).toEqual({
     'Accept-Language': 'fr-FR',
-    'x-mangodisk-locale': 'fr-FR',
-    'x-mangodisk-distribution': 'installed',
+    'x-strawberrydisk-locale': 'fr-FR',
+    'x-strawberrydisk-distribution': 'installed',
   });
   expect(metadata).toEqual({ locale: 'fr-FR', distribution: 'installed' });
   expect(clientRequestHeaders({ ...metadata, installId: 'fixture', osVersion: '11', timezone: 'UTC' })).toMatchObject({
-    'x-mangodisk-install-id': 'fixture',
-    'x-mangodisk-os-version': '11',
-    'x-mangodisk-timezone': 'UTC',
+    'x-strawberrydisk-install-id': 'fixture',
+    'x-strawberrydisk-os-version': '11',
+    'x-strawberrydisk-timezone': 'UTC',
   });
 });

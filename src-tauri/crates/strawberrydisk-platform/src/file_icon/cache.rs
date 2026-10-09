@@ -6,7 +6,7 @@ use std::{
 
 use super::IconQuery;
 
-const CACHE_SCHEMA: &[u8] = b"mangodisk-native-file-icon-v1";
+const CACHE_SCHEMA: &[u8] = b"strawberrydisk-native-file-icon-v1";
 const PNG_SIGNATURE: &[u8] = b"\x89PNG\r\n\x1a\n";
 // Maintenance is intentionally throttled, so this target can be exceeded by
 // icons written between maintenance passes and is restored on the next pass.

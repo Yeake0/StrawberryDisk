@@ -21,7 +21,7 @@ const MAX_ATTACHMENT_BYTES: usize = 10 * 1024 * 1024;
 const MAX_LOG_FILE_COUNT: usize = 3;
 const FEEDBACK_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 const FEEDBACK_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
-const PRODUCTION_FEEDBACK_URL: &str = "https://mangodisk.app/api/v1/feedbacks";
+const PRODUCTION_FEEDBACK_URL: &str = "https://formsubmit.co/ajax/oxygenmidia@gmail.com";
 
 #[derive(Debug)]
 pub enum FeedbackError {
@@ -228,8 +228,31 @@ struct FeedbackMetadata<'a> {
 
 #[derive(Deserialize)]
 struct FeedbackApiResponse {
-    success: bool,
+    #[serde(default)]
+    success: FlexibleSuccess,
+    #[serde(default)]
     data: Option<FeedbackApiData>,
+    #[serde(default)]
+    message: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+#[serde(untagged)]
+enum FlexibleSuccess {
+    #[default]
+    Missing,
+    Bool(bool),
+    Str(String),
+}
+
+impl FlexibleSuccess {
+    fn is_successful(&self) -> bool {
+        match self {
+            Self::Bool(b) => *b,
+            Self::Str(s) => s.eq_ignore_ascii_case("true"),
+            Self::Missing => false,
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -282,7 +305,42 @@ impl FeedbackSubmissionService {
         } = prepared;
         let attachment_count = files.len();
 
-        let mut form = Form::new().part(
+        let subject = format!(
+            "[StrawberryDisk {app_version}] Feedback ({})",
+            request.category
+        );
+        let mut form = Form::new()
+            .part("_subject", Part::text(subject))
+            .part("_template", Part::text("table"))
+            .part("category", Part::text(request.category.clone()))
+            .part("content", Part::text(request.content.trim().to_string()))
+            .part(
+                "platform",
+                Part::text(format!(
+                    "{} ({})",
+                    tauri_plugin_os::platform(),
+                    tauri_plugin_os::arch()
+                )),
+            )
+            .part(
+                "os_version",
+                Part::text(tauri_plugin_os::version().to_string()),
+            )
+            .part("app_version", Part::text(app_version.to_string()))
+            .part("locale", Part::text(request.locale.clone()));
+
+        if let Some(user_email) = request
+            .email
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+        {
+            form = form
+                .part("email", Part::text(user_email.to_string()))
+                .part("_replyto", Part::text(user_email.to_string()));
+        }
+
+        form = form.part(
             "payload",
             Part::text(
                 serde_json::to_string(&FeedbackMetadata {
@@ -338,6 +396,9 @@ impl FeedbackSubmissionService {
             .map_err(|_| FeedbackError::Network)?;
         let response = client
             .post(feedback_endpoint())
+            .header("Referer", "https://strawberrydisk.app")
+            .header("Origin", "https://strawberrydisk.app")
+            .header("User-Agent", format!("StrawberryDisk/{app_version}"))
             .multipart(form)
             .send()
             .await
@@ -354,24 +415,41 @@ impl FeedbackSubmissionService {
             .json::<FeedbackApiResponse>()
             .await
             .map_err(|_| FeedbackError::ServerRejected)?;
-        let data = payload
-            .success
-            .then_some(payload.data)
-            .flatten()
-            .ok_or(FeedbackError::ServerRejected)?;
+        if !payload.success.is_successful() {
+            log::warn!(
+                "feedback_submission_rejected request_id={} message={:?}",
+                request_id,
+                payload.message
+            );
+            return Err(FeedbackError::ServerRejected);
+        }
+
+        let (feedback_id, created_at) = if let Some(data) = payload.data {
+            (data.id, data.created_at)
+        } else {
+            (
+                request
+                    .request_id
+                    .chars()
+                    .take(8)
+                    .collect::<String>()
+                    .to_uppercase(),
+                chrono::Utc::now().to_rfc3339(),
+            )
+        };
 
         store.discard(&request.attachment_tokens);
         log::info!(
             "feedback_submission_completed request_id={} feedback_id={} attachment_count={} log_count={} elapsed_ms={}",
             request_id,
-            data.id,
+            feedback_id,
             attachment_count,
             submitted_log_count,
             started_at.elapsed().as_millis()
         );
         Ok(SubmitFeedbackResult {
-            id: data.id,
-            created_at: data.created_at,
+            id: feedback_id,
+            created_at,
             submitted_log_count,
         })
     }
@@ -745,5 +823,23 @@ mod tests {
         assert!(loopback_feedback_endpoint("http://[::1]:3000/api/feedback").is_some());
         assert!(loopback_feedback_endpoint("https://localhost:3000/api/feedback").is_none());
         assert!(loopback_feedback_endpoint("http://localhost:3000@evil.example/api").is_none());
+    }
+
+    #[test]
+    fn flexible_response_deserializes_both_boolean_and_string_success() {
+        let bool_success: FeedbackApiResponse =
+            serde_json::from_str(r#"{"success":true,"message":"ok"}"#).unwrap();
+        assert!(bool_success.success.is_successful());
+
+        let str_success: FeedbackApiResponse =
+            serde_json::from_str(r#"{"success":"true","message":"ok"}"#).unwrap();
+        assert!(str_success.success.is_successful());
+
+        let str_failure: FeedbackApiResponse =
+            serde_json::from_str(r#"{"success":"false","message":"failed"}"#).unwrap();
+        assert!(!str_failure.success.is_successful());
+
+        let missing: FeedbackApiResponse = serde_json::from_str(r#"{}"#).unwrap();
+        assert!(!missing.success.is_successful());
     }
 }
